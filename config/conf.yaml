@@ -1,0 +1,4 @@
+ownership_data_input: data/raw/statements.latest.jsonl
+companies_output: data/interim/companies.parquet
+relationships_output: data/interim/relationships.parquet
+persons_output: data/interim/persons.parquet
