@@ -1,5 +1,11 @@
 # UK Companies Graph Study
 
+## TODO
+
+- create graph structure of company ownership
+- use networkx / igraph to start with?
+- may need to sample data for persons with > 1 interest
+
 ## Data
 
 Put this into a table

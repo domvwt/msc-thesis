@@ -36,7 +36,9 @@ def main() -> None:
     gb_relationships_df.write.parquet(relationships_output)
 
     persons_df = df.filter(F.col("statementType") == "personStatement")
-    join_expr = F.col("person.statementID") == F.col("relationship.interestedParty.describedByPersonStatement")
+    join_expr = F.col("person.statementID") == F.col(
+        "relationship.interestedParty.describedByPersonStatement"
+    )
     gb_persons_df = persons_df.alias("person").join(
         gb_relationships_df.alias("relationship"), join_expr, "leftsemi"
     )
