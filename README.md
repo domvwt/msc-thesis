@@ -5,6 +5,8 @@
 - create graph structure of company ownership
 - use networkx / igraph to start with?
 - may need to sample data for persons with > 1 interest
+- use embeddings for names and addresses
+- get lat long for postcode
 
 ## Data
 
