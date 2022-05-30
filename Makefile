@@ -72,3 +72,8 @@ isort: ## sort imports
 
 .PHONY: cqa
 cqa: format isort lint mypy ## run all cqa tools
+
+.PHONY: install
+install: ## run project installation steps
+	poetry install
+	poetry install -E geometric
