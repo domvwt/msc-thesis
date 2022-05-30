@@ -10,6 +10,12 @@ def write_if_missing(outputs_map: dict[DataFrame, str]) -> None:
             dataframe.write.parquet(path)
 
 
+def strip_chars_from_statement_id(df: DataFrame, id_col: str = "statementID") -> DataFrame:
+    return df.withColumn(
+        id_col, F.col(id_col).substr(F.lit(24), F.length(id_col))
+    )
+
+
 def extract_companies(ownership_df: DataFrame) -> DataFrame:
     companies_filter = (
         (F.col("incorporatedInJurisdiction.code") == "GB")
