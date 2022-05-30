@@ -3,17 +3,17 @@
 # IDEAS
 
 - try different order invariant aggregation functions in GNN (sum, mean, median, std...)
-    - sum
-    - mean
-    - median
-    - std
-    - harmonic mean
+  - sum
+  - mean
+  - median
+  - std
+  - harmonic mean
 - can we predict node features using a GNN? Where predictions are wrong can we identify anomalous nodes?
-    - industry
-    - number of directors
-    - degree
-    - other properties?
-- GraphSAGE vs GraphMAGE vs GIN 
+  - industry
+  - number of directors
+  - degree
+  - other properties?
+- GraphSAGE vs GraphMAGE vs GIN
 
 ## Key Milestones
 
