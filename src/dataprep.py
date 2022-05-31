@@ -1,7 +1,8 @@
+import itertools as it
 from pathlib import Path
 
 import pyspark.sql.functions as F
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 
 
 def write_if_missing(outputs_map: dict[DataFrame, str]) -> None:
@@ -10,10 +11,10 @@ def write_if_missing(outputs_map: dict[DataFrame, str]) -> None:
             dataframe.write.parquet(path)
 
 
-def strip_chars_from_statement_id(df: DataFrame, id_col: str = "statementID") -> DataFrame:
-    return df.withColumn(
-        id_col, F.col(id_col).substr(F.lit(24), F.length(id_col))
-    )
+def strip_chars_from_statement_id(
+    df: DataFrame, id_col: str = "statementID"
+) -> DataFrame:
+    return df.withColumn(id_col, F.col(id_col).substr(F.lit(24), F.length(id_col)))
 
 
 def extract_companies(ownership_df: DataFrame) -> DataFrame:
@@ -55,16 +56,68 @@ def extract_persons(ownership_df: DataFrame, relationships_df: DataFrame) -> Dat
     return gb_persons_df
 
 
-def process_companies(companies_df: DataFrame) -> DataFrame:
+def extract_companies_house_info(spark: SparkSession, csv_path: str) -> DataFrame:
+    # Remove invalid characters (<space>, ',') from column names
+    with Path(csv_path).open() as f:
+        column_names = f.readline().split(",")
+    column_names_clean = [s.strip().replace(".", "_") for s in column_names]
+    df00 = spark.read.csv(csv_path, header=False)
+    cols_renamed = [
+        F.col(colname).alias(colname_new)
+        for colname, colname_new in zip(df00.columns, column_names_clean)
+    ]
+    # Select relevant columns
+    df01 = df00.select(cols_renamed).filter(F.col("CompanyName") != "CompanyName")
+    keep_cols = [
+        "CompanyName",
+        "CompanyNumber",
+        "CompanyCategory",
+        "CompanyStatus",
+        "Accounts_AccountCategory",
+        "SICCode_SicText_1",
+    ]
+    df02 = df01.select(keep_cols)
+    return df02
+
+
+def process_companies(
+    companies_df: DataFrame, companies_house_df: DataFrame
+) -> DataFrame:
     """Select and flatten relevant company information.
 
     Args:
         companies_df (DataFrame): Unprocessed company records.
+        companies_house_df (DataFrame): Companies House records.
 
     Returns:
         DataFrame: Processed company records.
     """
-    return companies_df.select("statementID", "name", "foundingDate")
+    scheme_dict = {
+        "OpenOwnership Register": "OpenOwnershipRegisterID",
+        "Companies House": "CompaniesHouseID",
+        "OpenCorporates": "OpenCorporatesID",
+    }
+    scheme_map = F.create_map(*(F.lit(item) for item in it.chain(*scheme_dict.items())))
+    scheme_ids_long = companies_df.select(
+        "statementID", F.explode("identifiers")
+    ).select("statementID", "col.id", "col.schemeName")
+    scheme_ids_wide = (
+        scheme_ids_long.filter(F.col("schemeName").isin(list(scheme_dict.keys())))
+        .withColumn("schemeName", scheme_map[F.col("schemeName")])
+        .groupBy("statementID")
+        .pivot("schemeName")
+        .agg(F.first("id"))
+    )
+    # Join scheme IDs to companies data.
+    output_df = companies_df.select("statementID", "name", "foundingDate")
+    output_df = output_df.join(scheme_ids_wide, on=["statementID"], how="left")
+    # Join Companies House info to companies data.
+    join_expr = output_df.CompaniesHouseID == companies_house_df.CompanyNumber
+    output_df = output_df.join(companies_house_df, on=join_expr, how="left")
+    # Drop unneeded columns.
+    drop_cols = ["CompanyName", "CompanyNumber"]
+    output_df = output_df.drop(*drop_cols)
+    return output_df
 
 
 def process_relationships(relationships_df: DataFrame) -> DataFrame:

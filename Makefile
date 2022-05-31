@@ -77,3 +77,18 @@ cqa: format isort lint mypy ## run all cqa tools
 install: ## run project installation steps
 	poetry install
 	poetry install -E geometric
+
+.PHONY: download_open_ownership_data
+download_open_ownership_data: ## download open ownership data
+	wget https://oo-register-production.s3-eu-west-1.amazonaws.com/public/exports/statements.2022-05-27T19:23:50Z.jsonl.gz \
+	-O data/raw/open-ownership-data.jsonl.gz && \
+	gunzip data/raw/open-ownership-data.jsonl.gz
+
+.PHONY: download_companies_house_data
+download_companies_house_data: ## download data from companies house
+	wget http://download.companieshouse.gov.uk/BasicCompanyDataAsOneFile-2022-05-01.zip \
+	-O data/raw/companies-house-data.zip && \
+	unzip data/raw/companies-house-data.zip
+
+.PHONY: download_all_data
+download_all_data: download_open_ownership_data download_companies_house_data ## download all raw data
