@@ -6,15 +6,17 @@
 - use networkx / igraph to start with?
 - may need to sample data for persons with > 1 interest
 - use embeddings for names and addresses
-- get lat long for postcode
+- get lat long for postcode(?)
+- join companies house data
+- join open corporates data(?)
 
 ## Data
 
-Put this into a table
-
-- <http://download.companieshouse.gov.uk/BasicCompanyDataAsOneFile-2022-05-01.zip> - retrieved 2022-05-24
-- <http://download.companieshouse.gov.uk/persons-with-significant-control-snapshot-2022-05-24.zip> - retrieved 2022-05-24
-- [Open Ownership Data](https://oo-register-production.s3-eu-west-1.amazonaws.com/public/exports/statements.latest.jsonl.gz) - retrieved 2022-05-24
+|Data                           |Provider       |Date Retrieved|
+|:------------------------------|:--------------|:-------------|
+|[Company Data][CompanyData]    |Companies House|2022-05-24    |
+|[PSC Data][PSCData]            |Companies House|2022-05-24    |
+|[Ownership Data][OwnershipData]|Open Ownership |2022-05-24    |
 
 ## Libraries
 
@@ -39,3 +41,7 @@ sudo apt install gcc gfortran python3-dev libopenblas-dev liblapack-dev cython
 # Graph plotting
 sudo apt install graphviz
 ```
+ <!-- Links -->
+[CompanyData]: http://download.companieshouse.gov.uk/BasicCompanyDataAsOneFile-2022-05-01.zip
+[PSCData]: http://download.companieshouse.gov.uk/persons-with-significant-control-snapshot-2022-05-24.zip
+[OwnershipData]: https://oo-register-production.s3-eu-west-1.amazonaws.com/public/exports/statements.2022-05-27T19:23:50Z.jsonl.gz
