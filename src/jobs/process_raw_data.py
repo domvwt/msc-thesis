@@ -23,12 +23,12 @@ def main() -> None:
     )
 
     # Start session.
-    spark = SparkSession.builder.getOrCreate()
+    spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
     ownership_df = spark.read.json(f"file://{ownership_data_raw}")
 
     # Extract entities.
-    companies_df = dp.extract_companies(ownership_df)
-    relationships_df = dp.extract_relationships(ownership_df, companies_df)
+    relationships_df = dp.extract_relationships(ownership_df)
+    companies_df = dp.extract_companies(ownership_df, relationships_df)
     persons_df = dp.extract_persons(ownership_df, relationships_df)
     companies_house_df = dp.extract_companies_house_info(
         spark, companies_house_data_raw

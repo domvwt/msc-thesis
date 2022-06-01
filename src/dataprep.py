@@ -1,5 +1,6 @@
 import itertools as it
 from pathlib import Path
+from numpy import dtype
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
@@ -17,31 +18,49 @@ def strip_chars_from_statement_id(
     return df.withColumn(id_col, F.col(id_col).substr(F.lit(24), F.length(id_col)))
 
 
-def extract_companies(ownership_df: DataFrame) -> DataFrame:
+def extract_relationships(ownership_df: DataFrame) -> DataFrame:
+    """Extract all ownership statements pertaining to GB companies.
+
+    Args:
+        ownership_df (DataFrame): Raw open ownership data.
+
+    Returns:
+        DataFrame: Ownership relationships to GB companies.
+    """
+    relationships_df = ownership_df.filter(
+        F.col("statementType") == "ownershipOrControlStatement"
+    )
     companies_filter = (
         (F.col("incorporatedInJurisdiction.code") == "GB")
         & (F.col("statementType") == "entityStatement")
         & (F.col("dissolutionDate").isNull())
     )
-    gb_companies_df = ownership_df.filter(companies_filter)
-    gb_companies_df.repartition(100)
-    return gb_companies_df
-
-
-def extract_relationships(
-    ownership_df: DataFrame, companies_df: DataFrame
-) -> DataFrame:
-    relationships_df = ownership_df.filter(
-        F.col("statementType") == "ownershipOrControlStatement"
-    )
+    gb_company_ids = ownership_df.filter(companies_filter)
     join_expr = F.col("relationship.subject.describedByEntityStatement") == F.col(
         "company.statementID"
     )
     gb_relationships_df = relationships_df.alias("relationship").join(
-        companies_df.alias("company"), join_expr, "leftsemi"
+        gb_company_ids.alias("company"), join_expr, "leftsemi"
     )
     gb_relationships_df.repartition(100)
     return gb_relationships_df
+
+
+def extract_companies(ownership_df: DataFrame, relationship_df: DataFrame) -> DataFrame:
+    companies_filter = F.col("statementType") == "entityStatement"
+    join_expr = (
+        F.col("company.statementID")
+        == F.col("relationship.interestedParty.describedByEntityStatement")
+    ) | (
+        F.col("company.statementID")
+        == F.col("relationship.subject.describedByEntityStatement")
+    )
+    companies_df = ownership_df.filter(companies_filter).alias("company")
+    relevant_companies_df = companies_df.join(
+        relationship_df.alias("relationship"), join_expr, "leftsemi"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+    )
+    relevant_companies_df.repartition(100)
+    return relevant_companies_df
 
 
 def extract_persons(ownership_df: DataFrame, relationships_df: DataFrame) -> DataFrame:
@@ -49,11 +68,11 @@ def extract_persons(ownership_df: DataFrame, relationships_df: DataFrame) -> Dat
     join_expr = F.col("person.statementID") == F.col(
         "relationship.interestedParty.describedByPersonStatement"
     )
-    gb_persons_df = persons_df.alias("person").join(
+    relevant_persons_df = persons_df.alias("person").join(
         relationships_df.alias("relationship"), join_expr, "leftsemi"
     )
-    gb_persons_df.repartition(100)
-    return gb_persons_df
+    relevant_persons_df.repartition(100)
+    return relevant_persons_df
 
 
 def extract_companies_house_info(spark: SparkSession, csv_path: str) -> DataFrame:
@@ -92,10 +111,12 @@ def process_companies(
     Returns:
         DataFrame: Processed company records.
     """
+    # Extract relevant scheme IDs from company records.
     scheme_dict = {
-        "OpenOwnership Register": "OpenOwnershipRegisterID",
-        "Companies House": "CompaniesHouseID",
-        "OpenCorporates": "OpenCorporatesID",
+        "OpenOwnership Register": "openOwnershipRegisterID",
+        "Companies House": "companiesHouseID",
+        "GB Persons Of Significant Control Register - Registration numbers": "companiesHouseID",
+        "OpenCorporates": "openCorporatesID",
     }
     scheme_map = F.create_map(*(F.lit(item) for item in it.chain(*scheme_dict.items())))
     scheme_ids_long = companies_df.select(
@@ -106,13 +127,19 @@ def process_companies(
         .withColumn("schemeName", scheme_map[F.col("schemeName")])
         .groupBy("statementID")
         .pivot("schemeName")
-        .agg(F.first("id"))
+        .agg(F.max("id"))
     )
     # Join scheme IDs to companies data.
-    output_df = companies_df.select("statementID", "name", "foundingDate")
+    output_df = companies_df.select(
+        "statementID",
+        "name",
+        "foundingDate",
+        "dissolutionDate",
+        F.col("incorporatedInJurisdiction.code").alias("countryCode"),
+    )
     output_df = output_df.join(scheme_ids_wide, on=["statementID"], how="left")
     # Join Companies House info to companies data.
-    join_expr = output_df.CompaniesHouseID == companies_house_df.CompanyNumber
+    join_expr = F.col("CompaniesHouseID") == F.col("CompanyNumber")
     output_df = output_df.join(companies_house_df, on=join_expr, how="left")
     # Drop unneeded columns.
     drop_cols = ["CompanyName", "CompanyNumber"]
