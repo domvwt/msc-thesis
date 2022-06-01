@@ -8,32 +8,18 @@ import src.dataprep as dp
 
 def main() -> None:
     # Read config.
-    conf_dict = yaml.safe_load(Path("config/dataprep.yaml").read_text())
-
-    companies_interim_path = str(Path(conf_dict["companies_interim"]).absolute())
-    relationships_interim_path = str(
-        Path(conf_dict["relationships_interim"]).absolute()
-    )
-    persons_interim_path = str(Path(conf_dict["persons_interim"]).absolute())
-    companies_house_interim_path = str(
-        Path(conf_dict["companies_house_interim"]).absolute()
-    )
-
-    companies_processed_path = str(Path(conf_dict["companies_processed"]).absolute())
-    relationships_processed_path = str(
-        Path(conf_dict["relationships_processed"]).absolute()
-    )
-    persons_processed_path = str(Path(conf_dict["persons_processed"]).absolute())
-    addresses_processed_path = str(Path(conf_dict["addresses_processed"]).absolute())
+    conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
 
     # Start session.
     spark = SparkSession.builder.getOrCreate()
 
     # Load interim data.
-    companies_interim_df = spark.read.parquet(companies_interim_path)
-    relationships_interim_df = spark.read.parquet(relationships_interim_path)
-    persons_interim_df = spark.read.parquet(persons_interim_path)
-    companies_house_interim_df = spark.read.parquet(companies_house_interim_path)
+    companies_interim_df = spark.read.parquet(conf_dict["companies_interim"])
+    relationships_interim_df = spark.read.parquet(conf_dict["relationships_interim"])
+    persons_interim_df = spark.read.parquet(conf_dict["persons_interim"])
+    companies_house_interim_df = spark.read.parquet(
+        conf_dict["companies_house_interim"]
+    )
 
     # Process interim data.
     processed_companies_df = dp.process_companies(
@@ -58,10 +44,10 @@ def main() -> None:
 
     # Write outputs.
     output_path_map = {
-        processed_companies_df: companies_processed_path,
-        processed_relationships_df: relationships_processed_path,
-        processed_persons_df: persons_processed_path,
-        processed_addresses_df: addresses_processed_path,
+        processed_companies_df: conf_dict["companies_processed"],
+        processed_relationships_df: conf_dict["relationships_processed"],
+        processed_persons_df: conf_dict["persons_processed"],
+        processed_addresses_df: conf_dict["addresses_processed"],
     }
     dp.write_if_missing(output_path_map)
 

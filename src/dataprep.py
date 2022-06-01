@@ -1,6 +1,5 @@
 import itertools as it
 from pathlib import Path
-from numpy import dtype
 
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame, SparkSession
@@ -46,21 +45,14 @@ def extract_relationships(ownership_df: DataFrame) -> DataFrame:
     return gb_relationships_df
 
 
-def extract_companies(ownership_df: DataFrame, relationship_df: DataFrame) -> DataFrame:
-    companies_filter = F.col("statementType") == "entityStatement"
-    join_expr = (
-        F.col("company.statementID")
-        == F.col("relationship.interestedParty.describedByEntityStatement")
-    ) | (
-        F.col("company.statementID")
-        == F.col("relationship.subject.describedByEntityStatement")
+def extract_companies(ownership_df: DataFrame) -> DataFrame:
+    # Restricted to GB companies due to resource constraints
+    companies_filter = (F.col("statementType") == "entityStatement") & (
+        F.col("incorporatedInJurisdiction.code") == "GB"
     )
-    companies_df = ownership_df.filter(companies_filter).alias("company")
-    relevant_companies_df = companies_df.join(
-        relationship_df.alias("relationship"), join_expr, "leftsemi"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-    )
-    relevant_companies_df.repartition(100)
-    return relevant_companies_df
+    companies_df = ownership_df.filter(companies_filter)
+    companies_df.repartition(100)
+    return companies_df
 
 
 def extract_persons(ownership_df: DataFrame, relationships_df: DataFrame) -> DataFrame:

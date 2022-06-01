@@ -73,10 +73,18 @@ isort: ## sort imports
 .PHONY: cqa
 cqa: format isort lint mypy ## run all cqa tools
 
-.PHONY: install
-install: ## run project installation steps
+.PHONY: install_python_deps
+install_python_deps: ## install python dependencies
 	poetry install
 	poetry install -E geometric
+
+.PHONY: install_spark_deps
+install_spark_deps: ## install spark dependencies
+	wget https://repos.spark-packages.org/graphframes/graphframes/0.8.2-spark3.1-s_2.12/graphframes-0.8.2-spark3.1-s_2.12.jar \
+	-O .venv/lib/python3.9/site-packages/pyspark/jars/graphframes-0.8.2-spark3.1-s_2.12.jar
+
+.PHONY: install_all_deps
+install_all_deps: install_python_deps install_python_deps ## install python and spark dependencies
 
 .PHONY: download_open_ownership_data
 download_open_ownership_data: ## download open ownership data

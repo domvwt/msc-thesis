@@ -1,0 +1,20 @@
+# Stage 1 - Filter raw data for GB companies and persons
+ownership_data_raw: data/raw/open-ownership-data.jsonl
+companies_house_data_raw: data/raw/BasicCompanyDataAsOneFile-2022-05-01.csv
+
+companies_interim: data/interim/companies.parquet
+relationships_interim: data/interim/relationships.parquet
+persons_interim: data/interim/persons.parquet
+addresses_interim: data/interim/addresses.parquet
+companies_house_interim: data/interim/companies-info.parquet
+
+# Stage 2 - Select and create relevant columns
+companies_processed: data/processed/companies.parquet
+relationships_processed: data/processed/relationships.parquet
+persons_processed: data/processed/persons.parquet
+addresses_processed: data/processed/addresses.parquet
+
+# Stage 3 - Create graph objects
+nodes: data/graph/nodes.parquet
+edges: data/graph/edges.parquet
+connected_components: data/graph/connected_components.parquet
