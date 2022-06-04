@@ -12,11 +12,12 @@
 
 ## Data
 
-|Data                           |Provider       |Date Retrieved|
-|:------------------------------|:--------------|:-------------|
-|[Company Data][CompanyData]    |Companies House|2022-05-24    |
-|[PSC Data][PSCData]            |Companies House|2022-05-24    |
-|[Ownership Data][OwnershipData]|Open Ownership |2022-05-24    |
+|Data                           |Provider                         |Date Retrieved|
+|:------------------------------|:--------------------------------|:-------------|
+|[Company Data][CompanyData]    |[Companies House][CompaniesHouse]|2022-05-24    |
+|[PSC Data][PSCData]            |[Companies House][CompaniesHouse]|2022-05-24    |
+|[Ownership Data][OwnershipData]|[Open Ownership][OpenOwnership]  |2022-05-24    |
+|[Offshore Leaks][OffshoreLeaks]|[ICIJ][ICIJ]                     |2022-06-02    |
 
 ## Libraries
 
@@ -32,16 +33,33 @@
 
 ## Other Dependencies
 
+### Scipy Build
 ```bash
 # SciPy dependencies
 sudo apt install gcc gfortran python3-dev libopenblas-dev liblapack-dev cython
 ```
-
+### Graph Plotting
 ```bash
 # Graph plotting
 sudo apt install graphviz
 ```
+
+### Graph Database - Neo4j
+```bash
+curl -fsSL https://debian.neo4j.com/neotechnology.gpg.key |sudo gpg --dearmor -o /usr/share/keyrings/neo4j.gpg
+echo "deb [signed-by=/usr/share/keyrings/neo4j.gpg] https://debian.neo4j.com stable 4.1" | sudo tee -a /etc/apt/sources.list.d/neo4j.list
+```
+
+```bash
+sudo apt update
+sudo apt install neo4j
+```
+
  <!-- Links -->
+[CompaniesHouse] :https://www.gov.uk/government/organisations/companies-house
+[OpenOwnership]: https://www.openownership.org/
+[ICIJ]: https://offshoreleaks.icij.org/
 [CompanyData]: http://download.companieshouse.gov.uk/BasicCompanyDataAsOneFile-2022-05-01.zip
 [PSCData]: http://download.companieshouse.gov.uk/persons-with-significant-control-snapshot-2022-05-24.zip
 [OwnershipData]: https://oo-register-production.s3-eu-west-1.amazonaws.com/public/exports/statements.2022-05-27T19:23:50Z.jsonl.gz
+[OffshoreLeaks]: https://offshoreleaks-data.icij.org/offshoreleaks/csv/full-oldb.20220503.zip#_ga=2.29179839.263289515.1654130741-1571958430.1654130741
