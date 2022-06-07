@@ -14,31 +14,49 @@ https://pandoc.org/
 https://github.com/domvwt/panhan
 -->
 
-# Notes for the Reviewer
-
-A key focus in my position as Lead Data Scientist at Quantexa is the application
-of graph analytics for the detection of fraud. Traditional Machine Learning
-techniques struggle to identify anomalous entities in business networks, as
-their main giveaway is their relationship to neighbouring entities.
-
-Through this project, I hope to demonstrate  the effectiveness of Graph
-Convolutional Neural Network (GCN) models for identifying suspicious actors in
-business ownership networks. 
-
 # Introduction
 
-## Subject Overview
+## Background 
 
 In October of 2021, The International Consortium of Investigative Journalists
-(ICIJ) revealed the findings of their 'Pandora Papers' investigation,
-implicating hundreds of politicians, public officials, and businesses in efforts
-to conceal the true ownership of companies and assets around the world
-[@icij_offshore_2021]. The intentions behind this secrecy range from legitimate
+(ICIJ) revealed the findings of their Pandora Papers investigation. Through
+examination of nearly 12 million confidential business records, they put forward
+evidence implicating thousands of individuals and businesses in efforts to
+conceal the true ownership of companies and assets around the world
+[@icij_offshore_2021]. The intentions behind this secrecy varied from legitimate
 privacy concerns to criminal activities, including money laundering, tax
-evasion, and fraud. According to a study by the European Commission, an
-estimated total of USD 7.8 trillion was held offshore in 2016. The share of this
-attributed to the European Union (EU) was USD 1.6 trillion, which corresponds to an estimated tax
-revenue loss to the EU of EUR 46 billion [@noauthor_estimating_2019].
+evasion, and fraud
+[@european_union_agency_for_law_enforcement_cooperation_shadow_2021]. 
+
+A 2019 study by the European Commission estimates that a total of USD 7.8
+trillion was held offshore as of 2016. The share of this attributed to the
+European Union (EU) was USD 1.6 trillion, which corresponds to an estimated tax
+revenue loss to the EU of EUR 46 billion
+[@european_commission_directorate_general_for_taxation_and_customs_union_estimating_2019].
+
+Identifying the ultimate beneficiaries of a company is challenging due to the
+ease with which information can be concealed or simply not declared. This makes
+uncovering true company ownership an intensive exercise, placing strain on the
+resources of law enforcement agencies and responsible financial institutions
+[@steven_m_combating_2019]. Processing and flagging high risk entities is made
+difficult by the interconnected nature of businesses and individuals, as well as
+the ingenuity of criminals in masking illicit activity behind layers of
+seemingly legitimate business.
+
+In order to model the complex network of global business ownership, it is
+necessary to represent companies, people, and their relationships in a graph
+structure. With the data in this format, it is possible to not only consider the
+features of a particular entity when making a decision, but also those of their
+close connections and local community. Anomaly detection algorithms that can
+operate on graph structures remain at the frontier of machine learning research.
+The following project proposal is a study into the application of state of the
+art anomaly detection techniques to business ownership graphs.
+
+<!-- TODO: use of machine learning in fraud detection -->
+<!-- TODO: disclose my own interests as an employee of Quantexa -->
+<!-- TODO: summarise reasons for interest in this topic -->
+<!-- TODO: challenges - lack of training data, highly sensitive and proprietary
+-->
 
 ## Project Title
 
