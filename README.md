@@ -10,6 +10,12 @@
 - join companies house data
 - join open corporates data(?)
 
+## Remember
+
+[Litmaps](https://app.litmaps.com/shared/workspace/222F8A9E-DF91-4B50-BB96-1121DA98BEC4/map/5DB136D3-A5F5-49DC-AA5C-F02E42DD1A94
+
+)
+
 ## Data
 
 |Data                           |Provider                         |Date Retrieved|
