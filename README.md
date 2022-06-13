@@ -61,7 +61,7 @@ sudo apt install neo4j
 
  <!-- Links -->
  
-[CompaniesHouse] :https://www.gov.uk/government/organisations/companies-house
+[CompaniesHouse]: https://www.gov.uk/government/organisations/companies-house
 [OpenOwnership]: https://www.openownership.org/
 [ICIJ]: https://offshoreleaks.icij.org/
 [CompanyData]: http://download.companieshouse.gov.uk/BasicCompanyDataAsOneFile-2022-05-01.zip
