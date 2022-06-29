@@ -17,4 +17,4 @@ addresses_processed: data/processed/addresses.parquet
 # Stage 3 - Create graph objects
 nodes: data/graph/nodes.parquet
 edges: data/graph/edges.parquet
-connected_components: data/graph/connected_components.parquet
+connected_components: data/graph/connected-components.parquet

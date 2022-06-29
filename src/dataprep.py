@@ -186,11 +186,11 @@ def process_persons(persons_df: DataFrame) -> DataFrame:
     Returns:
         DataFrame: Processed person records.
     """
-    return (
-        persons_df.select("*", F.explode("nationalities"))
-        .select("*", F.col("col.code").alias("nationality"))
-        .groupBy("statementID", "birthDate")
-        .agg(F.max("nationality").alias("nationality"))
+    return persons_df.select(
+        "statementID",
+        "birthDate",
+        F.col("names").getItem(0).getItem("fullName").alias("name"),
+        F.col("nationalities").getItem(0).getItem("code").alias("nationality"),
     )
 
 
@@ -206,6 +206,6 @@ def process_addresses(companies_df: DataFrame, persons_df: DataFrame) -> DataFra
     """
     entities_df = companies_df.unionByName(persons_df)
     entity_address_edge_df = entities_df.select(
-        "statementID", F.explode("addresses")
-    ).select("statementID", "col.address")
+        "statementID", F.col("addresses").getItem(0).alias("address")
+    )
     return entity_address_edge_df

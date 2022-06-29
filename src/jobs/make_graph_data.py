@@ -1,12 +1,11 @@
 from pathlib import Path
 
-import graphframes as gf
-import pyspark.sql.functions as F
 import yaml
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 
-import src.dataprep as dp
+from src import dataprep as dp
+from src import graphprep as gp
 
 
 def main() -> None:
@@ -27,6 +26,7 @@ def main() -> None:
     )
     sc = SparkContext(conf=spark_conf).getOrCreate()
     sc.setCheckpointDir(checkpoint_dir)
+    sc.setLogLevel("ERROR")
     spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
 
     # Load processed data.
@@ -35,26 +35,24 @@ def main() -> None:
         conf_dict["relationships_processed"]
     )
     persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
-    addresses_processed_df = spark.read.parquet(conf_dict["addresses_processed"])
 
-    # Create graph.
-    company_nodes_df = companies_processed_df.withColumnRenamed(
-        "statementID", "id"
-    ).select("id", F.lit(True).alias("isCompany"))
-    person_nodes_df = persons_processed_df.withColumnRenamed(
-        "statementID", "id"
-    ).select("id", F.lit(False).alias("isCompany"))
-    nodes_df = company_nodes_df.union(person_nodes_df)
-    edges_df = relationships_processed_df.withColumnRenamed(
-        "interestedPartyStatementID", "src"
-    ).withColumnRenamed("subjectStatementID", "dst")
-    graph = gf.GraphFrame(nodes_df, edges_df)
+    # Create graph and get connected components.
+    graph = gp.make_graph(
+        companies_processed_df, persons_processed_df, relationships_processed_df
+    )
     connected_components = graph.connectedComponents()
+
+    # Filter for connected components where n >= 10.
+    graph_filtered = gp.filter_graph(graph, connected_components, 10)
+
+    # Derive node features.
+    nodes_filtered_df = gp.derive_node_features(graph_filtered)
+    edges_filtered_df = graph_filtered.edges
 
     # Write outputs.
     output_path_map = {
-        nodes_df: conf_dict["nodes"],
-        edges_df: conf_dict["edges"],
+        nodes_filtered_df: conf_dict["nodes"],
+        edges_filtered_df: conf_dict["edges"],
         connected_components: conf_dict["connected_components"],
     }
     dp.write_if_missing(output_path_map)
