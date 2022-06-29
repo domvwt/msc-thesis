@@ -21,9 +21,6 @@ https://github.com/domvwt/panhan
 <!-- Doing Your Research Project:
       file:///home/domvwt/Downloads/Judith_Bell_Doing_Your_Research_Project.pdf -->
 
-```{.include}
-thesis/literature-review.md
-```
 # Introduction
 
 ## Background 
