@@ -23,30 +23,21 @@ def make_graph(
 
 
 def filter_graph(
-    graph: GraphFrame, connected_components: DataFrame, min_component_nodes: int
+    graph: GraphFrame,
+    connected_components: DataFrame,
+    min_component_nodes: int,
+    max_component_nodes: int,
 ) -> GraphFrame:
-    large_components = (connected_components.groupBy("component").count()).filter(
-        F.col("count") >= min_component_nodes
+    large_component_ids = (connected_components.groupBy("component").count()).filter(
+        (F.col("count") >= min_component_nodes)
+        & (F.col("count") <= max_component_nodes)
     )
-    large_component_ids = [
-        row.component for row in large_components.select("component").collect()
-    ]
-    return (
-        graph.filterVertices(F.col("component").isin(large_component_ids))
-        .dropIsolatedVertices()
-        .cache()
+    large_components = connected_components.join(
+        large_component_ids, ["component"], "leftsemi"
     )
-
-
-def derive_node_features(graph: GraphFrame) -> DataFrame:
-    return (
-        graph.vertices.join(graph.inDegrees, ["id"], how="left")
-        .join(graph.outDegrees, ["id"], how="left")
-        .join(
-            graph.triangleCount()
-            .withColumnRenamed("count", "triangleCount")
-            .select("id", "triangleCount"),
-            ["id"],
-        )
-        .fillna(0)
+    # Filter and add component id as node and edge attribute.
+    nodes = graph.vertices.join(large_components, ["id"], "inner")
+    edges = graph.edges.join(
+        large_components.withColumnRenamed("id", "src"), ["src"], "inner"
     )
+    return GraphFrame(nodes, edges).dropIsolatedVertices()

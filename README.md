@@ -2,13 +2,33 @@
 
 ## TODO
 
-- create graph structure of company ownership
-- use networkx / igraph to start with?
-- may need to sample data for persons with > 1 interest
-- use embeddings for names and addresses
-- get lat long for postcode(?)
-- join companies house data
-- join open corporates data(?)
+- use embeddings for names and addresses (?)
+- get lat long for postcode (?)
+  - <https://github.com/symerio/pgeocode>
+  - need to encode neighbour location for nodes
+- connected components
+  - label with minimum entity id
+  - split into train and test
+- perturbation
+  - rewire edge within component
+  - create edge within component
+  - create edge to external component
+  - make sure ownership is not above 100% - we can do this by rewiring an existing owner's edge?
+  - edge rewire vs edge creation
+- message passing - permutation invariant functions
+  - <https://openreview.net/pdf?id=tf8a4jDRFCv>
+  - <https://antoniolonga.github.io/Pytorch_geometric_tutorials/posts/post5.html>
+  - std
+  - var
+  - skewness
+  - kurtosis
+  - gini?
+  - average difference?
+- evaluation
+  - check nodes with highest anomaly score
+  - check greatest errors
+  - use SHAP to determine why predictions were made (if possible?)
+  - could explainability be an avenue for further research?
 
 ## Remember
 
@@ -38,17 +58,21 @@
 ## Other Dependencies
 
 ### Scipy Build
+
 ```bash
 # SciPy dependencies
 sudo apt install gcc gfortran python3-dev libopenblas-dev liblapack-dev cython
 ```
+
 ### Graph Plotting
+
 ```bash
 # Graph plotting
 sudo apt install graphviz
 ```
 
 ### Graph Database - Neo4j
+
 ```bash
 curl -fsSL https://debian.neo4j.com/neotechnology.gpg.key |sudo gpg --dearmor -o /usr/share/keyrings/neo4j.gpg
 echo "deb [signed-by=/usr/share/keyrings/neo4j.gpg] https://debian.neo4j.com stable 4.1" | sudo tee -a /etc/apt/sources.list.d/neo4j.list
@@ -60,7 +84,7 @@ sudo apt install neo4j
 ```
 
  <!-- Links -->
- 
+
 [CompaniesHouse]: https://www.gov.uk/government/organisations/companies-house
 [OpenOwnership]: https://www.openownership.org/
 [ICIJ]: https://offshoreleaks.icij.org/

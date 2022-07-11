@@ -56,9 +56,8 @@ spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
 companies_processed_df = spark.read.parquet(conf_dict["companies_processed"])
 relationships_processed_df = spark.read.parquet(conf_dict["relationships_processed"])
 persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
-nodes_filtered_df = spark.read.parquet(conf_dict["nodes"])
-edges_filtered_df = spark.read.parquet(conf_dict["edges"])
-
+nodes_filtered_df = spark.read.parquet("data/graph/component-nodes.parquet")
+edges_filtered_df = spark.read.parquet("data/graph/component-edges.parquet")
 
 # %%
 print(f"Node count: {nodes_filtered_df.count():,}")

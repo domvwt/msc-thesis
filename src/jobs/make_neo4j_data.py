@@ -43,13 +43,6 @@ def main() -> None:
     convert_to_csv(persons_filtered_df, "persons")
     convert_to_csv(edges_filtered_df, "relationships")
 
-    make_neo4j_statement(companies_filtered_df, "companies", "company")
-    make_neo4j_statement(persons_filtered_df, "persons", "person")
-
-    persons_filtered_df.printSchema()
-
-    edges_filtered_df.printSchema()
-
 
 def sanitise_string(column: str) -> Column:
     """Replace single quotes with double for neo4j import compatibility."""

@@ -40,13 +40,11 @@ def main() -> None:
     graph = gp.make_graph(
         companies_processed_df, persons_processed_df, relationships_processed_df
     )
-    connected_components = graph.connectedComponents()
+    connected_components = graph.connectedComponents().select("id", "component").cache()
 
-    # Filter for connected components where n >= 10.
-    graph_filtered = gp.filter_graph(graph, connected_components, 10)
-
-    # Derive node features.
-    nodes_filtered_df = gp.derive_node_features(graph_filtered)
+    # Filter for connected components where n >= 10 and n <= 50.
+    graph_filtered = gp.filter_graph(graph, connected_components, 10, 50).cache()
+    nodes_filtered_df = graph_filtered.vertices
     edges_filtered_df = graph_filtered.edges
 
     # Write outputs.

@@ -103,7 +103,7 @@ download_all_data: download_open_ownership_data download_companies_house_data ##
 
 NEO4J = ~/.config/Neo4j\ Desktop/Application/relate-data/dbmss/dbms-787062ea-0f75-4dbb-8f4a-db646f3f88d4/bin/neo4j-admin
 
-.PHOMY: neo4j_find_cli
+.PHONY: neo4j_find_cli
 neo4j_find_cli: ## find neo4j cli paths
 	find / -name neo4j-admin 2> /dev/null | sort
 
