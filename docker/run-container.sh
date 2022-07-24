@@ -1,0 +1,1 @@
+docker run -it --rm --init --runtime nvidia --gpus all pyg:latest /bin/bash

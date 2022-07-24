@@ -996,9 +996,9 @@ numpy = ">=1.9.1"
 six = ">=1.9.0"
 
 [package.extras]
-image = ["scipy (>=0.14)", "Pillow (>=5.2.0)"]
+tests = ["pytest-cov", "pytest-xdist", "pytest", "keras", "tensorflow", "pillow", "pandas"]
 pep8 = ["flake8"]
-tests = ["pandas", "pillow", "tensorflow", "keras", "pytest", "pytest-xdist", "pytest-cov"]
+image = ["Pillow (>=5.2.0)", "scipy (>=0.14)"]
 
 [[package]]
 name = "kiwisolver"
@@ -1502,6 +1502,18 @@ pytz = ">=2020.1"
 test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
 
 [[package]]
+name = "pandas-downcast"
+version = "1.2.1"
+description = "Shrink Pandas DataFrames with precision safe schema inference."
+category = "main"
+optional = false
+python-versions = ">=3.6.1,<4"
+
+[package.dependencies]
+numpy = {version = ">=1.17", markers = "python_version >= \"3.7\""}
+pandas = ">=0.24"
+
+[[package]]
 name = "pandas-profiling"
 version = "3.2.0"
 description = "Generate profile report for pandas DataFrame"
@@ -1730,6 +1742,17 @@ description = "Enables Python programs to dynamically access arbitrary Java obje
 category = "main"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "pyarrow"
+version = "8.0.0"
+description = "Python library for Apache Arrow"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = ">=1.16.6"
 
 [[package]]
 name = "pyasn1"
@@ -2682,7 +2705,7 @@ geometric = ["torch-scatter", "torch-sparse", "torch-cluster", "torch-spline-con
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.9,<3.11"
-content-hash = "a70dd9a804eccbe5da961779b7d6890058f10bb19bf8dff356682ad8dd8465fa"
+content-hash = "757864e6d41e37bbeeeab55b39e4078ddabe45952d0d49230e740d8758e67be5"
 
 [metadata.files]
 absl-py = []
@@ -2895,9 +2918,7 @@ decorator = [
     {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
     {file = "decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
 ]
-deepsnap = [
-    {file = "deepsnap-0.2.1.tar.gz", hash = "sha256:656a934757c72ff251291d687d95143e7841c487373f53e30d2c05d4aac40d8d"},
-]
+deepsnap = []
 defusedxml = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
     {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
@@ -2951,10 +2972,7 @@ graphframes-stubs = [
     {file = "graphframes-stubs-0.8.0.tar.gz", hash = "sha256:50f062859fa9ca63e528d8eec4a492536d9ad221db9f20180097f72cf7faa1c4"},
     {file = "graphframes_stubs-0.8.0-py3-none-any.whl", hash = "sha256:53984cfe9afadcc8e1d7ac9093f1e521efab3824ae85cb11ab1a98918dc7c8b0"},
 ]
-graphgym = [
-    {file = "graphgym-0.4.0-py3-none-any.whl", hash = "sha256:6348e61bdb2c12f3a42db3a4b0704c5471fd3a80c52b908f310b3bb66f987851"},
-    {file = "graphgym-0.4.0.tar.gz", hash = "sha256:762fcf6720dd263db7225e2a9540ffbecdb2a4bfe83c30edae53468fc5e09f5d"},
-]
+graphgym = []
 greenlet = [
     {file = "greenlet-1.1.2-cp27-cp27m-macosx_10_14_x86_64.whl", hash = "sha256:58df5c2a0e293bf665a51f8a100d3e9956febfbf1d9aaf8c0677cf70218910c6"},
     {file = "greenlet-1.1.2-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:aec52725173bd3a7b56fe91bc56eccb26fbdff1386ef123abb63c84c5b43b63a"},
@@ -3198,9 +3216,7 @@ kiwisolver = [
     {file = "kiwisolver-1.4.2.tar.gz", hash = "sha256:7f606d91b8a8816be476513a77fd30abe66227039bd6f8b406c348cb0247dcc9"},
 ]
 libclang = []
-littleutils = [
-    {file = "littleutils-0.2.2.tar.gz", hash = "sha256:e6cae3a4203e530d51c9667ed310ffe3b1948f2876e3d69605b3de4b7d96916f"},
-]
+littleutils = []
 mako = [
     {file = "Mako-1.2.0-py3-none-any.whl", hash = "sha256:23aab11fdbbb0f1051b93793a58323ff937e98e34aece1c4219675122e57e4ba"},
     {file = "Mako-1.2.0.tar.gz", hash = "sha256:9a7c7e922b87db3686210cf49d5d767033a41d4010b284e747682c92bddd8b39"},
@@ -3407,19 +3423,13 @@ oauthlib = [
     {file = "oauthlib-3.2.0-py3-none-any.whl", hash = "sha256:6db33440354787f9b7f3a6dbd4febf5d0f93758354060e802f6c06cb493022fe"},
     {file = "oauthlib-3.2.0.tar.gz", hash = "sha256:23a8208d75b902797ea29fd31fa80a15ed9dc2c6c16fe73f5d346f83f6fa27a2"},
 ]
-ogb = [
-    {file = "ogb-1.3.3-py3-none-any.whl", hash = "sha256:eb2c46a9255679389fd7aee8c7bd58f10eb04b93f92bc5416d523d3a2c6e0080"},
-    {file = "ogb-1.3.3.tar.gz", hash = "sha256:599fdf5c3aee48c21b32d69d0b4e0a50f92fee7ff5cbb53fbca4fd57739818be"},
-]
+ogb = []
 opt-einsum = []
 optuna = [
     {file = "optuna-2.10.0-py3-none-any.whl", hash = "sha256:457ff8b12b459dc1eeb0178389ff9e5c4da41764cc91152fe324bfd56f88d43f"},
     {file = "optuna-2.10.0.tar.gz", hash = "sha256:04c3100a4fe88a71dc72f69d8a10ec9db7c9a0c884feaf932b68632b00686a8d"},
 ]
-outdated = [
-    {file = "outdated-0.2.1-py3-none-any.whl", hash = "sha256:177e381857c10c410dc643b48ace8753ab977d5ae39642297a7f76eb4a3c1c8e"},
-    {file = "outdated-0.2.1.tar.gz", hash = "sha256:d92921a3d77bc56a6d39c0af321aad44b223906ebb6e8139996d26116baec573"},
-]
+outdated = []
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
@@ -3447,6 +3457,7 @@ pandas = [
     {file = "pandas-1.4.2-cp39-cp39-win_amd64.whl", hash = "sha256:09d8be7dd9e1c4c98224c4dfe8abd60d145d934e9fc1f5f411266308ae683e6a"},
     {file = "pandas-1.4.2.tar.gz", hash = "sha256:92bc1fc585f1463ca827b45535957815b7deb218c549b7c18402c322c7549a12"},
 ]
+pandas-downcast = []
 pandas-profiling = [
     {file = "pandas-profiling-3.2.0.tar.gz", hash = "sha256:8897c2628e3a9b5c915d038aa1782be7fa9e322e405a51aa4586466ab84e8461"},
     {file = "pandas_profiling-3.2.0-py2.py3-none-any.whl", hash = "sha256:dd063f35a99f8f0c75f109a2bbfa13a58209424b84b67842139562630d9035f7"},
@@ -3604,6 +3615,7 @@ py4j = [
     {file = "py4j-0.10.9-py2.py3-none-any.whl", hash = "sha256:859ba728a7bb43e9c2bf058832759fb97a598bb28cc12f34f5fc4abdec08ede6"},
     {file = "py4j-0.10.9.tar.gz", hash = "sha256:36ec57f43ff8ced260a18aa9a4e46c3500a730cac8860e259cbaa546c2b9db2f"},
 ]
+pyarrow = []
 pyasn1 = []
 pyasn1-modules = []
 pycodestyle = [
@@ -4052,10 +4064,7 @@ tangled-up-in-unicode = [
 tensorboard = []
 tensorboard-data-server = []
 tensorboard-plugin-wit = []
-tensorboardx = [
-    {file = "tensorboardX-2.5-py2.py3-none-any.whl", hash = "sha256:b1d8903f8106e2f4484640a293f9680f9757d5f7d2e699e0672bb2382d988e07"},
-    {file = "tensorboardX-2.5.tar.gz", hash = "sha256:5238ac5eac4a26d8f8381d7f54a2fcd530a134db841af9a9a6427beca93c6776"},
-]
+tensorboardx = []
 tensorflow = []
 tensorflow-estimator = []
 tensorflow-io-gcs-filesystem = []
@@ -4216,11 +4225,7 @@ widgetsnbextension = [
     {file = "widgetsnbextension-3.6.0.tar.gz", hash = "sha256:e84a7a9fcb9baf3d57106e184a7389a8f8eb935bf741a5eb9d60aa18cc029a80"},
 ]
 wrapt = []
-yacs = [
-    {file = "yacs-0.1.8-py2-none-any.whl", hash = "sha256:d43d1854c1ffc4634c5b349d1c1120f86f05c3a294c9d141134f282961ab5d94"},
-    {file = "yacs-0.1.8-py3-none-any.whl", hash = "sha256:99f893e30497a4b66842821bac316386f7bd5c4f47ad35c9073ef089aa33af32"},
-    {file = "yacs-0.1.8.tar.gz", hash = "sha256:efc4c732942b3103bea904ee89af98bcd27d01f0ac12d8d4d369f1e7a2914384"},
-]
+yacs = []
 zipp = [
     {file = "zipp-3.8.0-py3-none-any.whl", hash = "sha256:c4f6e5bbf48e74f7a38e7cc5b0480ff42b0ae5178957d564d18932525d5cf099"},
     {file = "zipp-3.8.0.tar.gz", hash = "sha256:56bf8aadb83c24db6c4b577e13de374ccfb67da2078beba1d037c17980bf43ad"},

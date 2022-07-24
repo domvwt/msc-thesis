@@ -51,6 +51,8 @@ def main() -> None:
     }
     dp.write_if_missing(output_path_map)
 
+    # Stop session.
+    spark.stop()
 
 if __name__ == "__main__":
     main()

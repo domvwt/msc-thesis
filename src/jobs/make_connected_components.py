@@ -36,45 +36,20 @@ def main() -> None:
     )
     persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
 
-    # Resolve duplicate nodes.
-    connected_components_df = spark.read.parquet(conf_dict["connected_components"])
-    nodes_df = gp.make_node_table(
-        companies_processed_df, persons_processed_df, connected_components_df
+    # Create graph and get connected components.
+    graph = gp.make_graph(
+        companies_processed_df, persons_processed_df, relationships_processed_df
     )
-    edges_df = gp.make_edge_table(relationships_processed_df, connected_components_df)
-    id_mapping_df = gp.map_duplicate_nodes_to_min_id(nodes_df)
-    resolved_nodes_df, resolved_edges_df = gp.resolve_duplicate_nodes(
-        nodes_df, edges_df, id_mapping_df
-    )
-
-    # Create graph.
-    graph = gp.make_graph(resolved_nodes_df, resolved_edges_df)
-
-    # Filter for connected components with desired size and at least x% of nodes being persons.
-    graph_filtered = gp.filter_graph(
-        graph, connected_components_df, 10, 1000, 0.1
-    ).cache()
-    nodes_filtered_df = graph_filtered.vertices.cache()
-    edges_filtered_df = graph_filtered.edges
-
-    # Separate companies nodes and persons nodes.
-    companies_nodes_df = gp.get_companies_nodes(
-        nodes_filtered_df, companies_processed_df
-    )
-    persons_nodes_df = gp.get_persons_nodes(nodes_filtered_df, persons_processed_df)
+    connected_components = graph.connectedComponents().select("id", "component", "isCompany").cache()
 
     # Write outputs.
     output_path_map = {
-        companies_nodes_df: conf_dict["companies_nodes"],
-        persons_nodes_df: conf_dict["persons_nodes"],
-        edges_filtered_df: conf_dict["edges"],
-        connected_components_df: conf_dict["connected_components"],
+        connected_components: conf_dict["connected_components"],
     }
     dp.write_if_missing(output_path_map)
 
     # Stop session.
     spark.stop()
-
 
 if __name__ == "__main__":
     main()
