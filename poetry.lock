@@ -2043,22 +2043,6 @@ requests = ">=2.0.0"
 rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
 
 [[package]]
-name = "retworkx"
-version = "0.11.0"
-description = "A python graph library implemented in Rust"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-numpy = ">=1.16.0"
-
-[package.extras]
-all = ["matplotlib (>=3.0)", "pillow (>=5.4)"]
-graphviz = ["pillow (>=5.4)"]
-mpl = ["matplotlib (>=3.0)"]
-
-[[package]]
 name = "rsa"
 version = "4.8"
 description = "Pure-Python RSA implementation"
@@ -2091,14 +2075,14 @@ tests = ["matplotlib (>=3.1.2)", "scikit-image (>=0.14.5)", "pandas (>=1.0.5)", 
 
 [[package]]
 name = "scipy"
-version = "1.6.1"
+version = "1.8.1"
 description = "SciPy: Scientific Library for Python"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8,<3.11"
 
 [package.dependencies]
-numpy = ">=1.16.5"
+numpy = ">=1.17.3,<1.25.0"
 
 [[package]]
 name = "seaborn"
@@ -2705,7 +2689,7 @@ geometric = ["torch-scatter", "torch-sparse", "torch-cluster", "torch-spline-con
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.9,<3.11"
-content-hash = "757864e6d41e37bbeeeab55b39e4078ddabe45952d0d49230e740d8758e67be5"
+content-hash = "5a7ed80b06cac6d7f9bb09f2de2f0108f182807ec9cc36bd9bfdb8b2dd57b123"
 
 [metadata.files]
 absl-py = []
@@ -3888,55 +3872,6 @@ requests = [
     {file = "requests-2.27.1.tar.gz", hash = "sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61"},
 ]
 requests-oauthlib = []
-retworkx = [
-    {file = "retworkx-0.11.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:5e7af7a6149e244b891d5f5a96765e14e273afd17c7c6df14ae874ecadd0c99d"},
-    {file = "retworkx-0.11.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a63ca79ef0950fb8fbb31696eb24c8e40ac1a3acf75f542855f49ec09171a00a"},
-    {file = "retworkx-0.11.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8a088709fb4734b3c4eda93d5177b778297be1edb5b2a5fc5a9d2e971aeb39e1"},
-    {file = "retworkx-0.11.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:02eb69c81eecac6d870a557784146cfbf0694b6c17dc4be32e80d7204d965b95"},
-    {file = "retworkx-0.11.0-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:474e4358c6c03a8740dd3bd54b4f4e29267879c870c040776cd91f794773cb86"},
-    {file = "retworkx-0.11.0-cp310-cp310-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9b1d0c76735cff05042684abcced2dc700cb96413635743a171d117e2761ba8a"},
-    {file = "retworkx-0.11.0-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:2db4df09f3bc421e34891b3c845aa3e307c633ae3967122b486cfd9b863b2c18"},
-    {file = "retworkx-0.11.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:fcd91d6a9eab5390b0f626d06587aa35220142c1238f919ce0d074545049c709"},
-    {file = "retworkx-0.11.0-cp310-cp310-win32.whl", hash = "sha256:64ad370bdca831608d18b93a738b8b3d8bc059b526bc1893e4a508c06c7e673e"},
-    {file = "retworkx-0.11.0-cp310-cp310-win_amd64.whl", hash = "sha256:3d191d1a287bc24514089f7ea3151ca9b16fd70ad82af4afc68043a909228170"},
-    {file = "retworkx-0.11.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:99f4ed97ab5342c0f10bdec440e6b0950c1483c1c9724d82a5601a31fb941f88"},
-    {file = "retworkx-0.11.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5a31a1e2d23ee5b57a227a71360f5c76a618e7f081117530acacca1948cb0770"},
-    {file = "retworkx-0.11.0-cp36-cp36m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:118e50ecbed38531072af9cc8696cc2baf2d5b24e55a170e5ea9a7136fb2b7a5"},
-    {file = "retworkx-0.11.0-cp36-cp36m-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f95c37a1a113f0042f0fae42af32c44bb6b460ec09595fbe82f8a11e1237257a"},
-    {file = "retworkx-0.11.0-cp36-cp36m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:4f7d151b725b1dc471a73b87d8951019171acafcfe32f52a770a87661a249c8e"},
-    {file = "retworkx-0.11.0-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:39834f5f8335bdbeca78cbeb4b545f8e3f3f55817a659e8599dcba56a1f91251"},
-    {file = "retworkx-0.11.0-cp36-cp36m-win32.whl", hash = "sha256:cea524a81c9a1c449fe7fa40e33465f00d2fbc29deb44bb8ce028ef16654452f"},
-    {file = "retworkx-0.11.0-cp36-cp36m-win_amd64.whl", hash = "sha256:ba4bbcba72200b86d93f034641e5928e3b308c8f315bc4a1732250b6e782da64"},
-    {file = "retworkx-0.11.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:83ee8fa88849a6305aec865bf09a9b638aa9b5a2e38f3b7e96327652133952ae"},
-    {file = "retworkx-0.11.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b8bf6d103a1068aeeea3b0e7ce362effb2766620a57d80c9bebbd0858db50d85"},
-    {file = "retworkx-0.11.0-cp37-cp37m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ffdee65a449841c7a4432f75ec84754cd64cfaf1ab596d56e24cdfc6f0cc7644"},
-    {file = "retworkx-0.11.0-cp37-cp37m-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:03c883dca99a69884c4d0a0e0b880ec4c1f772c29b1c081ddb2867b760c32637"},
-    {file = "retworkx-0.11.0-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:014f92e656d4495d5265daa70fa72ad8a012c81f92e363cc9d3c82ac7deef02d"},
-    {file = "retworkx-0.11.0-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:add52f65d8c85e337d1c0ce23891584c556faf5e5af12f6538e35b3fe823a23e"},
-    {file = "retworkx-0.11.0-cp37-cp37m-win32.whl", hash = "sha256:3fca540e733c0b234f0506dc259a152f92e8f15f04fd37b1d7a6c890deaaed50"},
-    {file = "retworkx-0.11.0-cp37-cp37m-win_amd64.whl", hash = "sha256:abee9263f2d7ff61076d9911d11dd40481e6df7c6711350afba20f08abed4e5d"},
-    {file = "retworkx-0.11.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:804aa25af8898a2e0a4fbf2f94fb4d13cb7543722316a09cbed0e7c4f9b445d4"},
-    {file = "retworkx-0.11.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:6eecc461f5226028011192d7421c1886121c7b6760191fe1d774d8e72d9961df"},
-    {file = "retworkx-0.11.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:4b9a8f5f2c6ae01acfb8de82ae4733b2fd42d89dfa53153e5816df73c2098dd5"},
-    {file = "retworkx-0.11.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c818c6034da670686f4e5c0aa424175ae95744b11d2abced3c6f0a9c7e7ab9e2"},
-    {file = "retworkx-0.11.0-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f4537cd72e12be4c7ad74b790039fc58b2383c3ef8877f60b3ebcd715960d2cd"},
-    {file = "retworkx-0.11.0-cp38-cp38-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:adbcd034bc7acd1aa67fd95186735ce37c318b6467c054267c53dd2e8d0a1614"},
-    {file = "retworkx-0.11.0-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:4f3a2d157a8f7b2331339eca644742db2476c8c5af7846c3f22d994efcc505c2"},
-    {file = "retworkx-0.11.0-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:a199e0374036503db8c98e45e2476896fbcaf7f620f4f81206e0ee1b19a436c5"},
-    {file = "retworkx-0.11.0-cp38-cp38-win32.whl", hash = "sha256:21f58c69fb68b2d9e1307a75dc239ccdca038a655127df5763e161b715e5ae71"},
-    {file = "retworkx-0.11.0-cp38-cp38-win_amd64.whl", hash = "sha256:b08484348add5eff6ddf48dc4c21aa6c085c4520287fbc11bbfdf6c44c33b387"},
-    {file = "retworkx-0.11.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:c731cf468cdc9158505687124427b3f9ddc4a72ad7dfaefbe4e80bd126c792c7"},
-    {file = "retworkx-0.11.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:03d3967cc9c25c6fbee88aae99f867b1f51acedfcce7925df353f1a3ee8059f8"},
-    {file = "retworkx-0.11.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:8842fcbfecde45a4562aaa5ca61f7e4d3d60a84ffd63de3af8d1b436f7bc277d"},
-    {file = "retworkx-0.11.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:05bb8c3371557e4761d974dbac9cdb3aa7435d989ebae16f12e4292db681c2cd"},
-    {file = "retworkx-0.11.0-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:5c9ed7c1bd7dbfbdce1a309501a5863716c2bc4f937647cba80d2c22248eabdb"},
-    {file = "retworkx-0.11.0-cp39-cp39-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:e8fd11b17e1bc456fb5f5f4a79981c51d4059b408f166b8ae4abf0d2752e64d3"},
-    {file = "retworkx-0.11.0-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:d11fd9254bd9865a346717acb8e7c61766eb544617377939e990d09402970314"},
-    {file = "retworkx-0.11.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:9be63746d964cf172b0f756f8727a2e5a12db6295a87891112497dd8152b44ff"},
-    {file = "retworkx-0.11.0-cp39-cp39-win32.whl", hash = "sha256:26b0574054bd0c83e6c7f50a60a5323bed876081f364a8ba20427fffb8d93a4f"},
-    {file = "retworkx-0.11.0-cp39-cp39-win_amd64.whl", hash = "sha256:97b0fd2c6cb29031b21e395b1c0ac5f43b4110fb78f1fa448c1c7079180c864a"},
-    {file = "retworkx-0.11.0.tar.gz", hash = "sha256:a4c2a5ad3f8402493d41ad20ad91a03777ea214a3636c290272bbfaf36161161"},
-]
 rsa = []
 scikit-learn = [
     {file = "scikit-learn-1.1.1.tar.gz", hash = "sha256:3e77b71e8e644f86c8b5be7f1c285ef597de4c384961389ee3e9ca36c445b256"},
@@ -3958,27 +3893,7 @@ scikit-learn = [
     {file = "scikit_learn-1.1.1-cp39-cp39-win32.whl", hash = "sha256:22145b60fef02e597a8e7f061ebc7c51739215f11ce7fcd2ca9af22c31aa9f86"},
     {file = "scikit_learn-1.1.1-cp39-cp39-win_amd64.whl", hash = "sha256:45c0f6ae523353f1d99b85469d746f9c497410adff5ba8b24423705b6956a86e"},
 ]
-scipy = [
-    {file = "scipy-1.6.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:a15a1f3fc0abff33e792d6049161b7795909b40b97c6cc2934ed54384017ab76"},
-    {file = "scipy-1.6.1-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:e79570979ccdc3d165456dd62041d9556fb9733b86b4b6d818af7a0afc15f092"},
-    {file = "scipy-1.6.1-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:a423533c55fec61456dedee7b6ee7dce0bb6bfa395424ea374d25afa262be261"},
-    {file = "scipy-1.6.1-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:33d6b7df40d197bdd3049d64e8e680227151673465e5d85723b3b8f6b15a6ced"},
-    {file = "scipy-1.6.1-cp37-cp37m-win32.whl", hash = "sha256:6725e3fbb47da428794f243864f2297462e9ee448297c93ed1dcbc44335feb78"},
-    {file = "scipy-1.6.1-cp37-cp37m-win_amd64.whl", hash = "sha256:5fa9c6530b1661f1370bcd332a1e62ca7881785cc0f80c0d559b636567fab63c"},
-    {file = "scipy-1.6.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:bd50daf727f7c195e26f27467c85ce653d41df4358a25b32434a50d8870fc519"},
-    {file = "scipy-1.6.1-cp38-cp38-manylinux1_i686.whl", hash = "sha256:f46dd15335e8a320b0fb4685f58b7471702234cba8bb3442b69a3e1dc329c345"},
-    {file = "scipy-1.6.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:0e5b0ccf63155d90da576edd2768b66fb276446c371b73841e3503be1d63fb5d"},
-    {file = "scipy-1.6.1-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:2481efbb3740977e3c831edfd0bd9867be26387cacf24eb5e366a6a374d3d00d"},
-    {file = "scipy-1.6.1-cp38-cp38-win32.whl", hash = "sha256:68cb4c424112cd4be886b4d979c5497fba190714085f46b8ae67a5e4416c32b4"},
-    {file = "scipy-1.6.1-cp38-cp38-win_amd64.whl", hash = "sha256:5f331eeed0297232d2e6eea51b54e8278ed8bb10b099f69c44e2558c090d06bf"},
-    {file = "scipy-1.6.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:0c8a51d33556bf70367452d4d601d1742c0e806cd0194785914daf19775f0e67"},
-    {file = "scipy-1.6.1-cp39-cp39-manylinux1_i686.whl", hash = "sha256:83bf7c16245c15bc58ee76c5418e46ea1811edcc2e2b03041b804e46084ab627"},
-    {file = "scipy-1.6.1-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:794e768cc5f779736593046c9714e0f3a5940bc6dcc1dba885ad64cbfb28e9f0"},
-    {file = "scipy-1.6.1-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:5da5471aed911fe7e52b86bf9ea32fb55ae93e2f0fac66c32e58897cfb02fa07"},
-    {file = "scipy-1.6.1-cp39-cp39-win32.whl", hash = "sha256:8e403a337749ed40af60e537cc4d4c03febddcc56cd26e774c9b1b600a70d3e4"},
-    {file = "scipy-1.6.1-cp39-cp39-win_amd64.whl", hash = "sha256:a5193a098ae9f29af283dcf0041f762601faf2e595c0db1da929875b7570353f"},
-    {file = "scipy-1.6.1.tar.gz", hash = "sha256:c4fceb864890b6168e79b0e714c585dbe2fd4222768ee90bc1aa0f8218691b11"},
-]
+scipy = []
 seaborn = [
     {file = "seaborn-0.11.2-py3-none-any.whl", hash = "sha256:85a6baa9b55f81a0623abddc4a26b334653ff4c6b18c418361de19dbba0ef283"},
     {file = "seaborn-0.11.2.tar.gz", hash = "sha256:cf45e9286d40826864be0e3c066f98536982baf701a7caa386511792d61ff4f6"},

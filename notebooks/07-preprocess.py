@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.13.8
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: 'Python 3.9.12 (''.venv'': poetry)'
 #     language: python
 #     name: python3
 # ---
@@ -20,14 +20,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import pyspark.sql.functions as F
 import yaml
-
-import pandas_profiling as pp
-
-import graphframes as gf
-from pyspark import SparkContext, SparkConf
-from pyspark.sql import SparkSession, Column
 
 import pdcast as pdc
 

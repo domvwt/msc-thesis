@@ -101,11 +101,11 @@ download_companies_house_data: ## download data from companies house
 .PHONY: download_all_data
 download_all_data: download_open_ownership_data download_companies_house_data ## download all raw data
 
-NEO4J = ~/.config/Neo4j\ Desktop/Application/relate-data/dbmss/dbms-787062ea-0f75-4dbb-8f4a-db646f3f88d4/bin/neo4j-admin
-
 .PHONY: neo4j_find_cli
 neo4j_find_cli: ## find neo4j cli paths
 	find / -name neo4j-admin 2> /dev/null | sort
+
+NEO4J = ~/.config/Neo4j\ Desktop/Application/relate-data/dbmss/dbms-787062ea-0f75-4dbb-8f4a-db646f3f88d4/bin/neo4j-admin
 
 .PHONY: neo4j_import
 neo4j_import: ## load data into neo4j (set neo4j cli variable first)
@@ -118,5 +118,5 @@ neo4j_import: ## load data into neo4j (set neo4j cli variable first)
 
 .PHONY: jupytext_sync
 jupytext_sync: ## sync jupytext
-	jupytext --sync notebooks/*.ipynb
-
+	jupytext --sync notebooks/*.ipynb >/dev/null
+	jupytext --set-formats ipynb,py:percent notebooks/*.ipynb >/dev/null

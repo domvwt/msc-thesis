@@ -28,7 +28,7 @@ RUN ${CONDA} config --add channels pytorch \
  && ${CONDA} config --set experimental_solver libmamba
 
 # Install pytorch geometric.
-RUN ${CONDA} install -n base pyg tensorboardx -y
+RUN ${CONDA} install -n base pyg==2.0.4 tensorboardx -y
 
 # Install graphgym.
 RUN git clone https://github.com/pyg-team/pytorch_geometric.git \
