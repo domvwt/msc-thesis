@@ -78,13 +78,13 @@ def filter_graph(
     connected_components_df: DataFrame,
     min_component_nodes: int,
     max_component_nodes: int,
-    min_proportion_persons: float,
+    min_ratio_persons: float,
 ) -> GraphFrame:
     large_components = get_components_with_size(
         connected_components_df, min_component_nodes, max_component_nodes
     )
     persons_components = get_components_with_persons(
-        connected_components_df, min_proportion_persons
+        connected_components_df, min_ratio_persons
     )
     target_component_ids = large_components.join(
         persons_components, ["component"], "inner"

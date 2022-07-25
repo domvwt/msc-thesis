@@ -50,7 +50,7 @@ def main() -> None:
     # Create graph.
     graph = gp.make_graph(resolved_nodes_df, resolved_edges_df)
 
-    # Filter for connected components with desired size and at least x% of nodes being persons.
+    # Filter for connected components with desired size and ratio of person nodes (0.1 = 1:10).
     graph_filtered = gp.filter_graph(
         graph, connected_components_df, 10, 1000, 0.1
     ).cache()

@@ -53,130 +53,73 @@ sc.setLogLevel("ERROR")
 spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
 
 # %%
-import src.dataprep as dp
+companies_nodes_df = spark.read.parquet(conf_dict["companies_nodes"])
+persons_nodes_df = spark.read.parquet(conf_dict["persons_nodes"])
+edges_df = spark.read.parquet(conf_dict["edges"])
 
 # %%
-conf_dict
+print(f"Companies count: {companies_nodes_df.count():,}")
+print(f"Persons count: {persons_nodes_df.count():,}")
+print(f"Edge count: {edges_df.count():,}")
 
 # %%
-persons_interim_df = spark.read.parquet(conf_dict["persons_interim"])
-companies_processed_df = spark.read.parquet(conf_dict["companies_processed"])
-relationships_processed_df = spark.read.parquet(conf_dict["relationships_processed"])
-persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
-nodes_filtered_df = spark.read.parquet("data/graph/component-nodes.parquet")
-edges_filtered_df = spark.read.parquet("data/graph/component-edges.parquet")
+select_cols = ["id", "component", "isCompany"]
+all_nodes = companies_nodes_df.select(select_cols).union(persons_nodes_df.select(select_cols))
 
 # %%
-dp.process_persons(persons_interim_df).show(5)
+all_nodes
 
 # %%
-print(f"Node count: {nodes_filtered_df.count():,}")
-print(f"Edge count: {edges_filtered_df.count():,}")
-
-# %%
-nodes_filtered_df.groupBy("isCompany").count().show()
-
-# %% [markdown]
-# ### Neo4j
-
-# %%
-import textwrap as tw
-from pyspark.sql import DataFrame
-
-
-def sanitise_string(column: str) -> Column:
-    """Replace single quotes with double for neo4j import compatibility."""
-    return F.regexp_replace(
-        F.regexp_replace(F.col(column), pattern='"', replacement="'"),
-        pattern="'",
-        replacement="''",
-    )
-
-
-def convert_to_csv(df: DataFrame, output_name: str) -> None:
-    csv_path = f"data/neo4j/{output_name}.csv"
-    parquet_csv_path = f"{csv_path}.parquet"
-    string_cols_sanitised = [
-        sanitise_string(col[0]).alias(col[0]) if col[1] == "string" else col[0]
-        for col in df.dtypes
-    ]
-    sanitised_df = df.select(*string_cols_sanitised)
-    sanitised_df.coalesce(1).write.csv(
-        parquet_csv_path, header=False, escape="", mode="overwrite"
-    )
-    csv_txt_path = next(Path.cwd().glob(f"{parquet_csv_path}/part-00000*.csv"))
-    Path(csv_txt_path).rename(csv_path)
-
-
-def make_neo4j_statement(df: DataFrame, name: str, entity_type: str) -> None:
-    acc = []
-
-    for col in df.columns:
-        acc.append(f"{col}: row.{col}")
-
-    statement = f"""\
-        :auto USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM "file:///{name}.csv" AS row
-        CREATE (:{entity_type.capitalize()} """
-    statement += "{" + ", ".join(acc) + "});"
-    statement = tw.dedent(statement)
-    print(statement)
-    print()
-
-
-# %%
-def join_graph_features_to_entities(
-    entity_df: DataFrame, nodes_df: DataFrame
-) -> DataFrame:
-    nodes_df = nodes_df.drop("isCompany").withColumnRenamed("id", "statementID")
-    return entity_df.join(nodes_df, on=["statementID"], how="inner")
-
-
-# %%
-nodes_filtered_df.filter(~F.col("isCompany")).show()
-
-# %%
-companies_filtered_df = join_graph_features_to_entities(
-    companies_processed_df, nodes_filtered_df
+component_summary = (
+    all_nodes.groupBy("component", "isCompany")
+    .count()
+    .groupBy("component")
+    .pivot("isCompany", ["true", "false"])
+    .agg(F.sum("count"))
+    .withColumnRenamed("true", "company_count")
+    .withColumnRenamed("false", "person_count")
+    .withColumn("person_proportion", F.col("person_count") / F.col("company_count"))
+    .fillna(0)
+    .orderBy("person_proportion", ascending=False)
 )
-persons_filtered_df = join_graph_features_to_entities(
-    persons_processed_df, nodes_filtered_df
-)
-
-# %% [markdown]
-# # TODO
-#
-# - Connect company information back to nodes df to make companies nodes df
-# - Connect person information back to nodes df to make persons nodes df
-#
+component_summary.show()
 
 # %%
-convert_to_csv(companies_filtered_df, "companies")
-convert_to_csv(persons_filtered_df, "persons")
-convert_to_csv(edges_filtered_df, "relationships")
+component_summary.orderBy("person_proportion").show()
 
 # %%
-make_neo4j_statement(companies_filtered_df, "companies", "company")
-make_neo4j_statement(persons_filtered_df, "persons", "person")
+components_summary_pd = component_summary.toPandas()
 
 # %%
-persons_filtered_df.printSchema()
+components_summary_pd.query("person_proportion > 0.1 & person_proportion < 1")["person_proportion"].plot.hist(bins=10, alpha=0.5)
 
 # %%
-edges_filtered_df.printSchema()
+components_summary_pd
 
-# %% [markdown]
-# ```cypher
-# :auto USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM "file:///relationships.csv" AS row
-# MATCH
-#   (a:Person),
-#   (b:Company)
-# WHERE a.statementID = row.interestedPartyStatementID AND b.statementID = row.subjectStatementID
-# CREATE (a)-[r:Ownership {minimumShare: row.minimumShare}]->(b);
-#
-# :auto USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM "file:///relationships.csv" AS row
-# MATCH
-#   (a:Company),
-#   (b:Company)
-# WHERE a.statementID = row.interestedPartyStatementID AND b.statementID = row.subjectStatementID
-# CREATE (a)-[r:Ownership {minimumShare: row.minimumShare}]->(b)
-# ```
+# %%
+components_summary_pd["person_count"].plot.hist(bins=50, alpha=0.5)
+
+# %%
+components_summary_pd.query("person_count > 0").tail()
+
+# %%
+companies_nodes_df.filter(F.col("component") == "8589942400").toPandas()
+
+# %%
+persons_nodes_df.filter(F.col("component") == "8589942400").toPandas()
+
+
+# %%
+companies_nodes_df.filter(F.col("component").isNull()).toPandas()
+
+# %%
+companies_nodes_df.columns
+
+# %%
+companies_nodes_df.filter(F.col("name").isNull()).toPandas()
+
+# %%
+
+# %%
+
+# %%

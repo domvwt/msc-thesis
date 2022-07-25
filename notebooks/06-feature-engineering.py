@@ -39,11 +39,15 @@ sc.setLogLevel("ERROR")
 spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
 
 # %%
-nodes_df = spark.read.parquet(conf_dict["nodes"])
+companies_df = spark.read.parquet(conf_dict["companies_nodes"])
+persons_df = spark.read.parquet(conf_dict["persons_nodes"])
 edges_df = spark.read.parquet(conf_dict["edges"])
 
 # %%
-nodes_df.printSchema()
+companies_df.columns
+
+# %%
+persons_df.columns
 
 # %%
 edges_df.printSchema()
