@@ -1,3 +1,4 @@
+from platform import node
 import pandas as pd
 import networkx as nx
 
@@ -27,15 +28,20 @@ def get_node_features(graph: nx.DiGraph) -> pd.DataFrame:
 
 
 # Get average neigbourhood properties of nodes in the graph.
-def get_average_neighbourhood_features(
-    graph: nx.DiGraph, node_features: pd.DataFrame
+def get_local_neighbourhood_features(
+    graph: nx.DiGraph, node_features: pd.DataFrame, radius: int = 1
 ) -> pd.DataFrame:
     neighbourhood_feature_dict = {}
 
     def node_neighbour_features(node_id: int):
-        node_neighbours = graph.neighbors(node_id)
+        if radius == 1:
+            node_neighbours = list(graph.neighbors(node_id))
+        else:
+            node_neighbours = nx.generators.ego_graph(graph, node_id, radius, undirected=True).nodes
         node_neighbour_features = node_features.loc[node_neighbours]
-        return node_neighbour_features.mean()
+        sum_features = node_neighbour_features.sum()
+        sum_features["num_neighbours"] = len(node_neighbours)
+        return sum_features
 
     neighbourhood_feature_dict = {
         node: node_neighbour_features(node) for node in graph.nodes()
