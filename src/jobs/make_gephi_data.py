@@ -18,10 +18,14 @@ def main() -> None:
     edges_df = spark.read.parquet(conf_dict["edges"])
 
     select_cols = ["id", "name", "component", "isCompany"]
-    nodes_union_df = companies_nodes_df.select(select_cols).union(persons_nodes_df.select(select_cols))
-    
+    nodes_union_df = companies_nodes_df.select(select_cols).union(
+        persons_nodes_df.select(select_cols)
+    )
+
     gephi_nodes_df = nodes_union_df.withColumnRenamed("name", "label")
-    gephi_edges_df = edges_df.withColumnRenamed("src", "source").withColumnRenamed("dst", "target")
+    gephi_edges_df = edges_df.withColumnRenamed("src", "source").withColumnRenamed(
+        "dst", "target"
+    )
 
     # Write gephi dataframes to csv.
     dp.write_csv(gephi_nodes_df, "data/gephi", "nodes.csv")

@@ -47,7 +47,6 @@ def convert_to_datetime(df, cols):
     return df
 
 
-
 # %%
 persons_df = convert_to_datetime(persons_df, ["birthDate"])
 
@@ -56,8 +55,8 @@ companies_df = convert_to_datetime(companies_df, ["foundingDate", "dissolutionDa
 
 # %%
 company_drop_cols = [
-    "dissolutionDate", # practically invariant
-    "CompanyCategory", # practically invariant
+    "dissolutionDate",  # practically invariant
+    "CompanyCategory",  # practically invariant
 ]
 
 # %%
@@ -90,10 +89,8 @@ from sklearn.compose import ColumnTransformer
 def identity(x):
     return x
 
-passthough_kwargs = dict(
-    func=identity,
-    feature_names_out="one-to-one"
-)
+
+passthough_kwargs = dict(func=identity, feature_names_out="one-to-one")
 
 # %%
 companies_ct = ColumnTransformer(
@@ -119,7 +116,11 @@ companies_ct = ColumnTransformer(
 # %%
 persons_ct = ColumnTransformer(
     [
-        ("one_hot_encoder", pre.OneHotEncoder(**persons_one_hot_encoder_kwargs), ["nationality"]),
+        (
+            "one_hot_encoder",
+            pre.OneHotEncoder(**persons_one_hot_encoder_kwargs),
+            ["nationality"],
+        ),
         ("standard_scaler", pre.StandardScaler(), ["birthDate"]),
         # pass through the id and component
         # ("passthrough", pre.FunctionTransformer(**passthough_kwargs), ["id", "component"]),
@@ -136,14 +137,18 @@ def remove_from_col_names(df, s):
 
 # %%
 persons_processed_df = persons_ct.fit_transform(persons_df)
-persons_processed_df = pd.DataFrame(persons_processed_df, columns=persons_ct.get_feature_names_out())
+persons_processed_df = pd.DataFrame(
+    persons_processed_df, columns=persons_ct.get_feature_names_out()
+)
 persons_processed_df = pdc.downcast(persons_processed_df, numpy_dtypes_only=True)
 persons_processed_df = persons_df[["id", "component"]].join(persons_processed_df)
 persons_processed_df.info()
 
 # %%
 companies_processed_df = companies_ct.fit_transform(companies_df)
-companies_processed_df = pd.DataFrame(companies_processed_df, columns=companies_ct.get_feature_names_out())
+companies_processed_df = pd.DataFrame(
+    companies_processed_df, columns=companies_ct.get_feature_names_out()
+)
 companies_processed_df = remove_from_col_names(companies_processed_df, "passthrough__")
 companies_processed_df = pdc.downcast(companies_processed_df, numpy_dtypes_only=True)
 companies_processed_df = companies_df[["id", "component"]].join(companies_processed_df)
@@ -151,7 +156,9 @@ companies_processed_df.info()
 
 # %%
 edges_processed_df = edges_df.drop(columns=["interestedPartyIsPerson"])
-edges_processed_df["minimumShare"] = pre.StandardScaler().fit_transform(edges_processed_df["minimumShare"].values.reshape(-1, 1))
+edges_processed_df["minimumShare"] = pre.StandardScaler().fit_transform(
+    edges_processed_df["minimumShare"].values.reshape(-1, 1)
+)
 
 # %%
 edges_processed_df

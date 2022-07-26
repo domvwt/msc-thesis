@@ -64,7 +64,9 @@ print(f"Edge count: {edges_df.count():,}")
 
 # %%
 select_cols = ["id", "component", "isCompany"]
-all_nodes = companies_nodes_df.select(select_cols).union(persons_nodes_df.select(select_cols))
+all_nodes = companies_nodes_df.select(select_cols).union(
+    persons_nodes_df.select(select_cols)
+)
 
 # %%
 all_nodes
@@ -91,7 +93,9 @@ component_summary.orderBy("person_proportion").show()
 components_summary_pd = component_summary.toPandas()
 
 # %%
-components_summary_pd.query("person_proportion > 0.1 & person_proportion < 1")["person_proportion"].plot.hist(bins=10, alpha=0.5)
+components_summary_pd.query("person_proportion > 0.1 & person_proportion < 1")[
+    "person_proportion"
+].plot.hist(bins=10, alpha=0.5)
 
 # %%
 components_summary_pd

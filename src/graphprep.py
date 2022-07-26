@@ -1,8 +1,27 @@
+from typing import Tuple
+
 import graphframes as gf
 import pyspark.sql.functions as F
 from graphframes import GraphFrame
 from pyspark.sql import DataFrame
-from typing import Tuple
+
+
+def make_graph_from_entities_and_relationships(
+    companies_processed_df: DataFrame,
+    persons_processed_df: DataFrame,
+    relationships_processed_df: DataFrame,
+) -> GraphFrame:
+    company_nodes_df = companies_processed_df.withColumnRenamed(
+        "statementID", "id"
+    ).select("id", F.lit(True).alias("isCompany"))
+    person_nodes_df = persons_processed_df.withColumnRenamed(
+        "statementID", "id"
+    ).select("id", F.lit(False).alias("isCompany"))
+    nodes_df = company_nodes_df.union(person_nodes_df)
+    edges_df = relationships_processed_df.withColumnRenamed(
+        "interestedPartyStatementID", "src"
+    ).withColumnRenamed("subjectStatementID", "dst")
+    return gf.GraphFrame(nodes_df, edges_df)
 
 
 def make_node_table(
@@ -39,7 +58,9 @@ def make_edge_table(
     )
 
 
-def make_graph(node_table: DataFrame, edge_table: DataFrame) -> GraphFrame:
+def make_graph_from_nodes_and_edges(
+    node_table: DataFrame, edge_table: DataFrame
+) -> GraphFrame:
     return GraphFrame(node_table, edge_table)
 
 

@@ -211,13 +211,12 @@ def process_addresses(companies_df: DataFrame, persons_df: DataFrame) -> DataFra
     )
     return entity_address_edge_df
 
+
 def write_csv(df: DataFrame, output_dir: str, output_filename: str) -> None:
     csv_path = Path(output_dir) / f"{output_filename}"
     parquet_csv_path = f"{csv_path}.parquet"
 
-    df.coalesce(1).write.csv(
-        parquet_csv_path, header=True, mode="overwrite"
-    )
+    df.coalesce(1).write.csv(parquet_csv_path, header=True, mode="overwrite")
     csv_txt_path = next(Path.cwd().glob(f"{parquet_csv_path}/part-00000*.csv"))
     Path(csv_txt_path).rename(csv_path)
     shutil.rmtree(parquet_csv_path)

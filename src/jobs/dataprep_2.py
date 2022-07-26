@@ -54,5 +54,6 @@ def main() -> None:
     # Stop session.
     spark.stop()
 
+
 if __name__ == "__main__":
     main()

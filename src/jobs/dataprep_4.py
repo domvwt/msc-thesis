@@ -37,10 +37,12 @@ def main() -> None:
     persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
 
     # Create graph and get connected components.
-    graph = gp.make_graph(
+    graph = gp.make_graph_from_entities_and_relationships(
         companies_processed_df, persons_processed_df, relationships_processed_df
     )
-    connected_components = graph.connectedComponents().select("id", "component", "isCompany").cache()
+    connected_components = (
+        graph.connectedComponents().select("id", "component", "isCompany").cache()
+    )
 
     # Write outputs.
     output_path_map = {
@@ -50,6 +52,7 @@ def main() -> None:
 
     # Stop session.
     spark.stop()
+
 
 if __name__ == "__main__":
     main()

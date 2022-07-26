@@ -1,6 +1,7 @@
 from platform import node
-import pandas as pd
+
 import networkx as nx
+import pandas as pd
 
 
 def make_graph(edges: pd.DataFrame) -> nx.DiGraph:
@@ -37,7 +38,9 @@ def get_local_neighbourhood_features(
         if radius == 1:
             node_neighbours = list(graph.neighbors(node_id))
         else:
-            node_neighbours = nx.generators.ego_graph(graph, node_id, radius, undirected=True).nodes
+            node_neighbours = nx.generators.ego_graph(
+                graph, node_id, radius, undirected=True
+            ).nodes
         node_neighbour_features = node_features.loc[node_neighbours]
         sum_features = node_neighbour_features.sum()
         sum_features["num_neighbours"] = len(node_neighbours)

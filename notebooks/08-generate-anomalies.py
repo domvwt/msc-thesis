@@ -98,8 +98,8 @@ def efficient_shuffle(a1):
         else:
             inner(a1, _i + 1)
         return a2
-    return inner(a1, 0)
 
+    return inner(a1, 0)
 
 
 # %%
@@ -109,8 +109,10 @@ rng = np.random.default_rng(42)
 
 shuffled_edges_df = anomalous_edges_df.copy()
 
+
 def all_shuffled(a1, a2):
     return np.all(a1 != a2)
+
 
 i = 0
 
@@ -150,7 +152,9 @@ component_assignment_df = pd.DataFrame(
     np.array([components, components % 10]).T, columns=["component", "component_mod"]
 ).sort_values(by="component")
 
-train_idx = component_assignment_df.query("component_mod >= 1 and component_mod <= 8").index
+train_idx = component_assignment_df.query(
+    "component_mod >= 1 and component_mod <= 8"
+).index
 valid_idx = component_assignment_df.query("component_mod >= 9").index
 test_idx = component_assignment_df.query("component_mod == 0").index
 
@@ -160,12 +164,20 @@ component_assignment_df.loc[test_idx, "split"] = "test"
 
 
 # %%
-component_assignment_df.groupby("split")["component"].count().sort_values(ascending=False)
+component_assignment_df.groupby("split")["component"].count().sort_values(
+    ascending=False
+)
 
 # %%
-train_components = component_assignment_df.query("split == 'train'")["component"].to_list()
-valid_components = component_assignment_df.query("split == 'valid'")["component"].to_list()
-test_components = component_assignment_df.query("split == 'test'")["component"].to_list()
+train_components = component_assignment_df.query("split == 'train'")[
+    "component"
+].to_list()
+valid_components = component_assignment_df.query("split == 'valid'")[
+    "component"
+].to_list()
+test_components = component_assignment_df.query("split == 'test'")[
+    "component"
+].to_list()
 
 # %%
 train_person_nodes = persons_df.query("component in @train_components")
