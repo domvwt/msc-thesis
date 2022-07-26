@@ -5,7 +5,7 @@ import yaml
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import Column, DataFrame, SparkSession
 
-import src.dataprep as dp
+import mscproject.dataprep as dp
 
 
 def main() -> None:

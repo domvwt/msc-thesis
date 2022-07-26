@@ -1,11 +1,16 @@
+"""
+- Resolve duplicated entities
+- Filter for connected components with desired size and ratio of person nodes (0.1 = 1:10).
+"""
+
 from pathlib import Path
 
 import yaml
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 
-from src import dataprep as dp
-from src import graphprep as gp
+from mscproject import dataprep as dp
+from mscproject import graphprep as gp
 
 
 def main() -> None:
@@ -68,9 +73,8 @@ def main() -> None:
         companies_nodes_df: conf_dict["companies_nodes"],
         persons_nodes_df: conf_dict["persons_nodes"],
         edges_filtered_df: conf_dict["edges"],
-        connected_components_df: conf_dict["connected_components"],
     }
-    dp.write_if_missing(output_path_map)
+    dp.write_if_missing_spark(output_path_map)
 
     # Stop session.
     spark.stop()

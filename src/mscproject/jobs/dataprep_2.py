@@ -1,9 +1,14 @@
+"""
+- Select relevant information from records
+- Flatten data structure
+"""
+
 from pathlib import Path
 
 import yaml
 from pyspark.sql import SparkSession
 
-import src.dataprep as dp
+import mscproject.dataprep as dp
 
 
 def main() -> None:
@@ -49,7 +54,7 @@ def main() -> None:
         processed_persons_df: conf_dict["persons_processed"],
         processed_addresses_df: conf_dict["addresses_processed"],
     }
-    dp.write_if_missing(output_path_map)
+    dp.write_if_missing_spark(output_path_map)
 
     # Stop session.
     spark.stop()

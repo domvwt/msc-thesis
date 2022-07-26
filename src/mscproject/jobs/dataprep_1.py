@@ -1,9 +1,13 @@
+"""
+- Extract and clean relevant records from raw data sources
+"""
+
 from pathlib import Path
 
 import yaml
 from pyspark.sql import SparkSession
 
-import src.dataprep as dp
+import mscproject.dataprep as dp
 
 
 def main() -> None:
@@ -30,7 +34,7 @@ def main() -> None:
         persons_df: conf_dict["persons_interim"],
         companies_house_df: conf_dict["companies_house_interim"],
     }
-    dp.write_if_missing(output_path_map)
+    dp.write_if_missing_spark(output_path_map)
 
     # Stop session.
     spark.stop()

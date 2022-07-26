@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pyspark.sql import SparkSession
 
-import src.dataprep as dp
+import mscproject.dataprep as dp
 
 
 def main():

@@ -1,11 +1,15 @@
+"""
+- Assign nodes to connected components
+"""
+
 from pathlib import Path
 
 import yaml
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 
-from src import dataprep as dp
-from src import graphprep as gp
+from mscproject import dataprep as dp
+from mscproject import graphprep as gp
 
 
 def main() -> None:
@@ -48,7 +52,7 @@ def main() -> None:
     output_path_map = {
         connected_components: conf_dict["connected_components"],
     }
-    dp.write_if_missing(output_path_map)
+    dp.write_if_missing_spark(output_path_map)
 
     # Stop session.
     spark.stop()

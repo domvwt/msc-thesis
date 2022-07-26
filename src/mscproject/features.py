@@ -1,5 +1,3 @@
-from platform import node
-
 import networkx as nx
 import pandas as pd
 
@@ -12,7 +10,7 @@ def make_graph(edges: pd.DataFrame) -> nx.DiGraph:
 
 
 # Get structural properties of nodes in the graph.
-def get_node_features(graph: nx.DiGraph) -> pd.DataFrame:
+def generate_node_features(graph: nx.DiGraph) -> pd.DataFrame:
     feature_dict = dict()
     feature_dict["indegree"] = graph.in_degree()
     feature_dict["outdegree"] = graph.out_degree()
@@ -47,7 +45,7 @@ def get_local_neighbourhood_features(
         return sum_features
 
     neighbourhood_feature_dict = {
-        node: node_neighbour_features(node) for node in graph.nodes()
+        node: node_neighbour_features(node) for node in graph.nodes()  # type: ignore
     }
 
     return (
