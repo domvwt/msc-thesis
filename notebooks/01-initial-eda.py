@@ -49,10 +49,10 @@ spark = (
 )
 
 # %%
-companies_processed_df = spark.read.parquet(conf_dict["companies_processed"])
-relationships_processed_df = spark.read.parquet(conf_dict["relationships_processed"])
-persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
-addresses_processed_df = spark.read.parquet(conf_dict["addresses_processed"])
+companies_processed_df = spark.read.parquet(conf_dict["companies_interim_02"])
+relationships_processed_df = spark.read.parquet(conf_dict["relationships_interim_02"])
+persons_processed_df = spark.read.parquet(conf_dict["persons_interim_02"])
+addresses_processed_df = spark.read.parquet(conf_dict["addresses_interim_02"])
 
 # %%
 all_dfs_dict = {

@@ -29,10 +29,10 @@ def main() -> None:
 
     # Write outputs.
     output_path_map = {
-        companies_df: conf_dict["companies_interim"],
-        relationships_df: conf_dict["relationships_interim"],
-        persons_df: conf_dict["persons_interim"],
-        companies_house_df: conf_dict["companies_house_interim"],
+        companies_df: conf_dict["companies_interim_01"],
+        relationships_df: conf_dict["relationships_interim_01"],
+        persons_df: conf_dict["persons_interim_01"],
+        companies_house_df: conf_dict["companies_house_interim_01"],
     }
     dp.write_if_missing_spark(output_path_map)
 

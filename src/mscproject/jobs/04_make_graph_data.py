@@ -35,11 +35,11 @@ def main() -> None:
     spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
 
     # Load processed data.
-    companies_processed_df = spark.read.parquet(conf_dict["companies_processed"])
+    companies_processed_df = spark.read.parquet(conf_dict["companies_interim_02"])
     relationships_processed_df = spark.read.parquet(
-        conf_dict["relationships_processed"]
+        conf_dict["relationships_interim_02"]
     )
-    persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
+    persons_processed_df = spark.read.parquet(conf_dict["persons_interim_02"])
 
     # Resolve duplicate nodes.
     connected_components_df = spark.read.parquet(conf_dict["connected_components"])

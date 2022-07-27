@@ -53,9 +53,9 @@ sc.setLogLevel("ERROR")
 spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
 
 # %%
-companies_processed_df = spark.read.parquet(conf_dict["companies_processed"])
-relationships_processed_df = spark.read.parquet(conf_dict["relationships_processed"])
-persons_processed_df = spark.read.parquet(conf_dict["persons_processed"])
+companies_processed_df = spark.read.parquet(conf_dict["companies_interim_02"])
+relationships_processed_df = spark.read.parquet(conf_dict["relationships_interim_02"])
+persons_processed_df = spark.read.parquet(conf_dict["persons_interim_02"])
 nodes_df = spark.read.parquet(conf_dict["nodes"])
 edges_df = spark.read.parquet(conf_dict["edges"])
 connected_components = spark.read.parquet(conf_dict["connected_components"])

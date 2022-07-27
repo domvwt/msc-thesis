@@ -2,18 +2,226 @@ import dataclasses as dc
 
 import numpy as np
 import pandas as pd
+from sklearn import pipeline
 import sklearn.preprocessing as pre
 import yaml
 
+import os
+from pathlib import Path
 
-@dc.dataclass
-class GraphData:
-    companies_nodes: pd.DataFrame
-    persons_nodes: pd.DataFrame
-    edges: pd.DataFrame
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import yaml
+
+import pdcast as pdc
+
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.compose import make_column_selector, make_column_transformer
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
-def split_dataset(companies_df, persons_df, edges_df):
+class ColumnSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, columns):
+        self.columns = columns
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return X[self.columns]
+
+    def get_feature_names_out(self, input_features=None):
+        return self.columns
+
+
+class DateConverter(BaseEstimator, TransformerMixin):
+    def __init__(self, date_cols):
+        self.date_cols = date_cols
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X = X.copy()
+        for col in self.date_cols:
+            X.loc[:, col] = pd.to_datetime(X[col])
+            X.loc[:, col] = X[col].astype(np.int64).to_numpy()
+        return X
+
+    def get_feature_names_out(self, input_features=None):
+        return input_features
+
+
+class Downcaster(BaseEstimator, TransformerMixin):
+    def __init__(self, numpy_dtypes_only: bool = True):
+        self.numpy_dtypes_only = numpy_dtypes_only
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return pdc.downcast(X, numpy_dtypes_only=self.numpy_dtypes_only)
+
+    def get_feature_names_out(self, input_features=None):
+        return input_features
+
+
+def build_pipeline(
+    keep_cols: list,
+    date_cols: list,
+    one_hot_encoder_kwargs: dict,
+    numpy_dtypes_only: bool = True,
+) -> Pipeline:
+    return make_pipeline(
+        ColumnSelector(keep_cols),
+        DateConverter(date_cols),
+        Downcaster(numpy_dtypes_only=numpy_dtypes_only),
+        make_column_transformer(
+            (
+                OneHotEncoder(**one_hot_encoder_kwargs),
+                make_column_selector(dtype_include=object),
+            ),
+            remainder="passthrough",
+
+        ),
+        StandardScaler(),
+    )
+
+
+def apply_pipeline(
+    df: pd.DataFrame, pipeline: Pipeline, meta_cols: list[str]
+) -> pd.DataFrame:
+    df_out = pd.DataFrame(
+        pipeline.transform(df), columns=pipeline.get_feature_names_out()
+    )
+    # Remove leading 'remainder__' from column names
+    df_out.columns = [
+        col.split("remainder__")[-1] for col in df_out.columns
+    ]
+    return df[meta_cols].join(df_out)
+
+
+def process_companies(train_df, valid_df, test_df):
+
+    feature_cols = [
+        # "id",
+        # "component",
+        # "isCompany",
+        # "name",
+        "foundingDate",
+        # "dissolutionDate",  # ! practically invariant
+        "countryCode",
+        # "companiesHouseID",
+        # "openCorporatesID",
+        # "openOwnershipRegisterID",
+        # "CompanyCategory",  # ! practically invariant
+        "CompanyStatus",
+        "Accounts_AccountCategory",
+        "SICCode_SicText_1",
+        "indegree",
+        "outdegree",
+        "closeness",
+        "clustering",
+        "pagerank",
+        "neighbourhood_indegree",
+        "neighbourhood_outdegree",
+        "neighbourhood_closeness",
+        "neighbourhood_clustering",
+        "neighbourhood_pagerank",
+        "neighbourhood_num_neighbours",
+        "is_anomalous",
+    ]
+
+    date_cols = ["foundingDate"]
+
+    one_hot_encoder_kwargs = dict(
+        drop="first",
+        sparse=False,
+        dtype=np.uint8,
+        handle_unknown="infrequent_if_exist",
+        min_frequency=1000,
+    )
+
+    meta_cols = ["id", "component"]
+    pipeline = build_pipeline(feature_cols, date_cols, one_hot_encoder_kwargs)
+
+    pipeline.fit(train_df)
+    train_df = apply_pipeline(train_df, pipeline, meta_cols)
+    valid_df = apply_pipeline(valid_df, pipeline, meta_cols)
+    test_df = apply_pipeline(test_df, pipeline, meta_cols)
+
+    return train_df, valid_df, test_df
+
+
+def process_persons(train_df, valid_df, test_df):
+
+    feature_cols = [
+        # "id",
+        # "component",
+        # "isCompany",
+        "birthDate",
+        # "name",
+        "nationality",
+        "indegree",
+        "outdegree",
+        "closeness",
+        "clustering",
+        "pagerank",
+        "neighbourhood_indegree",
+        "neighbourhood_outdegree",
+        "neighbourhood_closeness",
+        "neighbourhood_clustering",
+        "neighbourhood_pagerank",
+        "neighbourhood_num_neighbours",
+        "is_anomalous",
+    ]
+
+    date_cols = ["birthDate"]
+
+    one_hot_encoder_kwargs = dict(
+        drop="first",
+        sparse=False,
+        dtype=np.uint8,
+        handle_unknown="infrequent_if_exist",
+        min_frequency=50,
+    )
+
+    meta_cols = ["id", "component"]
+    pipeline = build_pipeline(feature_cols, date_cols, one_hot_encoder_kwargs)
+
+    pipeline.fit(train_df)
+    train_df = apply_pipeline(train_df, pipeline, meta_cols)
+    valid_df = apply_pipeline(valid_df, pipeline, meta_cols)
+    test_df = apply_pipeline(test_df, pipeline, meta_cols)
+
+    return train_df, valid_df, test_df
+
+
+def process_edges(train_df, valid_df, test_df):
+
+    keep_cols = [
+        # "component",
+        # "src",
+        # "dst",
+        # "interestedPartyIsPerson",
+        "minimumShare",
+        # "is_anomalous",
+    ]
+
+    meta_cols = ["src", "dst", "component"]
+    pipeline = build_pipeline(keep_cols, [], {})
+
+    pipeline.fit(train_df)
+    train_df = apply_pipeline(train_df, pipeline, meta_cols)
+    valid_df = apply_pipeline(valid_df, pipeline, meta_cols)
+    test_df = apply_pipeline(test_df, pipeline, meta_cols)
+
+    return train_df, valid_df, test_df
+
+
+def split_datasets(companies_df, persons_df, edges_df):
     components = persons_df.component.unique()
     component_assignment_df = pd.DataFrame(
         np.array([components, components % 10]).T,
@@ -53,61 +261,14 @@ def split_dataset(companies_df, persons_df, edges_df):
     valid_edges = edges_df.query("src in @valid_person_nodes.id")
     test_edges = edges_df.query("src in @test_person_nodes.id")
 
-    train_split = GraphData(
-        companies_nodes=train_company_nodes,
-        persons_nodes=train_person_nodes,
-        edges=train_edges,
+    return (
+        train_company_nodes,
+        train_person_nodes,
+        train_edges,
+        valid_company_nodes,
+        valid_person_nodes,
+        valid_edges,
+        test_company_nodes,
+        test_person_nodes,
+        test_edges,
     )
-
-    valid_split = GraphData(
-        companies_nodes=valid_company_nodes,
-        persons_nodes=valid_person_nodes,
-        edges=valid_edges,
-    )
-
-    test_split = GraphData(
-        companies_nodes=test_company_nodes,
-        persons_nodes=test_person_nodes,
-        edges=test_edges,
-    )
-
-    return train_split, valid_split, test_split
-
-
-def main():
-
-    # Read config.
-    conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
-
-    edges_path = conf_dict["persons_nodes"]
-    persons_path = conf_dict["companies_nodes"]
-    edges_path = conf_dict["edges"]
-    connected_components_path = conf_dict["connected_components"]
-
-    companies_encoders = {
-        # 'id',
-        # 'component',
-        # 'isCompany',
-        # 'name',
-        "foundingDate": None,
-        "dissolutionDate": None,
-        "countryCode": None,
-        # 'companiesHouseID',
-        # 'openCorporatesID',
-        # 'openOwnershipRegisterID',
-        "CompanyCategory": None,
-        "CompanyStatus": None,
-        "Accounts_AccountCategory": None,
-        "SICCode_SicText_1": None,
-    }
-
-    persons_encoders = {
-        # 'id',
-        # 'component',
-        # 'isCompany',
-        "birthDate": None,
-        # 'name',
-        "nationality": None,
-    }
-
-    edge_encoder = {"minimumShare": None}

@@ -1,30 +1,34 @@
 test_mode: false
 
-# Stage 1 - Filter raw data for GB companies and persons.
+# Stage 0 - Raw data inputs.
 ownership_data_raw: data/raw/open-ownership-data.jsonl
 companies_house_data_raw: data/raw/BasicCompanyDataAsOneFile-2022-05-01.csv
 
-companies_interim: data/interim/companies.parquet
-relationships_interim: data/interim/relationships.parquet
-persons_interim: data/interim/persons.parquet
-addresses_interim: data/interim/addresses.parquet
-companies_house_interim: data/interim/companies-info.parquet
+# Stage 1 - Filter raw data for GB companies and persons.
+companies_interim_01: data/interim-01/companies.parquet
+relationships_interim_01: data/interim-01/relationships.parquet
+persons_interim_01: data/interim-01/persons.parquet
+addresses_interim_01: data/interim-01/addresses.parquet
+companies_house_interim_01: data/interim-01/companies-info.parquet
 
 # Stage 2 - Select and create relevant columns.
-companies_processed: data/processed/companies.parquet
-relationships_processed: data/processed/relationships.parquet
-persons_processed: data/processed/persons.parquet
-addresses_processed: data/processed/addresses.parquet
+companies_interim_02: data/interim-02/companies.parquet
+relationships_interim_02: data/interim-02/relationships.parquet
+persons_interim_02: data/interim-02/persons.parquet
+addresses_interim_02: data/interim-02/addresses.parquet
 
-# Stage 3 - Create graph objects.
+# Stage 3 - Assign nodes to connected components.
+connected_components: data/graph/connected-components.parquet
+
+# Stage 4 - Create graph objects.
 companies_nodes: data/graph/companies-nodes.parquet
 persons_nodes: data/graph/persons-nodes.parquet
 edges: data/graph/edges.parquet
 
-# Stage 4 - Assign nodes to connected components.
-connected_components: data/graph/connected-components.parquet
-
 # Stage 5 - Simulate anomalous nodes / edges and generate graph features.
-companies_stage_05: data/stage-05/companies.parquet
-persons_stage_05: data/stage-05/persons.parquet
-edges_stage_05: data/stage-05/edges.parquet
+companies_features: data/features/companies.parquet
+persons_features: data/features/persons.parquet
+edges_features: data/features/edges.parquet
+
+# Stage 6 - Process features for model training
+preprocessed_features_path: data/features-preprocessed/

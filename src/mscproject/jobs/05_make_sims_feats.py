@@ -23,8 +23,9 @@ def main() -> None:
     persons_nodes_df = pd.read_parquet(conf_dict["persons_nodes"])
     edges_df = pd.read_parquet(conf_dict["edges"])
 
-    # sample 1000 records from each file if testing
+    # Sample 1000 records from each file if testing.
     if conf_dict["test_mode"]:
+        print("Sampling 1000 records...")
         companies_nodes_df = companies_nodes_df.sample(1000)
         persons_nodes_df = persons_nodes_df.sample(1000)
         edges_df = edges_df.sample(1000)
@@ -68,13 +69,13 @@ def main() -> None:
         on="id",
     )
 
-    # Write outputs.
-    print("Writing outputs...")
+    # Save features.
+    print("Saving features...")
     # ? Swapped dict for list of tuples as pd.DataFrame is unhashable.
     output_path_map = [
-        (companies_nodes_with_features_df02, conf_dict["companies_stage_05"]),
-        (persons_nodes_with_features_df02, conf_dict["persons_stage_05"]),
-        (edges_anomalised, conf_dict["edges_stage_05"]),
+        (companies_nodes_with_features_df02, conf_dict["companies_features"]),
+        (persons_nodes_with_features_df02, conf_dict["persons_features"]),
+        (edges_anomalised, conf_dict["edges_features"]),
     ]
     dp.write_if_missing_pandas(output_path_map)
     print("Done.")

@@ -19,11 +19,11 @@ def main() -> None:
     spark = SparkSession.builder.getOrCreate()
 
     # Load interim data.
-    companies_interim_df = spark.read.parquet(conf_dict["companies_interim"])
-    relationships_interim_df = spark.read.parquet(conf_dict["relationships_interim"])
-    persons_interim_df = spark.read.parquet(conf_dict["persons_interim"])
+    companies_interim_df = spark.read.parquet(conf_dict["companies_interim_01"])
+    relationships_interim_df = spark.read.parquet(conf_dict["relationships_interim_01"])
+    persons_interim_df = spark.read.parquet(conf_dict["persons_interim_01"])
     companies_house_interim_df = spark.read.parquet(
-        conf_dict["companies_house_interim"]
+        conf_dict["companies_house_interim_01"]
     )
 
     # Process interim data.
@@ -49,10 +49,10 @@ def main() -> None:
 
     # Write outputs.
     output_path_map = {
-        processed_companies_df: conf_dict["companies_processed"],
-        processed_relationships_df: conf_dict["relationships_processed"],
-        processed_persons_df: conf_dict["persons_processed"],
-        processed_addresses_df: conf_dict["addresses_processed"],
+        processed_companies_df: conf_dict["companies_interim_02"],
+        processed_relationships_df: conf_dict["relationships_interim_02"],
+        processed_persons_df: conf_dict["persons_interim_02"],
+        processed_addresses_df: conf_dict["addresses_interim_02"],
     }
     dp.write_if_missing_spark(output_path_map)
 
