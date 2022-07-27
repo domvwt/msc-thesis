@@ -1,21 +1,14 @@
 import dataclasses as dc
-
-import numpy as np
-import pandas as pd
-from sklearn import pipeline
-import sklearn.preprocessing as pre
-import yaml
-
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import yaml
-
 import pdcast as pdc
-
+import sklearn.preprocessing as pre
+import yaml
+from sklearn import pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import make_column_selector, make_column_transformer
 from sklearn.pipeline import Pipeline, make_pipeline
@@ -84,23 +77,20 @@ def build_pipeline(
                 make_column_selector(dtype_include=object),
             ),
             remainder="passthrough",
-
         ),
         StandardScaler(),
     )
 
 
-def apply_pipeline(
-    df: pd.DataFrame, pipeline: Pipeline, meta_cols: list[str]
-) -> pd.DataFrame:
+def apply_pipeline(df: pd.DataFrame, pipeline: Pipeline) -> pd.DataFrame:
     df_out = pd.DataFrame(
         pipeline.transform(df), columns=pipeline.get_feature_names_out()
     )
     # Remove leading 'remainder__' from column names
     df_out.columns = [
-        col.split("remainder__")[-1] for col in df_out.columns
+        col.split("remainder__")[-1] + "__processed" for col in df_out.columns
     ]
-    return df[meta_cols].join(df_out)
+    return df.join(df_out)
 
 
 def process_companies(train_df, valid_df, test_df):
@@ -131,7 +121,7 @@ def process_companies(train_df, valid_df, test_df):
         "neighbourhood_clustering",
         "neighbourhood_pagerank",
         "neighbourhood_num_neighbours",
-        "is_anomalous",
+        # "is_anomalous",
     ]
 
     date_cols = ["foundingDate"]
@@ -144,13 +134,12 @@ def process_companies(train_df, valid_df, test_df):
         min_frequency=1000,
     )
 
-    meta_cols = ["id", "component"]
     pipeline = build_pipeline(feature_cols, date_cols, one_hot_encoder_kwargs)
 
     pipeline.fit(train_df)
-    train_df = apply_pipeline(train_df, pipeline, meta_cols)
-    valid_df = apply_pipeline(valid_df, pipeline, meta_cols)
-    test_df = apply_pipeline(test_df, pipeline, meta_cols)
+    train_df = apply_pipeline(train_df, pipeline)
+    valid_df = apply_pipeline(valid_df, pipeline)
+    test_df = apply_pipeline(test_df, pipeline)
 
     return train_df, valid_df, test_df
 
@@ -175,7 +164,7 @@ def process_persons(train_df, valid_df, test_df):
         "neighbourhood_clustering",
         "neighbourhood_pagerank",
         "neighbourhood_num_neighbours",
-        "is_anomalous",
+        # "is_anomalous",
     ]
 
     date_cols = ["birthDate"]
@@ -188,13 +177,12 @@ def process_persons(train_df, valid_df, test_df):
         min_frequency=50,
     )
 
-    meta_cols = ["id", "component"]
     pipeline = build_pipeline(feature_cols, date_cols, one_hot_encoder_kwargs)
 
     pipeline.fit(train_df)
-    train_df = apply_pipeline(train_df, pipeline, meta_cols)
-    valid_df = apply_pipeline(valid_df, pipeline, meta_cols)
-    test_df = apply_pipeline(test_df, pipeline, meta_cols)
+    train_df = apply_pipeline(train_df, pipeline)
+    valid_df = apply_pipeline(valid_df, pipeline)
+    test_df = apply_pipeline(test_df, pipeline)
 
     return train_df, valid_df, test_df
 
@@ -210,13 +198,12 @@ def process_edges(train_df, valid_df, test_df):
         # "is_anomalous",
     ]
 
-    meta_cols = ["src", "dst", "component"]
     pipeline = build_pipeline(keep_cols, [], {})
 
     pipeline.fit(train_df)
-    train_df = apply_pipeline(train_df, pipeline, meta_cols)
-    valid_df = apply_pipeline(valid_df, pipeline, meta_cols)
-    test_df = apply_pipeline(test_df, pipeline, meta_cols)
+    train_df = apply_pipeline(train_df, pipeline)
+    valid_df = apply_pipeline(valid_df, pipeline)
+    test_df = apply_pipeline(test_df, pipeline)
 
     return train_df, valid_df, test_df
 
