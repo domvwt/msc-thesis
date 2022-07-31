@@ -120,7 +120,7 @@ def process_companies(train_df, valid_df, test_df):
         "neighbourhood_closeness",
         "neighbourhood_clustering",
         "neighbourhood_pagerank",
-        "neighbourhood_num_neighbours",
+        "neighbourhood_neighbour_count",
         # "is_anomalous",
     ]
 
@@ -163,7 +163,7 @@ def process_persons(train_df, valid_df, test_df):
         "neighbourhood_closeness",
         "neighbourhood_clustering",
         "neighbourhood_pagerank",
-        "neighbourhood_num_neighbours",
+        "neighbourhood_neighbour_count",
         # "is_anomalous",
     ]
 

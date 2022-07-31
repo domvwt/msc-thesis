@@ -41,6 +41,7 @@ mypy = "^0.950"
 types-PyYAML = "^6.0.7"
 pandas-profiling = "^3.2.0"
 graphframes-stubs = "^0.8.0"
+scalene = "^1.5.9"
 
 [tool.poetry.extras]
 geometric = [

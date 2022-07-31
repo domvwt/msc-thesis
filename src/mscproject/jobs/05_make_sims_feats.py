@@ -23,12 +23,12 @@ def main() -> None:
     persons_nodes_df = pd.read_parquet(conf_dict["persons_nodes"])
     edges_df = pd.read_parquet(conf_dict["edges"])
 
-    # Sample 1000 records from each file if testing.
-    if conf_dict["test_mode"]:
-        print("Sampling 1000 records...")
-        companies_nodes_df = companies_nodes_df.sample(1000)
-        persons_nodes_df = persons_nodes_df.sample(1000)
-        edges_df = edges_df.sample(1000)
+    # Sample records if sample size is specified.
+    if conf_dict["sample_size"] is not None:
+        print(f"Sampling {conf_dict['sample_size']} records...")
+        companies_nodes_df = companies_nodes_df.sample(conf_dict["sample_size"])
+        persons_nodes_df = persons_nodes_df.sample(conf_dict["sample_size"])
+        edges_df = edges_df.sample(conf_dict["sample_size"])
 
     # Simulate anomalous nodes and edges.
     print("Simulating anomalous nodes and edges...")
@@ -40,8 +40,14 @@ def main() -> None:
     print("Generating graph features...")
     graph_nx = feat.make_graph(edges_anomalised)
     node_features_df = feat.generate_node_features(graph_nx)
-    neighbourhood_features_df = feat.get_local_neighbourhood_features(
-        graph_nx, node_features_df
+    # neighbourhood_features_df = feat.get_local_neighbourhood_features_fast(
+    #     graph_nx, node_features_df, 2
+    # )
+    print("Generating connected component map...")
+    cc_map = feat.get_node_to_cc_map(graph_nx)
+    print("Generating local neighbourhood features...")
+    neighbourhood_features_df = feat.get_local_neighbourhood_features_parallel(
+        graph_nx, node_features_df, 2, cc_map
     )
 
     # Make index into id column.

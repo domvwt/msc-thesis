@@ -1,5 +1,9 @@
 import networkx as nx
+import numpy as np
 import pandas as pd
+import joblib as jl
+from tqdm import tqdm
+import functools as ft
 
 
 def make_graph(edges: pd.DataFrame) -> nx.DiGraph:
@@ -26,30 +30,107 @@ def generate_node_features(graph: nx.DiGraph) -> pd.DataFrame:
     return pd.concat(series_list, axis=1)
 
 
-# Get average neigbourhood properties of nodes in the graph.
+def get_node_to_cc_map(graph: nx.DiGraph) -> dict:
+    @ft.lru_cache(maxsize=None)
+    def get_subgraph(cc_nodes):
+        return graph.subgraph(cc_nodes)
+
+    return {
+        node_id: get_subgraph(frozenset(cc_nodes))
+        for cc_nodes in nx.weakly_connected_components(graph)
+        for node_id in cc_nodes
+    }
+
+
 def get_local_neighbourhood_features(
-    graph: nx.DiGraph, node_features: pd.DataFrame, radius: int = 1
+    graph: nx.DiGraph, node_features: pd.DataFrame, radius: int, cc_map: dict
 ) -> pd.DataFrame:
-    neighbourhood_feature_dict = {}
+
+    id_to_index_map = {node: i for i, node in enumerate(graph.nodes())}
+    node_features["neighbour_count"] = 1
+    node_features_np = node_features.to_numpy(dtype=np.float32)
+
+    def node_ids_to_indices(node_id_list: list) -> list:
+        return [id_to_index_map[node_id] for node_id in node_id_list]
 
     def node_neighbour_features(node_id: int):
         if radius == 1:
-            node_neighbours = list(graph.neighbors(node_id))
+            node_neighbours = node_ids_to_indices(graph.neighbors(node_id))
         else:
-            node_neighbours = nx.generators.ego_graph(
-                graph, node_id, radius, undirected=True
-            ).nodes
-        node_neighbour_features = node_features.loc[node_neighbours]
-        sum_features = node_neighbour_features.sum()
-        sum_features["num_neighbours"] = len(node_neighbours)
+            subgraph = cc_map[node_id]
+            node_neighbours = node_ids_to_indices(
+                nx.generators.ego_graph(
+                    subgraph, node_id, radius, undirected=True
+                ).nodes
+            )
+        node_neighbour_features = node_features_np[node_neighbours]
+        sum_features = node_neighbour_features.sum(axis=0)
         return sum_features
 
     neighbourhood_feature_dict = {
-        node: node_neighbour_features(node) for node in graph.nodes()  # type: ignore
+        node_id: node_neighbour_features(node_id) for node_id in graph.nodes
     }
 
+    columns = [f"neighbourhood_{col}" for col in node_features.columns]
     return (
         pd.DataFrame(neighbourhood_feature_dict)
-        .T.rename(columns=lambda x: f"neighbourhood_{x}")
+        .T.set_axis(columns, axis=1, inplace=False)
+        .fillna(0)
+    )
+
+
+def get_local_neighbourhood_features_parallel(
+    graph: nx.DiGraph, node_features: pd.DataFrame, radius: int, cc_map: dict
+) -> pd.DataFrame:
+
+    id_to_index_map = {node: i for i, node in enumerate(graph.nodes())}
+    node_features["neighbour_count"] = 1
+    node_features_np = node_features.to_numpy(dtype=np.float32)
+
+    def node_ids_to_indices(node_id_list: list) -> list:
+        return [id_to_index_map[node_id] for node_id in node_id_list]
+
+    def node_neighbour_features(node_id: int):
+        if radius == 1:
+            node_neighbours = node_ids_to_indices(graph.neighbors(node_id))
+        else:
+            subgraph = cc_map[node_id]
+            node_neighbours = node_ids_to_indices(
+                nx.generators.ego_graph(
+                    subgraph, node_id, radius, undirected=True
+                ).nodes
+            )
+        node_neighbour_features = node_features_np[node_neighbours]
+        sum_features = node_neighbour_features.sum(axis=0)
+        return sum_features
+
+    # Get node neighbourhood features for batch of nodes.
+    def node_neighbour_features_batch(node_id_list: list) -> dict:
+        return {node_id: node_neighbour_features(node_id) for node_id in node_id_list}
+
+    # Split nodes into eight evenly sized groups.
+    node_groups = [
+        list(graph.nodes())[i : i + len(graph.nodes()) // 8]
+        for i in range(0, len(graph.nodes()), len(graph.nodes()) // 8)
+    ]
+
+    # Compute features for each group in parallel.
+    neighbourhood_feature_dicts = [
+        jl.Parallel(n_jobs=8)(
+            jl.delayed(node_neighbour_features_batch)(node_group)
+            for node_group in node_groups
+        )
+    ]
+
+    # Concatenate all the feature dictionaries.
+    neighbourhood_feature_dict = {}
+    for d in neighbourhood_feature_dicts:
+        for e in d:
+            neighbourhood_feature_dict.update(e)
+
+    columns = [f"neighbourhood_{col}" for col in node_features.columns]
+    return (
+        pd.DataFrame(neighbourhood_feature_dict)
+        .T.set_axis(columns, axis=1, inplace=False)
         .fillna(0)
     )

@@ -31,4 +31,4 @@ edges_features: data/features/edges.parquet
 # Stage 6 - Process features for model training
 preprocessed_features_path: data/features-preprocessed/
 
-test_mode: false
+sample_size: null

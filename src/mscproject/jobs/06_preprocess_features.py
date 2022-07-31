@@ -22,13 +22,13 @@ def main() -> None:
     persons_features_df = pd.read_parquet(conf_dict["persons_features"])
     edges_features_df = pd.read_parquet(conf_dict["edges_features"])
 
-    # Sample 1000 records from each file if testing.
-    if conf_dict["test_mode"]:
-        print("Sampling 1000 records...")
-        companies_features_df = companies_features_df.sample(1000)
-        persons_features_df = persons_features_df.sample(1000)
-        edges_features_df = edges_features_df.sample(1000)
-
+    # Sample records if sample size is specified.
+    if conf_dict["sample_size"] is not None:
+        print(f"Sampling {conf_dict['sample_size']} records...")
+        companies_features_df = companies_features_df.sample(conf_dict["sample_size"])
+        persons_features_df = persons_features_df.sample(conf_dict["sample_size"])
+        edges_features_df = edges_features_df.sample(conf_dict["sample_size"])
+    
     # Split dataset into train, valid, and test.
     print("Splitting dataset into train, valid, and test...")
     (
