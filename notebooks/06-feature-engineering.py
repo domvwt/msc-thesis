@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.13.8
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: 'Python 3.9.12 (''.venv'': poetry)'
 #     language: python
 #     name: python3
 # ---
@@ -23,36 +23,46 @@ import matplotlib.pyplot as plt
 import pyspark.sql.functions as F
 import yaml
 
-import graphframes as gf
-from pyspark import SparkContext, SparkConf
-from pyspark.sql import SparkSession, Column
+import networkx as nx
 
 while not Path("data") in Path(".").iterdir():
     os.chdir("..")
 
+import mscproject.features as ft
+
 plt.style.use("seaborn-white")
 conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
 
-sc = SparkContext.getOrCreate()
-sc.setLogLevel("ERROR")
-
-spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
+# %%
+# %load_ext autoreload
+# %autoreload 2
 
 # %%
-companies_df = spark.read.parquet(conf_dict["companies_nodes"])
-persons_df = spark.read.parquet(conf_dict["persons_nodes"])
-edges_df = spark.read.parquet(conf_dict["edges"])
+companies_df = pd.read_parquet(conf_dict["companies_nodes"])
+persons_df = pd.read_parquet(conf_dict["persons_nodes"])
+edges_df = pd.read_parquet(conf_dict["edges"])
 
 # %%
-companies_df.columns
+graph = ft.make_graph(edges=edges_df)
 
 # %%
-persons_df.columns
+node_features = ft.generate_node_features(graph=graph)
 
 # %%
-edges_df.printSchema()
+node_features.describe()
 
 # %%
-print("node count:", nodes_df.count())
-print("edge count:", edges_df.count())
-print("component count:", nodes_df.select("component").distinct().count())
+list(nx.generators.ego_graph(graph, "2356236782051912119", 1, undirected=True).nodes)
+
+# %%
+list(nx.all_neighbors(graph, "2356236782051912119"))
+
+# %%
+neighbourhood_features = ft.get_local_neighbourhood_features(graph, node_features)
+
+# %%
+neighbourhood_features.sort_values(by="neighbourhood_closeness", ascending=False).head(
+    10
+)
+
+# %%

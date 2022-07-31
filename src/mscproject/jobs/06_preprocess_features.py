@@ -28,38 +28,36 @@ def main() -> None:
         companies_features_df = companies_features_df.sample(conf_dict["sample_size"])
         persons_features_df = persons_features_df.sample(conf_dict["sample_size"])
         edges_features_df = edges_features_df.sample(conf_dict["sample_size"])
-    
+
     # Split dataset into train, valid, and test.
-    print("Splitting dataset into train, valid, and test...")
+    print("Splitting dataset...")
     (
-        train_company_nodes,
-        train_person_nodes,
-        train_edges,
-        valid_company_nodes,
-        valid_person_nodes,
-        valid_edges,
-        test_company_nodes,
-        test_person_nodes,
-        test_edges,
-    ) = pre.split_datasets(
-        companies_features_df, persons_features_df, edges_features_df
+        train_companies_nodes,
+        valid_companies_nodes,
+        test_companies_nodes,
+    ) = pre.split_dataset(companies_features_df)
+    train_persons_nodes, valid_persons_nodes, test_persons_nodes = pre.split_dataset(
+        persons_features_df
     )
+    train_edges, valid_edges, test_edges = pre.split_dataset(edges_features_df)
 
     # Preprocess features for modelling.
     print("Preprocessing company features...")
     (
-        train_company_nodes_preprocessed,
-        valid_company_nodes_preprocessed,
-        test_company_nodes_preprocessed,
+        train_companies_nodes_preprocessed,
+        valid_companies_nodes_preprocessed,
+        test_companies_nodes_preprocessed,
     ) = pre.process_companies(
-        train_company_nodes, valid_company_nodes, test_company_nodes
+        train_companies_nodes, valid_companies_nodes, test_companies_nodes
     )
     print("Preprocessing person features...")
     (
-        train_person_nodes_preprocessed,
-        valid_person_nodes_preprocessed,
-        test_person_nodes_preprocessed,
-    ) = pre.process_persons(train_person_nodes, valid_person_nodes, test_person_nodes)
+        train_persons_nodes_preprocessed,
+        valid_persons_nodes_preprocessed,
+        test_persons_nodes_preprocessed,
+    ) = pre.process_persons(
+        train_persons_nodes, valid_persons_nodes, test_persons_nodes
+    )
     print("Preprocessing edge features...")
     (
         train_edges_preprocessed,
@@ -81,63 +79,40 @@ def main() -> None:
         filepath.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(filepath)
 
+    print("Saving preprocessed features...")
     preprocessed_features_path = Path(conf_dict["preprocessed_features_path"])
     preprocessed_features_path.mkdir(parents=True, exist_ok=True)
 
-    write_feature_output(
-        train_company_nodes_preprocessed,
-        "companies",
-        "train",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        valid_company_nodes_preprocessed,
-        "companies",
-        "valid",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        test_company_nodes_preprocessed,
-        "companies",
-        "test",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        train_person_nodes_preprocessed,
-        "persons",
-        "train",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        valid_person_nodes_preprocessed,
-        "persons",
-        "valid",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        test_person_nodes_preprocessed,
-        "persons",
-        "test",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        train_edges_preprocessed,
-        "edges",
-        "train",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        valid_edges_preprocessed,
-        "edges",
-        "valid",
-        preprocessed_features_path,
-    )
-    write_feature_output(
-        test_edges_preprocessed,
-        "edges",
-        "test",
-        preprocessed_features_path,
-    )
+    datasets = [
+        (
+            train_companies_nodes_preprocessed,
+            valid_companies_nodes_preprocessed,
+            test_companies_nodes_preprocessed,
+            "companies",
+        ),
+        (
+            train_persons_nodes_preprocessed,
+            valid_persons_nodes_preprocessed,
+            test_persons_nodes_preprocessed,
+            "persons",
+        ),
+        (
+            train_edges_preprocessed,
+            valid_edges_preprocessed,
+            test_edges_preprocessed,
+            "edges",
+        ),
+    ]
+    for (
+        train_df,
+        valid_df,
+        test_df,
+        name,
+    ) in datasets:
+        write_feature_output(train_df, name, "train", preprocessed_features_path)
+        write_feature_output(valid_df, name, "valid", preprocessed_features_path)
+        write_feature_output(test_df, name, "test", preprocessed_features_path)
+
     print("Done.")
 
 

@@ -24,6 +24,7 @@ persons_nodes: data/graph/persons-nodes.parquet
 edges: data/graph/edges.parquet
 
 # Stage 5 - Simulate anomalous nodes / edges and generate graph features.
+features_path: data/features/
 companies_features: data/features/companies.parquet
 persons_features: data/features/persons.parquet
 edges_features: data/features/edges.parquet

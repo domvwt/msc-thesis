@@ -1,9 +1,10 @@
+import functools as ft
+
+import joblib as jl
 import networkx as nx
 import numpy as np
 import pandas as pd
-import joblib as jl
 from tqdm import tqdm
-import functools as ft
 
 
 def make_graph(edges: pd.DataFrame) -> nx.DiGraph:
@@ -80,7 +81,11 @@ def get_local_neighbourhood_features(
 
 
 def get_local_neighbourhood_features_parallel(
-    graph: nx.DiGraph, node_features: pd.DataFrame, radius: int, cc_map: dict
+    graph: nx.DiGraph,
+    node_features: pd.DataFrame,
+    radius: int,
+    cc_map: dict,
+    n_jobs: int = 8,
 ) -> pd.DataFrame:
 
     id_to_index_map = {node: i for i, node in enumerate(graph.nodes())}
@@ -108,10 +113,10 @@ def get_local_neighbourhood_features_parallel(
     def node_neighbour_features_batch(node_id_list: list) -> dict:
         return {node_id: node_neighbour_features(node_id) for node_id in node_id_list}
 
-    # Split nodes into eight evenly sized groups.
+    # Split nodes into evenly sized groups.
     node_groups = [
-        list(graph.nodes())[i : i + len(graph.nodes()) // 8]
-        for i in range(0, len(graph.nodes()), len(graph.nodes()) // 8)
+        list(graph.nodes())[i : i + len(graph.nodes()) // n_jobs]
+        for i in range(0, len(graph.nodes()), len(graph.nodes()) // n_jobs)
     ]
 
     # Compute features for each group in parallel.

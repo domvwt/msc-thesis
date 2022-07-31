@@ -79,7 +79,6 @@ anomalous_edges_df = anomalous_edges_df.copy(deep=True)
 
 
 # %%
-
 # select array indexes where values are equal
 def indexes_not_shuffled(a1, a2):
     return np.argwhere(a1 == a2)

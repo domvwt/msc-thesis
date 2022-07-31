@@ -1,6 +1,7 @@
 import dataclasses as dc
 import os
 from pathlib import Path
+from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -208,54 +209,11 @@ def process_edges(train_df, valid_df, test_df):
     return train_df, valid_df, test_df
 
 
-def split_datasets(companies_df, persons_df, edges_df):
-    components = persons_df.component.unique()
-    component_assignment_df = pd.DataFrame(
-        np.array([components, components % 10]).T,
-        columns=["component", "component_mod"],
-    ).sort_values(by="component")
+def split_dataset(df) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    component_mod = (df.component % 10).to_numpy()
 
-    train_idx = component_assignment_df.query(
-        "component_mod >= 1 and component_mod <= 8"
-    ).index
-    valid_idx = component_assignment_df.query("component_mod >= 9").index
-    test_idx = component_assignment_df.query("component_mod == 0").index
+    train_df = df.loc[component_mod <= 6, :]
+    valid_df = df.loc[(7 <= component_mod) & (component_mod <= 8)]
+    test_df = df.loc[component_mod == 9]
 
-    component_assignment_df.loc[train_idx, "split"] = "train"
-    component_assignment_df.loc[valid_idx, "split"] = "valid"
-    component_assignment_df.loc[test_idx, "split"] = "test"
-
-    # Used in the following queries.
-    train_components = component_assignment_df.query("split == 'train'")[
-        "component"
-    ].to_list()
-    valid_components = component_assignment_df.query("split == 'valid'")[
-        "component"
-    ].to_list()
-    test_components = component_assignment_df.query("split == 'test'")[
-        "component"
-    ].to_list()
-
-    train_person_nodes = persons_df.query("component in @train_components")
-    valid_person_nodes = persons_df.query("component in @valid_components")
-    test_person_nodes = persons_df.query("component in @test_components")
-
-    train_company_nodes = companies_df.query("component in @train_components")
-    valid_company_nodes = companies_df.query("component in @valid_components")
-    test_company_nodes = companies_df.query("component in @test_components")
-
-    train_edges = edges_df.query("src in @train_person_nodes.id")
-    valid_edges = edges_df.query("src in @valid_person_nodes.id")
-    test_edges = edges_df.query("src in @test_person_nodes.id")
-
-    return (
-        train_company_nodes,
-        train_person_nodes,
-        train_edges,
-        valid_company_nodes,
-        valid_person_nodes,
-        valid_edges,
-        test_company_nodes,
-        test_person_nodes,
-        test_edges,
-    )
+    return train_df, valid_df, test_df
