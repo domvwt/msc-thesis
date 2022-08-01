@@ -51,8 +51,10 @@ def get_local_neighbourhood_features(
     node_features["neighbour_count"] = 1
     node_features_np = node_features.to_numpy(dtype=np.float32)
 
-    def node_ids_to_indices(node_id_list: list) -> list:
-        return [id_to_index_map[node_id] for node_id in node_id_list]
+    def node_ids_to_indices(node_id_list: list) -> np.ndarray:
+        return np.array(
+            [id_to_index_map[node_id] for node_id in node_id_list], dtype=np.int32
+        )
 
     def node_neighbour_features(node_id: int):
         if radius == 1:
@@ -64,9 +66,7 @@ def get_local_neighbourhood_features(
                     subgraph, node_id, radius, undirected=True
                 ).nodes
             )
-        node_neighbour_features = node_features_np[node_neighbours]
-        sum_features = node_neighbour_features.sum(axis=0)
-        return sum_features
+        return node_features_np[node_neighbours].sum(axis=0)
 
     neighbourhood_feature_dict = {
         node_id: node_neighbour_features(node_id) for node_id in graph.nodes
@@ -92,8 +92,10 @@ def get_local_neighbourhood_features_parallel(
     node_features["neighbour_count"] = 1
     node_features_np = node_features.to_numpy(dtype=np.float32)
 
-    def node_ids_to_indices(node_id_list: list) -> list:
-        return [id_to_index_map[node_id] for node_id in node_id_list]
+    def node_ids_to_indices(node_id_list: list) -> np.ndarray:
+        return np.array(
+            [id_to_index_map[node_id] for node_id in node_id_list], dtype=np.int32
+        )
 
     def node_neighbour_features(node_id: int):
         if radius == 1:
@@ -105,9 +107,7 @@ def get_local_neighbourhood_features_parallel(
                     subgraph, node_id, radius, undirected=True
                 ).nodes
             )
-        node_neighbour_features = node_features_np[node_neighbours]
-        sum_features = node_neighbour_features.sum(axis=0)
-        return sum_features
+        return node_features_np[node_neighbours].sum(axis=0)
 
     # Get node neighbourhood features for batch of nodes.
     def node_neighbour_features_batch(node_id_list: list) -> dict:
@@ -121,7 +121,7 @@ def get_local_neighbourhood_features_parallel(
 
     # Compute features for each group in parallel.
     neighbourhood_feature_dicts = [
-        jl.Parallel(n_jobs=8)(
+        jl.Parallel(n_jobs=n_jobs)(
             jl.delayed(node_neighbour_features_batch)(node_group)
             for node_group in node_groups
         )

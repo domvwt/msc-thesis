@@ -2150,7 +2150,7 @@ pyasn1 = ">=0.1.3"
 
 [[package]]
 name = "scalene"
-version = "1.5.9"
+version = "1.5.8"
 description = "Scalene: A high-resolution, low-overhead CPU, GPU, and memory profiler for Python"
 category = "dev"
 optional = false
@@ -2158,6 +2158,7 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 cloudpickle = ">=1.5.0"
+numpy = "*"
 pynvml = ">=11.0.0"
 rich = ">=9.2.0"
 
@@ -2842,7 +2843,7 @@ geometric = ["torch-scatter", "torch-sparse", "torch-cluster", "torch-spline-con
 [metadata]
 lock-version = "1.1"
 python-versions = "~=3.9,<3.11"
-content-hash = "8e6cff78c5ac5dbe5baa6275099478c883ce6fd01e22fdeee84758a0e175861b"
+content-hash = "bde31e397f09b0532c39a530c6d0f186488541d5d4fb13796d43671d23f152ec"
 
 [metadata.files]
 absl-py = []
