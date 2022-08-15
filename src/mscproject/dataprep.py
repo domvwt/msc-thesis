@@ -14,7 +14,9 @@ def write_if_missing_spark(outputs_map: dict[DataFrame, str]) -> None:
             dataframe.write.parquet(path)
 
 
-def write_output_path_map(outputs_map: Iterable[Tuple[pd.DataFrame, str]], overwrite: bool = False) -> None:
+def write_output_path_map(
+    outputs_map: Iterable[Tuple[pd.DataFrame, str]], overwrite: bool = False
+) -> None:
     for df, path in outputs_map:
         path_object = Path(path)
         if not Path(path).exists() or overwrite:

@@ -19,7 +19,9 @@ def main() -> None:
 
     # Load graph data.
     print("Loading graph data...")
-    companies_nodes_with_features_df02 = pd.read_parquet(conf_dict["companies_features"])
+    companies_nodes_with_features_df02 = pd.read_parquet(
+        conf_dict["companies_features"]
+    )
     persons_nodes_with_features_df02 = pd.read_parquet(conf_dict["persons_features"])
     edges_anomalised = pd.read_parquet(conf_dict["edges_features"])
 
@@ -27,12 +29,12 @@ def main() -> None:
     print("Updating component ids...")
     new_graph = feat.make_graph(edges_anomalised)
     node_id_to_cc_id_map = feat.get_node_id_to_cc_id_map(new_graph)
-    companies_nodes_with_features_df02["component"] = companies_nodes_with_features_df02["id"].map(
-        node_id_to_cc_id_map
-    )
-    persons_nodes_with_features_df02["component"] = persons_nodes_with_features_df02["id"].map(
-        node_id_to_cc_id_map
-    )
+    companies_nodes_with_features_df02[
+        "component"
+    ] = companies_nodes_with_features_df02["id"].map(node_id_to_cc_id_map)
+    persons_nodes_with_features_df02["component"] = persons_nodes_with_features_df02[
+        "id"
+    ].map(node_id_to_cc_id_map)
     edges_anomalised["component"] = edges_anomalised["src"].map(node_id_to_cc_id_map)
 
     # Save features.
