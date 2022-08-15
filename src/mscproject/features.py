@@ -31,7 +31,7 @@ def generate_node_features(graph: nx.DiGraph) -> pd.DataFrame:
     return pd.concat(series_list, axis=1)
 
 
-def get_node_to_cc_map(graph: nx.DiGraph) -> dict:
+def get_node_to_cc_graph_map(graph: nx.DiGraph) -> dict:
     @ft.lru_cache(maxsize=None)
     def get_subgraph(cc_nodes):
         return graph.subgraph(cc_nodes)
@@ -39,6 +39,14 @@ def get_node_to_cc_map(graph: nx.DiGraph) -> dict:
     return {
         node_id: get_subgraph(frozenset(cc_nodes))
         for cc_nodes in nx.weakly_connected_components(graph)
+        for node_id in cc_nodes
+    }
+
+
+def get_node_id_to_cc_id_map(graph: nx.DiGraph) -> dict:
+    return {
+        node_id: cc_id
+        for cc_id, cc_nodes in enumerate(nx.weakly_connected_components(graph))
         for node_id in cc_nodes
     }
 

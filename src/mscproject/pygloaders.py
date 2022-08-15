@@ -1,65 +1,53 @@
-"""Load graph data from parquet files into PyTorch Geometric format."""
+"""
+Load graph data from parquet files into PyTorch Geometric format.
 
-from pathlib import Path
-from typing import Dict, List, Tuple
+Based on the CSV loader example at https://pytorch-geometric.readthedocs.io/en/latest/notes/load_csv.html.
+"""
+
+from typing import Iterable
 
 import pandas as pd
 import torch
-import yaml
 from torch_geometric.data import HeteroData
-from torch_geometric.transforms import RandomLinkSplit, ToUndirected
+
+import pdcast as pdc
 
 
-def load_edge_parquet(
-    path,
-    src_index_col,
-    src_mapping,
-    dst_index_col,
-    dst_mapping,
-    encoders=None,
-    **kwargs
-):
-    df = pd.read_parquet(path, **kwargs)
-
-    src = [src_mapping[index] for index in df[src_index_col]]
-    dst = [dst_mapping[index] for index in df[dst_index_col]]
-    edge_index = torch.tensor([src, dst])
-
-    edge_attr = None
-    if encoders is not None:
-        edge_attrs = [encoder(df[col]) for col, encoder in encoders.items()]
-        edge_attr = torch.cat(edge_attrs, dim=-1)
-
-    return edge_index, edge_attr
-
-
-def load_node_parquet(path, index_col, mapping_start, encoders=None, **kwargs):
-    df = pd.read_parquet(path, **kwargs).set_index(index_col)
-    mapping = {index: i + mapping_start for i, index in enumerate(df.index.unique())}
+def node_df_to_pyg(df: pd.DataFrame, id_col, mapping_start, encoders=None, label_col=None, **kwargs):
+    mapping = {str(node_id): idx + mapping_start for idx, node_id in enumerate(df[id_col].unique())}
 
     x = None
     if encoders is not None:
         xs = [encoder(df[col]) for col, encoder in encoders.items()]
         x = torch.cat(xs, dim=-1)
 
-    return x, mapping
+    y = None
+    if label_col is not None:
+        y = torch.tensor(df[label_col])
+
+    return x, y, mapping
 
 
-class GenresEncoder(object):
-    # The 'GenreEncoder' splits the raw column strings by 'sep' and converts
-    # individual elements to categorical labels.
-    def __init__(self, sep="|"):
-        self.sep = sep
+def edge_df_to_pyg(
+    df: pd.DataFrame,
+    src_col,
+    dst_col,
+    id_idx_mapping,
+    encoders=None,
+    **kwargs
+):
+    src, dst = zip(*(
+        (id_idx_mapping[src_index], id_idx_mapping[dst_index])
+        for src_index, dst_index in zip(df[src_col], df[dst_col])
+    ))
 
-    def __call__(self, df):
-        genres = set(g for col in df.values for g in col.split(self.sep))
-        mapping = {genre: i for i, genre in enumerate(genres)}
+    edge_index = torch.tensor([src, dst])
+    edge_attr = None
+    if encoders is not None:
+        edge_attrs = [encoder(df[col]) for col, encoder in encoders.items()]
+        edge_attr = torch.cat(edge_attrs, dim=-1)
 
-        x = torch.zeros(len(df), len(mapping))
-        for i, col in enumerate(df.values):
-            for genre in col.split(self.sep):
-                x[i, mapping[genre]] = 1
-        return x
+    return edge_index, edge_attr
 
 
 class IdentityEncoder(object):
@@ -72,96 +60,76 @@ class IdentityEncoder(object):
         return torch.from_numpy(df.values).view(-1, 1).to(self.dtype)
 
 
-def main():
+def get_processed_feature_cols(df: pd.DataFrame) -> Iterable[str]:
+    """
+    Get the list of feature columns that have been processed.
+    """
+    return [col for col in df.columns if col.endswith("__processed")]
 
-    # Read config.
-    conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
 
-    edges_path = conf_dict["persons_nodes"]
-    persons_path = conf_dict["companies_nodes"]
-    edges_path = conf_dict["edges"]
-    connected_components_path = conf_dict["connected_components"]
+def make_identity_encoders(cols):
+    return {col: IdentityEncoder() for col in cols}
 
-    companies_encoders = {
-        # 'id',
-        # 'component',
-        # 'isCompany',
-        # 'name',
-        "foundingDate": None,
-        "dissolutionDate": None,
-        "countryCode": None,
-        # 'companiesHouseID',
-        # 'openCorporatesID',
-        # 'openOwnershipRegisterID',
-        "CompanyCategory": None,
-        "CompanyStatus": None,
-        "Accounts_AccountCategory": None,
-        "SICCode_SicText_1": None,
-    }
 
-    persons_encoders = {
-        # 'id',
-        # 'component',
-        # 'isCompany',
-        "birthDate": None,
-        # 'name',
-        "nationality": None,
-    }
+def load_data_to_pyg(companies_path, persons_path, edges_path):
+    companies_df = pd.read_parquet(companies_path)
+    persons_df = pd.read_parquet(persons_path)
+    edges_df = pd.read_parquet(edges_path)
 
-    edge_encoder = {"minimumShare": None}
+    all_edge_ids = pd.concat((edges_df["src"], (edges_df["dst"])), axis=0).unique()
+    missing_companies = companies_df.query("id not in @all_edge_ids")
+    missing_persons = persons_df.query("id not in @all_edge_ids")
+    if len(missing_companies) > 0 or len(missing_persons) > 0:
+        raise ValueError("Missing companies or persons")
 
-    companies_x, companies_mapping = load_node_parquet(
-        edges_path, index_col="id", mapping_start=0
+    # Downcast to numpy dtypes.
+    companies_df: pd.DataFrame = pdc.downcast(companies_df, numpy_dtypes_only=True)  # type: ignore
+    persons_df: pd.DataFrame = pdc.downcast(persons_df, numpy_dtypes_only=True)  # type: ignore
+    edges_df: pd.DataFrame = pdc.downcast(edges_df, numpy_dtypes_only=True)  # type: ignore
+
+    companies_features = get_processed_feature_cols(companies_df)
+    companies_encoders = make_identity_encoders(companies_features)
+    companies_x, companies_y, companies_mapping = node_df_to_pyg(
+        companies_df, "id", 0, encoders=companies_encoders
     )
-    persons_x, persons_mapping = load_node_parquet(
-        persons_path, index_col="id", mapping_start=len(companies_mapping)
+
+    persons_features = get_processed_feature_cols(persons_df)
+    persons_encoders = make_identity_encoders(persons_features)
+    persons_x, persons_y, persons_mapping = node_df_to_pyg(
+        persons_df, "id", len(companies_mapping), encoders=persons_encoders
     )
+
+    edges_features = get_processed_feature_cols(edges_df)
+    edges_encoders = make_identity_encoders(edges_features)
+    company_company_edges = edges_df.query("interestedPartyIsPerson == False")
+    person_company_edges = edges_df.query("interestedPartyIsPerson == True")
+
     combined_mapping = {**companies_mapping, **persons_mapping}
 
-    # raise Exception("Done!")
-
-    persons_x, persons_mapping = load_node_parquet(
-        persons_path,
-        index_col="movieId",
-        encoders={"title": SequenceEncoder(), "genres": GenresEncoder()},
+    company_company_edge_index, company_company_edge_attr = edge_df_to_pyg(
+        company_company_edges,
+        "src",
+        "dst",
+        combined_mapping,
+        encoders=edges_encoders,
     )
 
-    edge_index, edge_label = load_edge_parquet(
-        edges_path,
-        src_index_col="src",
-        src_mapping=combined_mapping,
-        dst_index_col="dst",
-        dst_mapping=combined_mapping,
-        encoders={"rating": IdentityEncoder(dtype=torch.long)},
+    person_company_edge_index, person_company_edge_attr = edge_df_to_pyg(
+        person_company_edges,
+        "src",
+        "dst",
+        combined_mapping,
+        encoders=edges_encoders,
     )
 
-    data = HeteroData()
-    data["user"].x = companies_x
-    data["movie"].x = persons_x
-    data["user", "rates", "movie"].edge_index = edge_index
-    data["user", "rates", "movie"].edge_label = edge_label
-    print(data)
+    pyg_data = HeteroData()
+    pyg_data["company"].x = companies_x  # type: ignore
+    pyg_data["company"].y = companies_y  # type: ignore
+    pyg_data["person"].x = persons_x  # type: ignore
+    pyg_data["person"].y = persons_y  # type: ignore
+    pyg_data["company", "owns", "company"].edge_index = company_company_edge_index  # type: ignore
+    pyg_data["company", "owns", "company"].edge_attr = company_company_edge_attr  # type: ignore
+    pyg_data["person", "owns", "company"].edge_index = person_company_edge_index  # type: ignore
+    pyg_data["person", "owns", "company"].edge_attr = person_company_edge_attr  # type: ignore
 
-    # We can now convert `data` into an appropriate format for training a
-    # graph-based machine learning model:
-
-    # 1. Add a reverse ('movie', 'rev_rates', 'user') relation for message passing.
-    data = ToUndirected()(data)
-    del data["movie", "rev_rates", "user"].edge_label  # Remove "reverse" label.
-
-    # 2. Perform a link-level split into training, validation, and test edges.
-    transform = RandomLinkSplit(
-        num_val=0.05,
-        num_test=0.1,
-        neg_sampling_ratio=0.0,
-        edge_types=[("user", "rates", "movie")],
-        rev_edge_types=[("movie", "rev_rates", "user")],
-    )
-    train_data, val_data, test_data = transform(data)
-    print(train_data)
-    print(val_data)
-    print(test_data)
-
-
-if __name__ == "__main__":
-    main()
+    return pyg_data

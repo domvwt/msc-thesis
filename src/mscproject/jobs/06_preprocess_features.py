@@ -77,7 +77,7 @@ def main() -> None:
             f"{preprocessed_features_path}/{train_valid_test}/{name}.parquet"
         )
         filepath.parent.mkdir(parents=True, exist_ok=True)
-        df.to_parquet(filepath)
+        df.to_parquet(filepath, index=False)
 
     print("Saving preprocessed features...")
     preprocessed_features_path = Path(conf_dict["preprocessed_features_path"])

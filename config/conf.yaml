@@ -24,12 +24,15 @@ persons_nodes: data/graph/persons-nodes.parquet
 edges: data/graph/edges.parquet
 
 # Stage 5 - Simulate anomalous nodes / edges and generate graph features.
-features_path: data/features/
-companies_features: data/features/companies.parquet
-persons_features: data/features/persons.parquet
-edges_features: data/features/edges.parquet
+features_path: data/graph-features/
+companies_features: data/graph-features/companies.parquet
+persons_features: data/graph-features/persons.parquet
+edges_features: data/graph-features/edges.parquet
 
-# Stage 6 - Process features for model training
-preprocessed_features_path: data/features-preprocessed/
+# Stage 6 - Process features for model training.
+preprocessed_features_path: data/graph-features-preprocessed/
+
+# Stage 7 - Convert data to Pytorch Geometric HeteroData format.
+pyg_data_path: data/pyg/
 
 sample_size: null

@@ -44,7 +44,7 @@ def main() -> None:
     #     graph_nx, node_features_df, 2
     # )
     print("Generating connected component map...")
-    cc_map = feat.get_node_to_cc_map(graph_nx)
+    cc_map = feat.get_node_to_cc_graph_map(graph_nx)
     print("Generating local neighbourhood features...")
     neighbourhood_features_df = feat.get_local_neighbourhood_features_parallel(
         graph_nx, node_features_df, 2, cc_map
@@ -75,6 +75,18 @@ def main() -> None:
         on="id",
     )
 
+    # Get new component ids.
+    print("Updating component ids...")
+    new_graph = feat.make_graph(edges_anomalised)
+    node_id_to_cc_id_map = feat.get_node_id_to_cc_id_map(new_graph)
+    companies_nodes_with_features_df02["component"] = companies_nodes_with_features_df02["id"].map(
+        node_id_to_cc_id_map
+    )
+    persons_nodes_with_features_df02["component"] = persons_nodes_with_features_df02["id"].map(
+        node_id_to_cc_id_map
+    )
+    edges_anomalised["component"] = edges_anomalised["src"].map(node_id_to_cc_id_map)
+
     # Save features.
     print("Saving features...")
     # ? Swapped dict for list of tuples as pd.DataFrame is unhashable.
@@ -83,7 +95,7 @@ def main() -> None:
         (persons_nodes_with_features_df02, conf_dict["persons_features"]),
         (edges_anomalised, conf_dict["edges_features"]),
     ]
-    dp.write_if_missing_pandas(output_path_map)
+    dp.write_output_path_map(output_path_map)
     print("Done.")
 
 

@@ -1,6 +1,7 @@
 import itertools as it
 import shutil
 from pathlib import Path
+from typing import Iterable, Tuple
 
 import pandas as pd
 import pyspark.sql.functions as F
@@ -13,10 +14,12 @@ def write_if_missing_spark(outputs_map: dict[DataFrame, str]) -> None:
             dataframe.write.parquet(path)
 
 
-def write_if_missing_pandas(outputs_map: list[tuple[pd.DataFrame, str]]) -> None:
-    for dataframe, path in outputs_map:
-        if not Path(path).exists():
-            dataframe.to_parquet(path, index=False)
+def write_output_path_map(outputs_map: Iterable[Tuple[pd.DataFrame, str]], overwrite: bool = False) -> None:
+    for df, path in outputs_map:
+        path_object = Path(path)
+        if not Path(path).exists() or overwrite:
+            path_object.parent.mkdir(parents=True, exist_ok=True)
+            df.to_parquet(path, index=False)
 
 
 def strip_chars_from_statement_id(

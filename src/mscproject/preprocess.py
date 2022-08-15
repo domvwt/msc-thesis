@@ -210,10 +210,15 @@ def process_edges(train_df, valid_df, test_df):
 
 
 def split_dataset(df) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    component_mod = (df.component % 10).to_numpy()
 
-    train_df = df.loc[component_mod <= 6, :]
-    valid_df = df.loc[(7 <= component_mod) & (component_mod <= 8)]
-    test_df = df.loc[component_mod == 9]
+    df = df.copy()
+    df["component_mod"] = df["component"] % 10
+    df["data_split"] = "train"
+    df.loc[df["component_mod"] >= 7, "data_split"] = "valid"
+    df.loc[df["component_mod"] == 9, "data_split"] = "test"
+
+    train_df = df[df["data_split"] == "train"]
+    valid_df = df[df["data_split"] == "valid"]
+    test_df = df[df["data_split"] == "test"]
 
     return train_df, valid_df, test_df
