@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+import pandas as pd
 import torch
 import yaml
 
@@ -12,26 +13,18 @@ def main():
 
     # Read config.
     conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
-    data_splits = ["train", "valid", "test"]
 
-    for data_split in data_splits:
-        data_split_input_dir = (
-            Path(conf_dict["preprocessed_features_path"]) / data_split
-        )
-        data_split_output_dir = Path(conf_dict["pyg_data_path"]) / data_split
-        print(f"Loading {data_split} data from {data_split_input_dir}")
-        data_list = pgl.load_data_to_pyg(
-            data_split_input_dir / "companies.parquet",
-            data_split_input_dir / "persons.parquet",
-            data_split_input_dir / "edges.parquet",
-        )
-        print(f"Saving {data_split} to {data_split_output_dir}")
-        data_split_output_dir.mkdir(parents=True, exist_ok=True)
-        # for component_id, data in data_list:
-        #     torch.save(data, data_split_output_dir / f"{component_id}.pt")
-        data, slices = InMemoryDataset.collate(data_list)
-        torch.save((data, slices), data_split_output_dir / "data.pt")
+    companies_df = pd.read_parquet(conf_dict["companies_preprocessed"])
+    persons_df = pd.read_parquet(conf_dict["persons_preprocessed"])
+    edges_df = pd.read_parquet(conf_dict["edges_preprocessed"])
 
+    print("Loading PyTorch Geometric data...")
+    pyg_data = pgl.graph_elements_to_heterodata(companies_df, persons_df, edges_df)
+
+    print("Saving PyTorch Geometric data...")
+    torch.save(pyg_data, conf_dict["pyg_data"])
+
+    print("Done.")
 
 if __name__ == "__main__":
     main()

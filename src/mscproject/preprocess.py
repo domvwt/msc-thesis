@@ -8,8 +8,6 @@ import numpy as np
 import pandas as pd
 import pdcast as pdc
 import sklearn.preprocessing as pre
-import yaml
-from sklearn import pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import make_column_selector, make_column_transformer
 from sklearn.pipeline import Pipeline, make_pipeline
@@ -94,7 +92,7 @@ def apply_pipeline(df: pd.DataFrame, pipeline: Pipeline) -> pd.DataFrame:
     return df.join(df_out)
 
 
-def process_companies(train_df, valid_df, test_df):
+def process_companies(companies_df):
 
     feature_cols = [
         # "id",
@@ -136,16 +134,11 @@ def process_companies(train_df, valid_df, test_df):
     )
 
     pipeline = build_pipeline(feature_cols, date_cols, one_hot_encoder_kwargs)
-
-    pipeline.fit(train_df)
-    train_df = apply_pipeline(train_df, pipeline)
-    valid_df = apply_pipeline(valid_df, pipeline)
-    test_df = apply_pipeline(test_df, pipeline)
-
-    return train_df, valid_df, test_df
+    pipeline.fit(companies_df)
+    return apply_pipeline(companies_df, pipeline)
 
 
-def process_persons(train_df, valid_df, test_df):
+def process_persons(persons_df):
 
     feature_cols = [
         # "id",
@@ -179,16 +172,11 @@ def process_persons(train_df, valid_df, test_df):
     )
 
     pipeline = build_pipeline(feature_cols, date_cols, one_hot_encoder_kwargs)
-
-    pipeline.fit(train_df)
-    train_df = apply_pipeline(train_df, pipeline)
-    valid_df = apply_pipeline(valid_df, pipeline)
-    test_df = apply_pipeline(test_df, pipeline)
-
-    return train_df, valid_df, test_df
+    pipeline.fit(persons_df)
+    return apply_pipeline(persons_df, pipeline)
 
 
-def process_edges(train_df, valid_df, test_df):
+def process_edges(edges_df):
 
     keep_cols = [
         # "component",
@@ -200,25 +188,5 @@ def process_edges(train_df, valid_df, test_df):
     ]
 
     pipeline = build_pipeline(keep_cols, [], {})
-
-    pipeline.fit(train_df)
-    train_df = apply_pipeline(train_df, pipeline)
-    valid_df = apply_pipeline(valid_df, pipeline)
-    test_df = apply_pipeline(test_df, pipeline)
-
-    return train_df, valid_df, test_df
-
-
-def split_dataset(df) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-
-    df = df.copy()
-    df["component_mod"] = df["component"] % 10
-    df["data_split"] = "train"
-    df.loc[df["component_mod"] >= 7, "data_split"] = "valid"
-    df.loc[df["component_mod"] == 9, "data_split"] = "test"
-
-    train_df = df[df["data_split"] == "train"]
-    valid_df = df[df["data_split"] == "valid"]
-    test_df = df[df["data_split"] == "test"]
-
-    return train_df, valid_df, test_df
+    pipeline.fit(edges_df)
+    return apply_pipeline(edges_df, pipeline)

@@ -30,9 +30,11 @@ persons_features: data/graph-features/persons.parquet
 edges_features: data/graph-features/edges.parquet
 
 # Stage 6 - Process features for model training.
-preprocessed_features_path: data/graph-features-preprocessed/
+companies_preprocessed: data/graph-features-preprocessed/companies.parquet
+persons_preprocessed: data/graph-features-preprocessed/persons.parquet
+edges_preprocessed: data/graph-features-preprocessed/edges.parquet
 
 # Stage 7 - Convert data to Pytorch Geometric HeteroData format.
-pyg_data_path: data/pyg/
+pyg_data: data/pyg/MyDataset/processed/data.pt
 
 sample_size: null

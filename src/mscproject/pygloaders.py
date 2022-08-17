@@ -76,12 +76,15 @@ def make_identity_encoders(cols):
     return {col: IdentityEncoder() for col in cols}
 
 
-def load_data_to_pyg(
-    companies_path, persons_path, edges_path
-) -> List[HeteroData]:
-    companies_df = pd.read_parquet(companies_path)
-    persons_df = pd.read_parquet(persons_path)
-    edges_df = pd.read_parquet(edges_path)
+def get_data_split_masks(df: pd.DataFrame):
+    component_mod = df["component"].to_numpy() % 10
+    train_mask = torch.tensor(component_mod < 8)
+    val_mask = torch.tensor(component_mod == 8)
+    test_mask = torch.tensor(component_mod == 9)
+    return train_mask, val_mask, test_mask
+
+
+def graph_elements_to_heterodata(companies_df: pd.DataFrame, persons_df: pd.DataFrame, edges_df: pd.DataFrame) -> HeteroData:
 
     all_edge_ids = pd.concat((edges_df["src"], (edges_df["dst"])), axis=0).unique()
     missing_companies = companies_df.query("id not in @all_edge_ids")
@@ -90,12 +93,9 @@ def load_data_to_pyg(
         raise ValueError("Missing companies or persons")
 
     # Downcast to numpy dtypes.
-    companies_df: pd.DataFrame = pdc.downcast(companies_df, numpy_dtypes_only=True)  # type: ignore
-    persons_df: pd.DataFrame = pdc.downcast(persons_df, numpy_dtypes_only=True)  # type: ignore
-    edges_df: pd.DataFrame = pdc.downcast(edges_df, numpy_dtypes_only=True)  # type: ignore
-
-    # Split into separate batches as PyG expects.
-    data_list = []
+    companies_df = pdc.downcast(companies_df, numpy_dtypes_only=True)  # type: ignore
+    persons_df = pdc.downcast(persons_df, numpy_dtypes_only=True)  # type: ignore
+    edges_df = pdc.downcast(edges_df, numpy_dtypes_only=True)  # type: ignore
 
     companies_features = get_processed_feature_cols(companies_df)
     persons_features = get_processed_feature_cols(persons_df)
@@ -105,66 +105,86 @@ def load_data_to_pyg(
     persons_encoders = make_identity_encoders(persons_features)
     edges_encoders = make_identity_encoders(edges_features)
 
-    for component_id in companies_df["component"].unique():
+    companies_x, companies_y, companies_mapping = node_df_to_pyg(
+        companies_df,
+        "id",
+        0,
+        encoders=companies_encoders,
+        label_col="is_anomalous",
+    )
 
-        component_id: int
+    persons_x, persons_y, persons_mapping = node_df_to_pyg(
+        persons_df,
+        "id",
+        len(companies_mapping),
+        encoders=persons_encoders,
+        label_col="is_anomalous",
+    )
 
-        component_companies_df = companies_df.query("component == @component_id")
-        component_persons_df = persons_df.query("component == @component_id")
-        component_edges_df = edges_df.query("component == @component_id")
+    company_company_edges = edges_df.query("interestedPartyIsPerson == False")
+    person_company_edges = edges_df.query("interestedPartyIsPerson == True")
 
-        companies_x, companies_y, companies_mapping = node_df_to_pyg(
-            component_companies_df,
-            "id",
-            0,
-            encoders=companies_encoders,
-            label_col="is_anomalous",
-        )
+    combined_mapping = {**companies_mapping, **persons_mapping}
 
-        persons_x, persons_y, persons_mapping = node_df_to_pyg(
-            component_persons_df,
-            "id",
-            len(companies_mapping),
-            encoders=persons_encoders,
-            label_col="is_anomalous",
-        )
+    company_company_edge_index, company_company_edge_attr = edge_df_to_pyg(
+        company_company_edges,
+        "src",
+        "dst",
+        combined_mapping,
+        encoders=edges_encoders,
+    )
 
-        company_company_edges = component_edges_df.query(
-            "interestedPartyIsPerson == False"
-        )
-        person_company_edges = component_edges_df.query(
-            "interestedPartyIsPerson == True"
-        )
+    person_company_edge_index, person_company_edge_attr = edge_df_to_pyg(
+        person_company_edges,
+        "src",
+        "dst",
+        combined_mapping,
+        encoders=edges_encoders,
+    )
 
-        combined_mapping = {**companies_mapping, **persons_mapping}
+    (
+        companies_train_mask,
+        companies_val_mask,
+        companies_test_mask,
+    ) = get_data_split_masks(companies_df)
+    persons_train_mask, persons_val_mask, persons_test_mask = get_data_split_masks(
+        persons_df
+    )
+    (
+        company_company_train_mask,
+        company_company_val_mask,
+        company_company_test_mask,
+    ) = get_data_split_masks(company_company_edges)
+    (
+        person_company_train_mask,
+        person_company_val_mask,
+        person_company_test_mask,
+    ) = get_data_split_masks(person_company_edges)
 
-        company_company_edge_index, company_company_edge_attr = edge_df_to_pyg(
-            company_company_edges,
-            "src",
-            "dst",
-            combined_mapping,
-            encoders=edges_encoders,
-        )
+    pyg_data = HeteroData()
 
-        person_company_edge_index, person_company_edge_attr = edge_df_to_pyg(
-            person_company_edges,
-            "src",
-            "dst",
-            combined_mapping,
-            encoders=edges_encoders,
-        )
+    pyg_data["company"].x = companies_x  # type: ignore
+    pyg_data["company"].y = companies_y  # type: ignore
+    pyg_data["company"].train_mask = companies_train_mask  # type: ignore
+    pyg_data["company"].val_mask = companies_val_mask  # type: ignore
+    pyg_data["company"].test_mask = companies_test_mask  # type: ignore
 
-        pyg_data = HeteroData()
-        pyg_data["company"].x = companies_x  # type: ignore
-        pyg_data["company"].y = companies_y  # type: ignore
-        pyg_data["person"].x = persons_x  # type: ignore
-        pyg_data["person"].y = persons_y  # type: ignore
-        pyg_data["company", "owns", "company"].edge_index = company_company_edge_index  # type: ignore
-        pyg_data["company", "owns", "company"].edge_attr = company_company_edge_attr  # type: ignore
-        pyg_data["person", "owns", "company"].edge_index = person_company_edge_index  # type: ignore
-        pyg_data["person", "owns", "company"].edge_attr = person_company_edge_attr  # type: ignore
+    pyg_data["person"].x = persons_x  # type: ignore
+    pyg_data["person"].y = persons_y  # type: ignore
+    pyg_data["person"].train_mask = persons_train_mask  # type: ignore
+    pyg_data["person"].val_mask = persons_val_mask  # type: ignore
+    pyg_data["person"].test_mask = persons_test_mask  # type: ignore
 
-        # data: Tuple[int, HeteroData] = (component_id, pyg_data)
-        data_list.append(pyg_data)
+    pyg_data["company", "owns", "company"].edge_index = company_company_edge_index  # type: ignore
+    pyg_data["company", "owns", "company"].edge_attr = company_company_edge_attr  # type: ignore
+    pyg_data["company", "owns", "company"].train_mask = company_company_train_mask  # type: ignore
+    pyg_data["company", "owns", "company"].val_mask = company_company_val_mask  # type: ignore
+    pyg_data["company", "owns", "company"].test_mask = company_company_test_mask  # type: ignore
 
-    return data_list
+    pyg_data["person", "owns", "company"].edge_index = person_company_edge_index  # type: ignore
+    pyg_data["person", "owns", "company"].edge_attr = person_company_edge_attr  # type: ignore
+    pyg_data["person", "owns", "company"].train_mask = person_company_train_mask  # type: ignore
+    pyg_data["person", "owns", "company"].val_mask = person_company_val_mask  # type: ignore
+    pyg_data["person", "owns", "company"].test_mask = person_company_test_mask  # type: ignore
+
+    return pyg_data
