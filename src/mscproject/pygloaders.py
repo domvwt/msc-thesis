@@ -78,7 +78,7 @@ def make_identity_encoders(cols):
 
 def load_data_to_pyg(
     companies_path, persons_path, edges_path
-) -> List[Tuple[int, HeteroData]]:
+) -> List[HeteroData]:
     companies_df = pd.read_parquet(companies_path)
     persons_df = pd.read_parquet(persons_path)
     edges_df = pd.read_parquet(edges_path)
@@ -164,7 +164,7 @@ def load_data_to_pyg(
         pyg_data["person", "owns", "company"].edge_index = person_company_edge_index  # type: ignore
         pyg_data["person", "owns", "company"].edge_attr = person_company_edge_attr  # type: ignore
 
-        data: Tuple[int, HeteroData] = (component_id, pyg_data)
-        data_list.append(data)
+        # data: Tuple[int, HeteroData] = (component_id, pyg_data)
+        data_list.append(pyg_data)
 
     return data_list

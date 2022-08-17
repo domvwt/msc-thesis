@@ -12,6 +12,8 @@ import mscproject.dataprep as dp
 import mscproject.preprocess as pre
 
 
+# TODO: THIS NEEDS TO BE DONE IN PYTORCH GEOMETRIC
+
 def main() -> None:
     # Read config.
     conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())

@@ -5,6 +5,7 @@ import torch
 import yaml
 
 import mscproject.pygloaders as pgl
+from torch_geometric.data.in_memory_dataset import InMemoryDataset
 
 
 def main():
@@ -26,8 +27,10 @@ def main():
         )
         print(f"Saving {data_split} to {data_split_output_dir}")
         data_split_output_dir.mkdir(parents=True, exist_ok=True)
-        for component_id, data in enumerate(data_list):
-            torch.save(data, data_split_output_dir / f"{component_id}.pt")
+        # for component_id, data in data_list:
+        #     torch.save(data, data_split_output_dir / f"{component_id}.pt")
+        data, slices = InMemoryDataset.collate(data_list)
+        torch.save((data, slices), data_split_output_dir / "data.pt")
 
 
 if __name__ == "__main__":
