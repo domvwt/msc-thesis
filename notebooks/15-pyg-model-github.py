@@ -57,17 +57,19 @@ class GNN(torch.nn.Module):
         # Sigmoid to get 0-1 values.
         return F.sigmoid(x)
 
+
 # %%
 
 model = GNN(hidden_channels=64, out_channels=1, num_layers=2)
 model = to_hetero(model, metadata=data.metadata(), aggr="sum")
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 data, model = data.to(device), model.to(device)
 
 with torch.no_grad():  # Initialize lazy modules.
     out = model(data.x_dict, data.edge_index_dict)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
+
 
 def train():
     model.train()
@@ -96,9 +98,9 @@ def test():
     pred = model(data.x_dict, data.edge_index_dict).argmax(dim=-1)
 
     accs = []
-    for split in ['train_mask', 'val_mask', 'test_mask']:
-        mask = data['author'][split]
-        acc = (pred[mask] == data['author'].y[mask]).sum() / mask.sum()
+    for split in ["train_mask", "val_mask", "test_mask"]:
+        mask = data["author"][split]
+        acc = (pred[mask] == data["author"].y[mask]).sum() / mask.sum()
         accs.append(float(acc))
     return accs
 
@@ -106,7 +108,9 @@ def test():
 for epoch in range(1, 101):
     loss = train()
     train_acc, val_acc, test_acc = test()
-    print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
-          f'Val: {val_acc:.4f}, Test: {test_acc:.4f}')
+    print(
+        f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, "
+        f"Val: {val_acc:.4f}, Test: {test_acc:.4f}"
+    )
 
 # %%

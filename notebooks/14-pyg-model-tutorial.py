@@ -28,14 +28,14 @@ from torch_geometric.nn import HeteroConv, Linear, SAGEConv
 
 
 # path = osp.join(osp.dirname(osp.realpath(__file__)), '../../data/DBLP')
-path = Path('../data/datasets/DBLP')
+path = Path("../data/datasets/DBLP")
 path.mkdir(parents=True, exist_ok=True)
 dataset = DBLP(str(path))
 data = dataset[0]
 print(data)
 
 # We initialize conference node features with a single feature.
-data['conference'].x = torch.ones(data['conference'].num_nodes, 1)
+data["conference"].x = torch.ones(data["conference"].num_nodes, 1)
 
 
 class HeteroGNN(torch.nn.Module):
@@ -44,10 +44,12 @@ class HeteroGNN(torch.nn.Module):
 
         self.convs = torch.nn.ModuleList()
         for _ in range(num_layers):
-            conv = HeteroConv({
-                edge_type: SAGEConv((-1, -1), hidden_channels)
-                for edge_type in metadata[1]
-            })
+            conv = HeteroConv(
+                {
+                    edge_type: SAGEConv((-1, -1), hidden_channels)
+                    for edge_type in metadata[1]
+                }
+            )
             self.convs.append(conv)
 
         self.lin = Linear(hidden_channels, out_channels)
@@ -56,12 +58,11 @@ class HeteroGNN(torch.nn.Module):
         for conv in self.convs:
             x_dict = conv(x_dict, edge_index_dict)
             x_dict = {key: F.leaky_relu(x) for key, x in x_dict.items()}
-        return self.lin(x_dict['author'])
+        return self.lin(x_dict["author"])
 
 
-model = HeteroGNN(data.metadata(), hidden_channels=64, out_channels=4,
-                  num_layers=2)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = HeteroGNN(data.metadata(), hidden_channels=64, out_channels=4, num_layers=2)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 data, model = data.to(device), model.to(device)
 
 with torch.no_grad():  # Initialize lazy modules.
@@ -74,8 +75,8 @@ def train():
     model.train()
     optimizer.zero_grad()
     out = model(data.x_dict, data.edge_index_dict)
-    mask = data['author'].train_mask
-    loss = F.cross_entropy(out[mask], data['author'].y[mask])
+    mask = data["author"].train_mask
+    loss = F.cross_entropy(out[mask], data["author"].y[mask])
     loss.backward()
     optimizer.step()
     return float(loss)
@@ -87,9 +88,9 @@ def test():
     pred = model(data.x_dict, data.edge_index_dict).argmax(dim=-1)
 
     accs = []
-    for split in ['train_mask', 'val_mask', 'test_mask']:
-        mask = data['author'][split]
-        acc = (pred[mask] == data['author'].y[mask]).sum() / mask.sum()
+    for split in ["train_mask", "val_mask", "test_mask"]:
+        mask = data["author"][split]
+        acc = (pred[mask] == data["author"].y[mask]).sum() / mask.sum()
         accs.append(float(acc))
     return accs
 
@@ -97,7 +98,9 @@ def test():
 for epoch in range(1, 101):
     loss = train()
     train_acc, val_acc, test_acc = test()
-    print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
-          f'Val: {val_acc:.4f}, Test: {test_acc:.4f}')
+    print(
+        f"Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, "
+        f"Val: {val_acc:.4f}, Test: {test_acc:.4f}"
+    )
 
 # %%

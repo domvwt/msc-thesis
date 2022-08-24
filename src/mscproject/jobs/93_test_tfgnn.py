@@ -1,8 +1,6 @@
 import tensorflow as tf
 import tensorflow_gnn as tfgnn
-
 from tensorflow_gnn import runner
-
 
 graph_schema = tfgnn.read_schema("/tmp/graph_schema.pbtxt")
 gtspec = tfgnn.create_graph_spec_from_schema_pb(graph_schema)
@@ -29,7 +27,8 @@ trainer = runner.KerasTrainer(
     model_dir="...",
     steps_per_epoch=8191 // 128,  # global_batch_size == 128
     validation_per_epoch=2,
-    validation_steps=1634 // 128)  # global_batch_size == 128
+    validation_steps=1634 // 128,
+)  # global_batch_size == 128
 
 runner.run(
     train_ds_provider=train_ds_provider,
@@ -46,4 +45,5 @@ runner.run(
     global_batch_size=128,
     # Extract any labels before lossing them via `MapFeatures`!
     feature_processors=[extract_labels, map_features],
-    valid_ds_provider=valid_ds_provider)
+    valid_ds_provider=valid_ds_provider,
+)

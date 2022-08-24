@@ -4,13 +4,12 @@ Load graph data from parquet files into PyTorch Geometric format.
 Based on the CSV loader example at https://pytorch-geometric.readthedocs.io/en/latest/notes/load_csv.html.
 """
 
-from typing import Iterable, Tuple, List
+from typing import Iterable, List, Tuple
 
 import pandas as pd
+import pdcast as pdc
 import torch
 from torch_geometric.data import HeteroData
-
-import pdcast as pdc
 
 
 def node_df_to_pyg(
@@ -84,7 +83,9 @@ def get_data_split_masks(df: pd.DataFrame):
     return train_mask, val_mask, test_mask
 
 
-def graph_elements_to_heterodata(companies_df: pd.DataFrame, persons_df: pd.DataFrame, edges_df: pd.DataFrame) -> HeteroData:
+def graph_elements_to_heterodata(
+    companies_df: pd.DataFrame, persons_df: pd.DataFrame, edges_df: pd.DataFrame
+) -> HeteroData:
 
     all_edge_ids = pd.concat((edges_df["src"], (edges_df["dst"])), axis=0).unique()
     missing_companies = companies_df.query("id not in @all_edge_ids")

@@ -4,9 +4,9 @@ from typing import Dict, List, Tuple
 import pandas as pd
 import torch
 import yaml
+from torch_geometric.data.in_memory_dataset import InMemoryDataset
 
 import mscproject.pygloaders as pgl
-from torch_geometric.data.in_memory_dataset import InMemoryDataset
 
 
 def main():
@@ -33,6 +33,7 @@ def main():
     print(pyg_data)
 
     print("Done.")
+
 
 if __name__ == "__main__":
     main()
