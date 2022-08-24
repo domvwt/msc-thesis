@@ -116,11 +116,12 @@ def graph_elements_to_heterodata(companies_df: pd.DataFrame, persons_df: pd.Data
     persons_x, persons_y, persons_mapping = node_df_to_pyg(
         persons_df,
         "id",
-        len(companies_mapping),
+        0,
         encoders=persons_encoders,
         label_col="is_anomalous",
     )
 
+    edges_df["interestedPartyIsPerson"] = edges_df["src"].isin(persons_mapping)
     company_company_edges = edges_df.query("interestedPartyIsPerson == False")
     person_company_edges = edges_df.query("interestedPartyIsPerson == True")
 
@@ -186,5 +187,8 @@ def graph_elements_to_heterodata(companies_df: pd.DataFrame, persons_df: pd.Data
     pyg_data["person", "owns", "company"].train_mask = person_company_train_mask  # type: ignore
     pyg_data["person", "owns", "company"].val_mask = person_company_val_mask  # type: ignore
     pyg_data["person", "owns", "company"].test_mask = person_company_test_mask  # type: ignore
+
+    assert not pyg_data.has_self_loops(), "Data has self-loops"
+    pyg_data.add_self_loops = False
 
     return pyg_data
