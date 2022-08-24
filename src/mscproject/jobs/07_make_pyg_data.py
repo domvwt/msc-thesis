@@ -25,7 +25,9 @@ def main():
     pyg_data = pgl.graph_elements_to_heterodata(companies_df, persons_df, edges_df)
 
     print("Saving PyTorch Geometric data...")
-    torch.save(pyg_data, conf_dict["pyg_data"])
+    pyg_data_path = Path(conf_dict["pyg_data"])
+    pyg_data_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(pyg_data, pyg_data_path)
 
     print("Data schema:")
     print(pyg_data)
