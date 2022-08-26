@@ -131,7 +131,7 @@ def get_local_neighbourhood_features_parallel(
     neighbourhood_feature_dicts = [
         jl.Parallel(n_jobs=n_jobs)(
             jl.delayed(node_neighbour_features_batch)(node_group)
-            for node_group in node_groups
+            for node_group in tqdm(node_groups)
         )
     ]
 

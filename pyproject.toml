@@ -34,6 +34,7 @@ scipy = "^1.8.1"
 catboost = "^1.0.6"
 shap = "^0.41.0"
 tensorflow-gnn = "^0.2.1"
+torchmetrics = "^0.9.3"
 
 [tool.poetry.dev-dependencies]
 black = {extras = ["jupyter"], version = "^22.3.0"}

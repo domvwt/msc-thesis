@@ -1,6 +1,6 @@
 # Project specific
 catboost_info
-/data
+/data*
 /spark-checkpoints
 /.vscode
 

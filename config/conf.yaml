@@ -35,6 +35,6 @@ persons_preprocessed: data/graph-features-preprocessed/persons.parquet
 edges_preprocessed: data/graph-features-preprocessed/edges.parquet
 
 # Stage 7 - Convert data to Pytorch Geometric HeteroData format.
-pyg_data: data/pyg/processed/data.pt
+pyg_data: data/pyg/processed/components/
 
 sample_size: null

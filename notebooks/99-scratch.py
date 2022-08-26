@@ -20,6 +20,7 @@ from pathlib import Path
 import pandas as pd
 import networkx as nx
 import scipy.sparse as sp
+import torch
 import yaml
 
 while not Path("data") in Path(".").iterdir():
@@ -35,21 +36,29 @@ import mscproject.simulate as sim
 # %autoreload 2
 
 # %%
-conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
-
-# Load features
-for data_split in ["train", "valid", "test"]:
-    for feature_type in ["companies", "persons", "edges"]:
-        feature_path = (
-            Path(conf_dict["preprocessed_features_path"])
-            / data_split
-            / f"{feature_type}.parquet"
-        )
-        print(f"Loading {feature_path}")
-        df = pd.read_parquet(feature_path)
-        # print(df.head())
-        # print first 20 components
-        print(df["component"].unique()[:20])
-        print()
+data_dir = "data/pyg/processed/components"
 
 # %%
+data_files = [f for f in Path(data_dir).iterdir() if f.is_file()]
+
+# %%
+df01 = torch.load(data_files[0])
+
+# %%
+df01.edge_stores
+
+# %%
+data_dict = {}
+
+for i, df in enumerate(data_files):
+    df = torch.load(df)
+    data_dict.update({i: (df.num_nodes, df.num_edges)})
+
+# %%
+df = pd.DataFrame.from_dict(data_dict, orient="index")
+
+# %%
+df.describe()
+
+# %%
+df.sort_values(by=0, ascending=False)
