@@ -1,9 +1,7 @@
 from pathlib import Path
 
-import pyspark.sql.functions as F
 import yaml
-from pyspark import SparkConf, SparkContext
-from pyspark.sql import Column, DataFrame, SparkSession
+from pyspark.sql import SparkSession
 
 import mscproject.dataprep as dp
 

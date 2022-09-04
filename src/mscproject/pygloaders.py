@@ -65,11 +65,18 @@ class IdentityEncoder(object):
         return torch.from_numpy(df.values).view(-1, 1).to(self.dtype)
 
 
-def get_processed_feature_cols(df: pd.DataFrame) -> Iterable[str]:
+def get_in_scope_feature_cols(df: pd.DataFrame) -> Iterable[str]:
     """
     Get the list of feature columns that have been processed.
+    Drop any that are neighbourhood aggregates.
     """
-    return [col for col in df.columns if col.endswith("__processed")]
+
+    def in_scope(col_name: str):
+        return col_name.endswith("processed") and not col_name.startswith(
+            "neighbourhood"
+        )
+
+    return [col for col in df.columns if in_scope(col)]
 
 
 def make_identity_encoders(cols):
@@ -86,15 +93,19 @@ def get_data_split_masks(df: pd.DataFrame) -> Masks:
     test_mask = torch.tensor(component_mod == 9)
     return Masks(train_mask, val_mask, test_mask)
 
+
 def masks_unique(masks: Masks) -> bool:
     combined = masks.train.int() + masks.val.int() + masks.test.int()
     return combined.sum() == len(combined)
+
 
 def graph_elements_to_heterodata(
     companies_df: pd.DataFrame, persons_df: pd.DataFrame, edges_df: pd.DataFrame
 ) -> HeteroData:
 
-    all_edge_ids = pd.concat((edges_df["src"], (edges_df["dst"])), axis=0).unique()
+    all_edge_ids = pd.concat(  # noqa: F841
+        (edges_df["src"], (edges_df["dst"])), axis=0
+    ).unique()
     missing_companies = companies_df.query("id not in @all_edge_ids")
     missing_persons = persons_df.query("id not in @all_edge_ids")
     if len(missing_companies) > 0 or len(missing_persons) > 0:
@@ -105,9 +116,9 @@ def graph_elements_to_heterodata(
     persons_df = pdc.downcast(persons_df, numpy_dtypes_only=True)  # type: ignore
     edges_df = pdc.downcast(edges_df, numpy_dtypes_only=True)  # type: ignore
 
-    companies_features = get_processed_feature_cols(companies_df)
-    persons_features = get_processed_feature_cols(persons_df)
-    edges_features = get_processed_feature_cols(edges_df)
+    companies_features = get_in_scope_feature_cols(companies_df)
+    persons_features = get_in_scope_feature_cols(persons_df)
+    edges_features = get_in_scope_feature_cols(edges_df)
 
     companies_encoders = make_identity_encoders(companies_features)
     persons_encoders = make_identity_encoders(persons_features)
@@ -161,14 +172,16 @@ def graph_elements_to_heterodata(
     pyg_data["company"].x = companies_x  # type: ignore
     pyg_data["company"].y = companies_y  # type: ignore
     pyg_data["company"].train_mask = companies_masks.train  # type: ignore
-    pyg_data["company"].val_mask = companies_masks.val # type: ignore
+    pyg_data["company"].val_mask = companies_masks.val  # type: ignore
     pyg_data["company"].test_mask = companies_masks.test  # type: ignore
+    pyg_data["company"].feature_names = companies_features  # type: ignore
 
     pyg_data["person"].x = persons_x  # type: ignore
     pyg_data["person"].y = persons_y  # type: ignore
     pyg_data["person"].train_mask = persons_masks.train  # type: ignore
     pyg_data["person"].val_mask = persons_masks.val  # type: ignore
     pyg_data["person"].test_mask = persons_masks.test  # type: ignore
+    pyg_data["person"].feature_names = persons_features  # type: ignore
 
     pyg_data["company", "owns", "company"].edge_index = company_company_edge_index  # type: ignore
     pyg_data["company", "owns", "company"].edge_attr = company_company_edge_attr  # type: ignore

@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.13.8
 #   kernelspec:
-#     display_name: 'Python 3.9.12 (''.venv'': poetry)'
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -29,6 +29,8 @@ while not Path("data") in Path(".").iterdir():
 
 import mscproject.features as feats
 import mscproject.preprocess as pre
+import mscproject.pygloaders as pgl
+from mscproject.metrics import EvalMetrics
 import catboost as cb
 
 
@@ -41,31 +43,35 @@ features_path = conf_dict["features_path"]
 
 # %%
 # Load features for data split.
-def load_features(path_root, split):
-    features_dir = Path(path_root) / split if split else Path(path_root)
-    companies_df = pd.read_parquet(features_dir / "companies.parquet").dropna()
-    persons_df = pd.read_parquet(features_dir / "persons.parquet").dropna()
+def load_features(path_root):
+    companies_df = pd.read_parquet(conf_dict["companies_features"])
+    persons_df = pd.read_parquet(conf_dict["persons_features"])
     return companies_df, persons_df
 
 
 # %%
-companies_df, persons_df = load_features(features_path, None)
+companies_df, persons_df = load_features(features_path)
 
 # %%
-select_cols = list(set(companies_df.columns) & set(persons_df.columns))
-# processed_feature_cols = [x for x in select_cols if x.endswith("__processed")]
-# raw_feature_cols = [x.split("__processed")[0] for x in processed_feature_cols]
+common_cols = set(companies_df.columns) & set(persons_df.columns)
+drop_cols = ["id", "name", "component"]
+select_cols = sorted(common_cols.difference(drop_cols))
+
 target = "is_anomalous"
 
-entities_df = pd.concat([companies_train_df, persons_train_df], axis=0)[select_cols]
+entities_df = pd.concat([companies_df, persons_df], axis=0)[list(common_cols)]
 
-drop_cols = ["id", "name", "component"]
 
-train_df, test_df, valid_df = pre.split_dataset(entities_df)
+# %%
+masks = pgl.get_data_split_masks(entities_df)
 
-train_df = train_df.drop(drop_cols, axis=1)
-test_df = test_df.drop(drop_cols, axis=1)
-valid_df = valid_df.drop(drop_cols, axis=1)
+# %%
+train_df = entities_df.loc[list(masks.train.numpy())].drop(drop_cols, axis=1)
+valid_df = entities_df.loc[list(masks.val.numpy())].drop(drop_cols, axis=1)
+test_df = entities_df.loc[list(masks.test.numpy())].drop(drop_cols, axis=1)
+
+# %%
+train_df.query("isCompany == False and indegree > 0")
 
 # %%
 # Create train, test, and valid pools for CatBoost.
@@ -81,6 +87,7 @@ y_valid = valid_df[target]
 X_test = test_df.drop(target, axis=1)
 y_test = test_df[target]
 
+# %%
 train_pool = cb.Pool(
     X_train.to_numpy(),
     y_train.to_numpy(),
@@ -105,10 +112,10 @@ test_pool = cb.Pool(
 # %%
 # Create CatBoost model.
 clf = cb.CatBoostClassifier(
-    iterations=100,
-    learning_rate=0.1,
+    iterations=2001,
+    # learning_rate=0.1,
     depth=6,
-    eval_metric="Accuracy",
+    # eval_metric="Accuracy",
     random_seed=42,
 )
 
@@ -118,7 +125,7 @@ clf.fit(
     train_pool,
     eval_set=valid_pool,
     use_best_model=True,
-    verbose=50,
+    verbose=200,
 )
 
 # %%
@@ -128,9 +135,9 @@ print(pd.crosstab(y_test, y_pred, rownames=["Actual"], colnames=["Predicted"]))
 
 # %%
 # Evaluate model.
-_ = clf.eval_metrics(
-    test_pool, ["Logloss", "Accuracy", "Precision", "Recall", "AUC"], plot=True
-)
+y_test_pred = np.array([x[1] for x in clf.predict_proba(test_pool)])
+eval_metrics = EvalMetrics.from_numpy(y_test_pred, y_test.astype(int).to_numpy())
+print(eval_metrics)
 
 # %%
 # Get Shapley values.
@@ -147,6 +154,14 @@ shap.summary_plot(shap_values, X_test)
 shap.summary_plot(shap_values, X_test, plot_type="bar")
 
 # %%
-for i in range(1, X_test.shape[1]):
+for i in range(X_test.shape[1]):
     shap.dependence_plot(f"rank({i})", shap_values, X_test)
     plt.show()
+
+# %%
+
+# %%
+
+# %%
+
+# %%

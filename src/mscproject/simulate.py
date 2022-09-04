@@ -40,16 +40,18 @@ def simulate_anomalies(companies_df, persons_df, edges_df):
     companies_df["is_anomalous"] = False
     companies_df.loc[anomalous_companies_df.index, "is_anomalous"] = True
 
-    # Select edges for anomalous persons and companies.
+    # Select one edge per anomalous entity.
     anomalous_ids = set(anomalous_persons_df["id"]) | set(anomalous_companies_df["id"])
-    anomalous_edges_df = edges_df[edges_df["src"].isin(anomalous_ids)].copy(deep=True)
+    anomalous_edges_df = edges_df[edges_df["src"].isin(anomalous_ids)]
+    selected_anomalous_edges_df = anomalous_edges_df.groupby("src").sample(
+        n=1, random_state=42
+    )
 
     # Shuffle the selected edges to simulate anomalous relationships.
-    shuffled_edges_df = anomalous_edges_df.copy()
-
-    original_edges = shuffled_edges_df["src"].to_numpy()
-    shuffled_edges = efficient_shuffle(original_edges)
-    shuffled_edges_df["src"] = shuffled_edges
+    shuffled_edges_df = selected_anomalous_edges_df.copy()
+    input_edges = shuffled_edges_df["src"].to_numpy()
+    output_edges = efficient_shuffle(input_edges)
+    shuffled_edges_df["src"] = output_edges
 
     # Update the main edges dataframe.
     edges_anomalised_df = edges_df.copy(deep=True)

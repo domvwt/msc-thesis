@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.13.8
 #   kernelspec:
-#     display_name: 'Python 3.9.12 (''.venv'': poetry)'
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -17,6 +17,7 @@
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import networkx as nx
 import scipy.sparse as sp
@@ -36,29 +37,16 @@ import mscproject.simulate as sim
 # %autoreload 2
 
 # %%
-data_dir = "data/pyg/processed/components"
+rng = np.random.default_rng()
 
 # %%
-data_files = [f for f in Path(data_dir).iterdir() if f.is_file()]
+ints1 = rng.integers(4, size=100)
+ints2 = rng.integers(100, size=100)
 
 # %%
-df01 = torch.load(data_files[0])
+df = pd.DataFrame({"a": ints1, "b": ints2})
 
 # %%
-df01.edge_stores
+df.groupby("a").sample(n=1, random_state=42)
 
 # %%
-data_dict = {}
-
-for i, df in enumerate(data_files):
-    df = torch.load(df)
-    data_dict.update({i: (df.num_nodes, df.num_edges)})
-
-# %%
-df = pd.DataFrame.from_dict(data_dict, orient="index")
-
-# %%
-df.describe()
-
-# %%
-df.sort_values(by=0, ascending=False)

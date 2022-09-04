@@ -10,7 +10,6 @@ import yaml
 
 import mscproject.dataprep as dp
 import mscproject.features as feat
-import mscproject.simulate as sim
 
 
 def main() -> None:

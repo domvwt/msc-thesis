@@ -119,7 +119,9 @@ def get_local_neighbourhood_features_parallel(
 
     # Get node neighbourhood features for batch of nodes.
     def node_neighbour_features_batch(node_id_list: list) -> dict:
-        return {node_id: node_neighbour_features(node_id) for node_id in node_id_list}
+        return {
+            node_id: node_neighbour_features(node_id) for node_id in tqdm(node_id_list)
+        }
 
     # Split nodes into evenly sized groups.
     node_groups = [
@@ -131,7 +133,7 @@ def get_local_neighbourhood_features_parallel(
     neighbourhood_feature_dicts = [
         jl.Parallel(n_jobs=n_jobs)(
             jl.delayed(node_neighbour_features_batch)(node_group)
-            for node_group in tqdm(node_groups)
+            for node_group in node_groups
         )
     ]
 

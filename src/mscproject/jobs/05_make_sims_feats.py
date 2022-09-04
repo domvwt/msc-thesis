@@ -47,7 +47,7 @@ def main() -> None:
     cc_map = feat.get_node_to_cc_graph_map(graph_nx)
     print("Generating local neighbourhood features...")
     neighbourhood_features_df = feat.get_local_neighbourhood_features_parallel(
-        graph_nx, node_features_df, 2, cc_map
+        graph=graph_nx, node_features=node_features_df, radius=2, cc_map=cc_map
     )
 
     # Make index into id column.
