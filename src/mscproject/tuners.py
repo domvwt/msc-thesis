@@ -246,7 +246,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData):
     early_stopping = EarlyStopping(patience=10, verbose=False)
 
     # Train and evaluate the model.
-    max_epochs = 1
+    max_epochs = 200
     val_loss = np.inf
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
