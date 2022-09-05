@@ -1,9 +1,12 @@
 import functools as ft
 import math
+import time
 from typing import NamedTuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import optuna
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from torch_geometric.data import HeteroData
@@ -126,17 +129,51 @@ def test(model, dataset) -> EvalResult:
     return EvalResult(*eval_metrics_list)
 
 
-def optimise_model(trial: optuna.Trial, dataset: HeteroData, device: torch.device):
+def get_model_and_optimiser(
+    param_dict: dict, dataset: HeteroData, learning_rate: float
+):
+    model_type = param_dict.pop("model_type")
+    edge_aggregator = param_dict.pop("edge_aggr")
+    weight_decay = param_dict.pop("weight_decay")
+
+    hidden_channels = 2 ** param_dict.pop("hidden_channels_log2")
+    param_dict["hidden_channels"] = hidden_channels
+
+    # Instantiate the model.
+    if model_type.is_heterogeneous:
+        model = model_type(**param_dict, metadata=dataset.metadata())
+    else:
+        model = model_type(**param_dict)
+        model = to_hetero(model, metadata=dataset.metadata(), aggr=edge_aggregator)
+
+    # Initialise the model.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    # Initialise lazy modules.
+    with torch.no_grad():
+        _ = model(dataset.x_dict, dataset.edge_index_dict)
+
+    # Initialise the optimiser.
+    optimiser = torch.optim.Adam(
+        model.parameters(),
+        lr=learning_rate,
+        weight_decay=weight_decay,
+    )
+
+    return model, optimiser
+
+
+def optimise_model(trial: optuna.Trial, dataset: HeteroData):
+
+    # Set the hyperparameters of the model.
+    param_dict = {}
 
     # Select the model.
     model_type = mod.get_model(
-        trial.suggest_categorical("model", ["GCN", "GraphSAGE", "GAT"])
+        trial.suggest_categorical("model", ["GCN", "GraphSAGE", "GAT", "HAN", "HGT"])
     )
-
-    norm_choices = {"none": None, "BatchNorm": "BatchNorm"}
-    norm_choice = norm_choices.get(
-        str(trial.suggest_categorical("norm", ["none", "BatchNorm"])), None
-    )
+    param_dict["model_type"] = model_type
 
     jk_choices = {
         "none": None,
@@ -148,27 +185,34 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, device: torch.devic
         str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
     )
 
-    # Set the hyperparameters of the model.
-    param_dict = {}
-
     aggr_choices = ["sum", "mean", "min", "max"]
-    hidden_channels_min = 0
+    heads_choices = [1, 2, 4, 8, 16]
+    hidden_channels_min = 1
 
     if model_type.__name__ == "GCN":
         param_dict["aggr"] = trial.suggest_categorical("gcn_aggr", aggr_choices)
         param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
     elif model_type.__name__ == "GAT":
         param_dict["v2"] = True
-        param_dict["heads"] = trial.suggest_categorical("heads", [1, 2, 4, 8, 16])
+        param_dict["heads"] = trial.suggest_categorical("heads", heads_choices)
         param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
         if param_dict["concat"]:
             hidden_channels_min = int(math.log2(param_dict["heads"]))
+    elif model_type.__name__ == "HAN":
+        param_dict["heads"] = trial.suggest_categorical("heads", heads_choices)
+        param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
+        param_dict["dropout"] = trial.suggest_float("han_dropout", 0, 1)
+        hidden_channels_min = int(math.log2(param_dict["heads"]))
+    elif model_type.__name__ == "HGT":
+        param_dict["heads"] = trial.suggest_categorical("heads", heads_choices)
+        param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
+        hidden_channels_min = int(math.log2(param_dict["heads"]))
 
-    hidden_channels_pow = trial.suggest_int(
-        "hidden_channels_pow", hidden_channels_min, 7
+    hidden_channels_log2 = trial.suggest_int(
+        "hidden_channels_log2", hidden_channels_min, 8
     )
-    hidden_channels = 2**hidden_channels_pow
-
+    param_dict["hidden_channels_log2"] = hidden_channels_log2
+    hidden_channels = 2**hidden_channels_log2
     trial.set_user_attr("n_hidden", hidden_channels)
 
     param_dict.update(
@@ -177,49 +221,36 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, device: torch.devic
             hidden_channels=hidden_channels,
             num_layers=trial.suggest_int("n_layers", 1, 4),
             out_channels=1,
-            dropout=trial.suggest_float("dropout", 0, 0.5),
+            dropout=trial.suggest_float("dropout", 0, 1),
             act=trial.suggest_categorical("act", ["relu", "gelu"]),
             act_first=trial.suggest_categorical("act_first", [True, False]),
-            norm=norm_choice,
+            norm=None,
             jk=jk_choice,
             add_self_loops=False,
         )
     )
 
-    # Instantiate the model.
-    model = model_type(**param_dict)
-    model = to_hetero(
-        model,
-        metadata=dataset.metadata(),
-        aggr=str(trial.suggest_categorical("edge_aggr", aggr_choices)),
-    )
-
-    # Initialize the model.
-    model.to(device)
-
-    # Initialize lazy modules.
-    with torch.no_grad():  # Initialize lazy modules.
-        _ = model(dataset.x_dict, dataset.edge_index_dict)
+    param_dict["edge_aggr"] = trial.suggest_categorical("edge_aggr", aggr_choices)
+    param_dict["weight_decay"] = trial.suggest_float("weight_decay", 0.0, 0.1)
 
     # Set the learning rate.
-    trial.set_user_attr("learning_rate", 0.01)
+    learning_rate = 0.01
+    trial.set_user_attr("learning_rate", learning_rate)
 
-    # Initialize the optimizer.
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=trial.user_attrs["learning_rate"],
-        weight_decay=trial.suggest_float("weight_decay", 0, 0.1),
+    # Get the model and optimiser.
+    model, optimiser = get_model_and_optimiser(
+        param_dict, dataset, learning_rate=learning_rate
     )
 
-    # Initialize the early stopping callback.
+    # Initialise the early stopping callback.
     early_stopping = EarlyStopping(patience=10, verbose=False)
 
     # Train and evaluate the model.
-    max_epochs = 200
+    max_epochs = 1
     val_loss = np.inf
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
-        _ = train(model, dataset, optimizer)
+        _ = train(model, dataset, optimiser)
         eval_metrics = test(model, dataset)
         val_loss = eval_metrics.val.loss
         early_stopping(val_loss)
@@ -227,6 +258,8 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, device: torch.devic
     # Log the number of epochs.
     trial.set_user_attr("total_epochs", early_stopping.epoch)
     trial.set_user_attr("best_epoch", early_stopping.best_epoch)
+
+    print("total_epochs:", early_stopping.epoch)
 
     return early_stopping.best_loss
 
@@ -241,20 +274,33 @@ def main():
     dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
     dataset = dataset.data.to(device)
 
+    study_name = f"pyg_model_selection_{time.strftime('%Y%m%d_%H%M')}"
+
     # Optimize the model.
     study = optuna.create_study(
         direction="minimize",
-        study_name="pyg_model_selection",
+        study_name=study_name,
         storage="sqlite:///pyg_model_selection.db",
         load_if_exists=True,
     )
 
-    optimise_model_partial = ft.partial(optimise_model, dataset=dataset, device=device)
+    optimise_model_partial = ft.partial(optimise_model, dataset=dataset)
     study.optimize(optimise_model_partial, n_trials=200)
 
-    # Print the best model.
-    print(study.best_params)
-    print(study.best_value)
+    # Print top models.
+    print()
+    print("Top models")
+    drop_cols = ["datetime_start", "datetime_complete", "duration", "state"]
+    trials_df: pd.DataFrame = study.trials_dataframe()
+    trials_df = trials_df.sort_values("value").head(10)
+    trials_df = trials_df.drop(drop_cols, axis=1)
+    print(trials_df.T)
+
+    # Plot the results.
+    optuna.visualization.plot_optimization_history(study).show()
+    optuna.visualization.plot_contour(study).show()
+    optuna.visualization.plot_slice(study).show()
+    optuna.visualization.plot_param_importances(study).show()
 
 
 if __name__ == "__main__":
