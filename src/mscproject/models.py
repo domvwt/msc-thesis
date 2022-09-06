@@ -5,6 +5,8 @@ from typing import Any, Dict, List, TypeVar
 import torch
 import torch.nn.functional as F
 from torch import Tensor, sigmoid
+from torch.nn import ModuleDict
+from torch_geometric.nn import Linear
 from torch_geometric.nn import models as pygmodels
 from torch_geometric.nn.conv import (
     GraphConv,
@@ -14,7 +16,8 @@ from torch_geometric.nn.conv import (
     MessagePassing,
 )
 from torch_geometric.nn.models.basic_gnn import BasicGNN
-from torch_geometric.typing import Adj, OptTensor
+from torch_geometric.nn.models.jumping_knowledge import JumpingKnowledge
+from torch_geometric.typing import Adj, EdgeType, Metadata, NodeType, OptTensor
 
 
 class SigmoidMixin(BasicGNN):
@@ -65,6 +68,16 @@ class BasicHeteroGNN(BasicGNN):
 
     output_act = torch.sigmoid
 
+    def __init__(self, *args, metadata: Metadata, **kwargs):
+        super().__init__(*args, metadata=metadata, **kwargs)
+
+        # Replace homogeneous linear layer with heterogeneous.
+        if hasattr(self, "lin"):
+            del self.lin
+            self.lin = ModuleDict()
+            for node_type in metadata[0]:
+                self.lin[str(node_type)] = Linear(-1, self.out_channels)
+
     def forward(
         self,
         x_dict: dict,
@@ -74,10 +87,10 @@ class BasicHeteroGNN(BasicGNN):
         edge_attr: OptTensor = None,
     ) -> dict:
         """"""
-        xs: Dict[Any, List[Tensor]] = defaultdict(list)
-        for i in range(self.num_layers):
+        # ! NOTE - Jumping Knowledge only works in mode 'last' !
 
-            final_layer = i == self.num_layers - 1
+        xs: Dict[str, List[Tensor]] = defaultdict(list)
+        for i in range(self.num_layers):
 
             # Tracing the module is not allowed with *args and **kwargs :(
             # As such, we rely on a static solution to pass optional edge
@@ -108,27 +121,27 @@ class BasicHeteroGNN(BasicGNN):
                 for key, x in x_dict.items()
             }
             if hasattr(self, "jk"):
-                for key, x in x_dict.items():
-                    xs[key].append(x)
+                for node_type, x in x_dict.items():
+                    xs[str(node_type)].append(x)
 
         x_dict = (
             {key: self.jk(xs[key]) for key in x_dict.keys()}
             if hasattr(self, "jk")
             else x_dict
         )
-        x_dict = (
-            {key: self.lin(x) for key, x in x_dict.items()}
-            if hasattr(self, "lin")
-            else x_dict
-        )
-        x_dict = {key: self.output_act(x) for key, x in x_dict.items()}
+
+        if hasattr(self, "lin"):
+            for node_type, x in x_dict.items():
+                x_dict[node_type] = self.lin[str(node_type)](x)
 
         if any(len(x.shape) != 1 for x in x_dict.values()):
             x_dict = {key: x.mean(dim=1) for key, x in x_dict.items()}
 
         # Check final output is a single dimensional tensor
-        for key, x in x_dict.items():
-            assert len(x.shape) == 1, f"{key} is not a single dimensional tensor"
+        for node_type, x in x_dict.items():
+            assert len(x.shape) == 1, f"{node_type} is not a single dimensional tensor"
+
+        x_dict = {key: self.output_act(x) for key, x in x_dict.items()}
 
         return x_dict
 

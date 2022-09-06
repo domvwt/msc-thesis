@@ -175,11 +175,13 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData):
     )
     param_dict["model_type"] = model_type
 
+    # NOTE: Jumping Knowledge restricted to 'last' due to difficulty of implementation
+    #   for heterogeneous models. Other modes will *not* work.
     jk_choices = {
         "none": None,
         "last": "last",
-        "cat": "cat",
-        "max": "max",
+        # "cat": "cat",
+        # "max": "max",
     }
     jk_choice = jk_choices.get(
         str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
@@ -223,7 +225,9 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData):
             out_channels=1,
             dropout=trial.suggest_float("dropout", 0, 1),
             act=trial.suggest_categorical("act", ["relu", "gelu"]),
-            act_first=trial.suggest_categorical("act_first", [True, False]),
+            # NOTE: act_first only has an effect when normalisation is used.
+            act_first=True,
+            # NOTE: normalisation is not used as data is not batched.
             norm=None,
             jk=jk_choice,
             add_self_loops=False,
@@ -231,7 +235,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData):
     )
 
     param_dict["edge_aggr"] = trial.suggest_categorical("edge_aggr", aggr_choices)
-    param_dict["weight_decay"] = trial.suggest_float("weight_decay", 0.0, 0.1)
+    param_dict["weight_decay"] = trial.suggest_float("weight_decay", 0.0, 0.2)
 
     # Set the learning rate.
     learning_rate = 0.01
@@ -246,8 +250,10 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData):
     early_stopping = EarlyStopping(patience=10, verbose=False)
 
     # Train and evaluate the model.
-    max_epochs = 200
+    max_epochs = 300
     val_loss = np.inf
+
+    eval_metrics = None
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
@@ -259,7 +265,8 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData):
     trial.set_user_attr("total_epochs", early_stopping.epoch)
     trial.set_user_attr("best_epoch", early_stopping.best_epoch)
 
-    print("total_epochs:", early_stopping.epoch)
+    print("Total Epochs:", early_stopping.epoch)
+    print("Eval Metrics:", eval_metrics.val)
 
     return early_stopping.best_loss
 
@@ -274,13 +281,16 @@ def main():
     dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
     dataset = dataset.data.to(device)
 
-    study_name = f"pyg_model_selection_{time.strftime('%Y%m%d_%H%M')}"
+    study_name = f"pyg_model_selection_final"
+
+    # Delete study if it already exists.
+    optuna.delete_study(study_name, storage="sqlite:///optuna.db")
 
     # Optimize the model.
     study = optuna.create_study(
         direction="minimize",
         study_name=study_name,
-        storage="sqlite:///pyg_model_selection.db",
+        storage="sqlite:///optuna.db",
         load_if_exists=True,
     )
 
@@ -289,7 +299,7 @@ def main():
 
     # Print top models.
     print()
-    print("Top models")
+    print("Top Models:")
     drop_cols = ["datetime_start", "datetime_complete", "duration", "state"]
     trials_df: pd.DataFrame = study.trials_dataframe()
     trials_df = trials_df.sort_values("value").head(10)
