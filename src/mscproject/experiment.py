@@ -1,3 +1,4 @@
+import argparse
 import functools as ft
 import math
 import time
@@ -15,6 +16,19 @@ from torch_geometric.nn import to_hetero
 import mscproject.models as mod
 from mscproject.datasets import CompanyBeneficialOwners
 from mscproject.metrics import EvalMetrics
+
+
+# Create parser for command line arguments.
+def get_parser():
+    parser = argparse.ArgumentParser(description="Optimise MSC model.")
+    parser.add_argument(
+        "-m",
+        "--model-type-name",
+        type=str,
+        help="Model type to optimise. One of ['GCN', 'GraphSAGE', 'GAT', 'HAN', 'HGT'] or 'ALL'",
+        required=True,
+    )
+    return parser
 
 
 # Early Stopping Callback
@@ -164,15 +178,20 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def optimise_model(trial: optuna.Trial, dataset: HeteroData):
+def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
 
     # Set the hyperparameters of the model.
     param_dict = {}
 
     # Select the model.
-    model_type = mod.get_model(
-        trial.suggest_categorical("model", ["GCN", "GraphSAGE", "GAT", "HAN", "HGT"])
-    )
+    if model_type_name == "ALL":
+        model_type = mod.get_model(
+            trial.suggest_categorical(
+                "model", ["GCN", "GraphSAGE", "GAT", "HAN", "HGT"]
+            )
+        )
+    else:
+        model_type = mod.get_model(model_type_name)
     param_dict["model_type"] = model_type
 
     # NOTE: Jumping Knowledge restricted to 'last' due to difficulty of implementation
@@ -253,25 +272,45 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData):
     max_epochs = 300
     val_loss = np.inf
 
-    eval_metrics = None
+    best_loss = np.inf
+    best_eval_metrics = None
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = test(model, dataset)
         val_loss = eval_metrics.val.loss
+        if val_loss < best_loss:
+            best_loss = val_loss
+            best_eval_metrics = eval_metrics
         early_stopping(val_loss)
 
     # Log the number of epochs.
     trial.set_user_attr("total_epochs", early_stopping.epoch)
     trial.set_user_attr("best_epoch", early_stopping.best_epoch)
 
-    print("Total Epochs:", early_stopping.epoch)
-    print("Eval Metrics:", eval_metrics.val)
+    if best_eval_metrics:
+        trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
+        trial.set_user_attr("precision", best_eval_metrics.val.precision)
+        trial.set_user_attr("recall", best_eval_metrics.val.recall)
+        trial.set_user_attr("f1", best_eval_metrics.val.f1)
+        trial.set_user_attr("auc", best_eval_metrics.val.auroc)
+        trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
 
     return early_stopping.best_loss
 
 
 def main():
+    parser = get_parser()
+    args = parser.parse_args()
+    assert args.model_type_name in {
+        "GCN",
+        "GraphSAGE",
+        "GAT",
+        "HAN",
+        "HGT",
+        "ALL",
+    }, "Model type must be one of: 'GCN', 'GraphSAGE', 'GAT', 'HAN', 'HGT', 'ALL'"
+
     dataset_path = "data/pyg/"
 
     # Set the device.
@@ -281,10 +320,10 @@ def main():
     dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
     dataset = dataset.data.to(device)
 
-    study_name = f"pyg_model_selection_final"
+    study_name = f"pyg_model_selection_{args.model_type_name}"
 
     # Delete study if it already exists.
-    optuna.delete_study(study_name, storage="sqlite:///optuna.db")
+    # optuna.delete_study(study_name, storage="sqlite:///optuna.db")
 
     # Optimize the model.
     study = optuna.create_study(
@@ -294,8 +333,13 @@ def main():
         load_if_exists=True,
     )
 
-    optimise_model_partial = ft.partial(optimise_model, dataset=dataset)
-    study.optimize(optimise_model_partial, n_trials=200)
+    total_num_trials = 200
+    current_trials = len(study.trials)
+    remaining_trials = total_num_trials - current_trials
+    optimise_model_partial = ft.partial(
+        optimise_model, dataset=dataset, model_type_name=args.model_type_name
+    )
+    study.optimize(optimise_model_partial, n_trials=remaining_trials)
 
     # Print top models.
     print()
