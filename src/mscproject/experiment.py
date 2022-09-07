@@ -230,7 +230,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         hidden_channels_min = int(math.log2(param_dict["heads"]))
 
     hidden_channels_log2 = trial.suggest_int(
-        "hidden_channels_log2", hidden_channels_min, 8
+        "hidden_channels_log2", hidden_channels_min, 10
     )
     param_dict["hidden_channels_log2"] = hidden_channels_log2
     hidden_channels = 2**hidden_channels_log2
@@ -240,7 +240,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         dict(
             in_channels=-1,
             hidden_channels=hidden_channels,
-            num_layers=trial.suggest_int("n_layers", 1, 4),
+            num_layers=trial.suggest_int("n_layers", 1, 6),
             out_channels=1,
             dropout=trial.suggest_float("dropout", 0, 1),
             act=trial.suggest_categorical("act", ["relu", "gelu"]),
