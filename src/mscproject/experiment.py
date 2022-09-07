@@ -315,6 +315,7 @@ def main():
 
     # Set the device.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {str(device).upper()}")
 
     # Load the dataset.
     dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
