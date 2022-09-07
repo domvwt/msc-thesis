@@ -240,7 +240,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         dict(
             in_channels=-1,
             hidden_channels=hidden_channels,
-            num_layers=trial.suggest_int("n_layers", 1, 5),
+            num_layers=trial.suggest_int("n_layers", 1, 10),
             out_channels=1,
             dropout=trial.suggest_float("dropout", 0, 1),
             act=trial.suggest_categorical("act", ["relu", "gelu"]),
@@ -326,7 +326,7 @@ def main():
     study_name = f"pyg_model_selection_{args.model_type_name}"
 
     # Delete study if it already exists.
-    optuna.delete_study(study_name, storage="sqlite:///optuna.db")
+    # optuna.delete_study(study_name, storage="sqlite:///optuna.db")
 
     # Set optuna verbosity.
     #optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -339,7 +339,7 @@ def main():
         load_if_exists=True,
     )
 
-    total_num_trials = 200
+    total_num_trials = 300
     current_trials = len(study.trials)
     remaining_trials = total_num_trials - current_trials
     optimise_model_partial = ft.partial(

@@ -50,6 +50,7 @@ geometric = [
   "torch-cluster", 
   "torch-spline-conv", 
   "torch-geometric", 
+  "torchmetrics",
 ]
 
 [build-system]
