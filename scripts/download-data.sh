@@ -11,11 +11,11 @@ fi
 
 # Check if the environment variables are set
 if [ -z "$GCP_BUCKET_NAME" ]; then
-  echo "BUCKET_NAME is not set"
+  echo "GCP_BUCKET_NAME is not set"
   exit 1
 fi
 
 # Sync the data to Google Cloud Storage
-echo "Syncing data to Google Cloud Storage..."
-gsutil -m rsync -x 'raw.*|interim.*|graph.*' -r -d data gs://$GCP_BUCKET_NAME
+echo "Downloading data from Google Cloud Storage..."
+gsutil -m rsync -r -d gs://$GCP_BUCKET_NAME data
 echo "Complete."

@@ -1,2 +1,1 @@
-docker run -it --rm --init --runtime nvidia --gpus all mscproject:latest /bin/bash \
-    -v /home/projects/msc-thesis/:mscproject/ \
+docker run -it -v ${HOME}/msc-thesis:/workspace --rm --init --runtime nvidia --gpus all mscproject:0.1 /bin/bash

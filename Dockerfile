@@ -15,11 +15,20 @@ RUN ${CONDA} config --add channels pytorch \
  && ${CONDA} config --set experimental_solver libmamba
 
 # Install pytorch geometric.
-RUN ${CONDA} install -n base pyg==2.0.4
+RUN pip install torch-scatter -f https://data.pyg.org/whl/torch-1.11.0+cu113.html \
+ && pip install torch-sparse -f https://data.pyg.org/whl/torch-1.11.0+cu113.html \
+ && pip install torch-geometric \
+ && python -m pip install torch-geometric==2.1.* torchmetrics==0.9.3
 
 # Update .bashrc.
 RUN ${CONDA} init \
  && echo "conda activate base" >> ~/.bashrc
 
+# Install the project.
+COPY ./requirements.txt pyproject.toml src ./
+RUN python -m pip install -r requirements.txt \
+ && pip install torchmetrics --no-dependencies \
+ && pip install . --no-dependencies
+
 # Set default command.
-CMD ["bash" "--login"]
+CMD ["/bin/bash"]

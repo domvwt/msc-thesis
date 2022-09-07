@@ -230,7 +230,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         hidden_channels_min = int(math.log2(param_dict["heads"]))
 
     hidden_channels_log2 = trial.suggest_int(
-        "hidden_channels_log2", hidden_channels_min, 10
+        "hidden_channels_log2", hidden_channels_min, 8
     )
     param_dict["hidden_channels_log2"] = hidden_channels_log2
     hidden_channels = 2**hidden_channels_log2
@@ -240,7 +240,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         dict(
             in_channels=-1,
             hidden_channels=hidden_channels,
-            num_layers=trial.suggest_int("n_layers", 1, 6),
+            num_layers=trial.suggest_int("n_layers", 1, 5),
             out_channels=1,
             dropout=trial.suggest_float("dropout", 0, 1),
             act=trial.suggest_categorical("act", ["relu", "gelu"]),
@@ -296,6 +296,8 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         trial.set_user_attr("auc", best_eval_metrics.val.auroc)
         trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
 
+    print(best_eval_metrics.val)
+
     return early_stopping.best_loss
 
 
@@ -324,13 +326,16 @@ def main():
     study_name = f"pyg_model_selection_{args.model_type_name}"
 
     # Delete study if it already exists.
-    # optuna.delete_study(study_name, storage="sqlite:///optuna.db")
+    optuna.delete_study(study_name, storage="sqlite:///optuna.db")
+
+    # Set optuna verbosity.
+    #optuna.logging.set_verbosity(optuna.logging.WARNING)
 
     # Optimize the model.
     study = optuna.create_study(
         direction="minimize",
         study_name=study_name,
-        storage="sqlite:///optuna.db",
+        storage="sqlite:///data/optuna.db",
         load_if_exists=True,
     )
 
