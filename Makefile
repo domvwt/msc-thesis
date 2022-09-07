@@ -120,3 +120,9 @@ neo4j_import: ## load data into neo4j (set neo4j cli variable first)
 jupytext_sync: ## sync jupytext
 	jupytext --sync notebooks/*.ipynb >/dev/null
 	jupytext --set-formats ipynb,py:percent notebooks/*.ipynb >/dev/null
+
+.PHONY: requirements
+requirements: ## export requirements from pyproject.toml
+	poetry export -f requirements.txt -o requirements.txt --without-hashes
+	sed -i "s/;.*//" requirements.txt
+	sed -i "s/==/>=/" requirements.txt

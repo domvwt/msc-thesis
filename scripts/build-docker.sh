@@ -1,0 +1,1 @@
+docker build . -t mscproject:0.1
