@@ -6,17 +6,6 @@ LABEL org.opencontainers.image.source = "https://github.com/pyg-team/pytorch_geo
 LABEL org.opencontainers.image.licenses = "MIT"
 LABEL org.opencontainers.image.base.name="pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel"
 
-# Install system packages.
-RUN apt-get update && apt-get install -y \
- curl \
- ca-certificates \
- neovim \
- sudo \
- git \
- bzip2 \
- libx11-6 \
- && rm -rf /var/lib/apt/lists/*
-
 # Set conda executable.
 ENV CONDA=/opt/conda/bin/conda
 
@@ -25,7 +14,8 @@ RUN ${CONDA} config --add channels pytorch \
  && ${CONDA} config --add channels pyg \
  && ${CONDA} update -n base conda -y \
  && ${CONDA} install -n base conda-libmamba-solver -y \
- && ${CONDA} config --set experimental_solver libmamba
+ && ${CONDA} config --set experimental_solver libmamba \
+ && ${CONDA} config --append channels conda-forge
 
 # Install pytorch geometric.
 RUN ${CONDA} install -n base pyg==2.0.4 tensorboardx -y
@@ -38,13 +28,9 @@ RUN git clone https://github.com/pyg-team/pytorch_geometric.git \
  && mv pytorch_geometric/graphgym .  \
  && rm -rf pytorch_geometric
 
-# Install open graph benchmark.
-RUN pip install ogb
-
 # Update .bashrc.
 RUN ${CONDA} init \
- && echo "conda activate base" >> ~/.bashrc \
- && echo "alias vim=nvim" >> ~/.bashrc
+ && echo "conda activate base" >> ~/.bashrc
 
 # Set default command.
 CMD ["bash" "--login"]
