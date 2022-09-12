@@ -12,6 +12,7 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import to_hetero
+from torch_geometric.transforms import AddSelfLoops
 
 import mscproject.models as mod
 from mscproject.datasets import CompanyBeneficialOwners
@@ -231,7 +232,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     heads_choices = [1, 2, 4, 8, 16]
     hidden_channels_min = 1
     num_layers_max = 5
-    self_loop_choices = [True, False]
+    allow_add_self_loops = True
 
     if model_type.__name__ == "GCN":
         param_dict["aggr"] = trial.suggest_categorical("gcn_aggr", aggr_choices)
@@ -244,7 +245,6 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
         if param_dict["concat"]:
             hidden_channels_min = int(math.log2(param_dict["heads"]))
-        self_loop_choices = [False]
     elif model_type.__name__ == "HAN":
         param_dict["heads"] = trial.suggest_categorical("heads", heads_choices)
         param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
@@ -263,6 +263,14 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     hidden_channels = 2**hidden_channels_log2
     trial.set_user_attr("n_hidden", hidden_channels)
 
+    if allow_add_self_loops:
+        add_self_loops = trial.suggest_categorical("add_self_loops", [True, False])
+    else:
+        add_self_loops = False
+
+    if add_self_loops:
+        dataset: HeteroData = AddSelfLoops(fill_value=1.0)(dataset)  # type: ignore
+
     param_dict.update(
         dict(
             in_channels=-1,
@@ -276,7 +284,8 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
             jk=jk_choice,
-            add_self_loops=trial.suggest_categorical("add_self_loops", self_loop_choices),
+            # NOTE: add_self_loops is directly applied to the dataset.
+            add_self_loops=False,
         )
     )
 
