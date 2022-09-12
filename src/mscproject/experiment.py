@@ -171,8 +171,11 @@ def get_model_and_optimiser(
     edge_aggregator = param_dict.pop("edge_aggr")
     weight_decay = param_dict.pop("weight_decay")
 
-    hidden_channels = 2 ** param_dict.pop("hidden_channels_log2")
-    param_dict["hidden_channels"] = hidden_channels
+    param_dict["hidden_channels"] = 2 ** param_dict.pop("hidden_channels_log2")
+
+    if "heads_log2" in param_dict:
+        heads = 2 ** param_dict.pop("heads_log2")
+        param_dict["heads"] = heads
 
     # Instantiate the model.
     if model_type.is_heterogeneous:
@@ -228,6 +231,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     )
 
     aggr_choices = ["sum", "mean", "min", "max"]
+    heads_min = 1
     heads_max = 4
     hidden_channels_min = 1
     hidden_channels_max = 8
@@ -247,20 +251,21 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         num_layers_max = 10
     elif model_type.__name__ == "GAT":
         param_dict["v2"] = trial.suggest_categorical("v2", [True])
-        param_dict["headsi_log2"] = trial.suggest_int("heads", 1, heads_max)
+        param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
         param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
         if param_dict["concat"]:
-            hidden_channels_min = int(math.log2(param_dict["heads"]))
+            hidden_channels_min = int(param_dict["heads_log2"])
         num_layers_max = 4
     elif model_type.__name__ == "HAN":
-        param_dict["heads_log2"] = trial.suggest_int("heads", 1, heads_max)
+        param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
         param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
         param_dict["dropout"] = trial.suggest_float("han_dropout", 0, 1)
-        hidden_channels_min = int(math.log2(param_dict["heads"]))
+        hidden_channels_min = int(param_dict["heads_log2"])
     elif model_type.__name__ == "HGT":
-        param_dict["heads"] = trial.suggest_int("heads", 1, heads_max)
+        param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
         param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
-        hidden_channels_min = int(math.log2(param_dict["heads"]))
+        hidden_channels_min = int(param_dict["heads_log2"])
+        
 
     # NOTE: Hidden channels restricted to '2**8' due to resource constraints.
     hidden_channels_log2 = trial.suggest_int(
@@ -269,10 +274,15 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     param_dict["hidden_channels_log2"] = hidden_channels_log2
     hidden_channels = 2**hidden_channels_log2
     trial.set_user_attr("n_hidden", hidden_channels)
+
+    if "heads_log2" in param_dict:
+        heads = 2**param_dict["heads_log2"]
+        param_dict["heads"] = heads
+        trial.set_user_attr("n_heads", heads)
+
     param_dict.update(
         dict(
             in_channels=-1,
-            hidden_channels=hidden_channels,
             num_layers=trial.suggest_int("num_layers", 1, num_layers_max),
             out_channels=1,
             dropout=trial.suggest_float("dropout", 0, 1),
