@@ -231,6 +231,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     heads_choices = [1, 2, 4, 8, 16]
     hidden_channels_min = 1
     num_layers_max = 5
+    self_loop_choices = [True, False]
 
     if model_type.__name__ == "GCN":
         param_dict["aggr"] = trial.suggest_categorical("gcn_aggr", aggr_choices)
@@ -243,6 +244,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
         if param_dict["concat"]:
             hidden_channels_min = int(math.log2(param_dict["heads"]))
+        self_loop_choices = [False]
     elif model_type.__name__ == "HAN":
         param_dict["heads"] = trial.suggest_categorical("heads", heads_choices)
         param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
@@ -274,7 +276,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
             jk=jk_choice,
-            add_self_loops=trial.suggest_categorical("add_self_loops", [True, False]),
+            add_self_loops=trial.suggest_categorical("add_self_loops", self_loop_choices),
         )
     )
 
@@ -349,7 +351,7 @@ def main():
     dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
     dataset = dataset.data.to(device)
 
-    study_name = f"pyg_model_selection_aprc_{args.model_type_name}"
+    study_name = f"pyg_model_selection_{args.model_type_name}"
 
     # Delete study if it already exists.
     # optuna.delete_study(study_name, storage="sqlite:///optuna.db")
@@ -378,7 +380,7 @@ def main():
     print("Top Models:")
     drop_cols = ["datetime_start", "datetime_complete", "duration", "state"]
     trials_df: pd.DataFrame = study.trials_dataframe()
-    trials_df = trials_df.sort_values("value").head(10)
+    trials_df = trials_df.sort_values("value", ascending=False).head(10)
     trials_df = trials_df.drop(drop_cols, axis=1)
     print(trials_df.T)
 
