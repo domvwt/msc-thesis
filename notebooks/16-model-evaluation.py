@@ -49,6 +49,8 @@ from IPython.display import display
 OPTUNA_STORAGE = "sqlite:///data/optuna.db"
 MODEL_DIR = "data/models/pyg"
 
+Path(MODEL_DIR).mkdir(parents=True, exist_ok=True)
+
 trials_dfs = [
     study.trials_dataframe().assign(study_name=study.study_name)
     for study in (
