@@ -1,8 +1,8 @@
-pip install . --no-dependencies
-#python src/mscproject/experiment.py -m ALL
-python src/mscproject/experiment.py -m GCN
-python src/mscproject/experiment.py -m GraphSAGE
-python src/mscproject/experiment.py -m GAT
-python src/mscproject/experiment.py -m HGT
-python src/mscproject/experiment.py -m HAN
+pip install --user . --no-dependencies
+#python src/mscproject/experiment.py -m ALL  # COMPLETED
+#python src/mscproject/experiment.py -m GCN  # COMPLETED
+#python src/mscproject/experiment.py -m GraphSAGE  # COMPLETED
+python src/mscproject/experiment.py -m GAT  # DIED
+python src/mscproject/experiment.py -m HGT  # COMPLETED
+python src/mscproject/experiment.py -m HAN  # DIED
 exit 0 
