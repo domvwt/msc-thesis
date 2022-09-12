@@ -204,6 +204,11 @@ def get_model_and_optimiser(
 
 def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
 
+    # Clear the CUDA cache if applicable.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device == "cuda":
+        torch.cuda.empty_cache()
+
     # Set the hyperparameters of the model.
     param_dict = {}
 
@@ -232,7 +237,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
 
     aggr_choices = ["sum", "mean", "min", "max"]
     heads_min = 1
-    heads_max = 4
+    heads_max = 3
     hidden_channels_min = 1
     hidden_channels_max = 8
     num_layers_max = 5
@@ -255,7 +260,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
         if param_dict["concat"]:
             hidden_channels_min = int(param_dict["heads_log2"])
-        num_layers_max = 4
+        #num_layers_max = 4
     elif model_type.__name__ == "HAN":
         param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
         param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
@@ -305,7 +310,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     trial.set_user_attr("learning_rate", learning_rate)
 
     # Print the params.
-    print(param_dict, flush=True)
+    #print(param_dict, flush=True)
 
     # Get the model and optimiser.
     model, optimiser = get_model_and_optimiser(
@@ -374,16 +379,16 @@ def main():
     study_name = f"pyg_model_selection_{args.model_type_name}"
 
     # Delete study if it already exists.
-    optuna.delete_study(study_name, storage="sqlite:///data/optuna-aprc.db")
+    #optuna.delete_study(study_name, storage="sqlite:///data/optuna.db")
 
     # Set optuna verbosity.
-    # optuna.logging.set_verbosity(optuna.logging.WARNING)
+    #optuna.logging.set_verbosity(optuna.logging.WARNING)
 
     # Optimize the model.
     study = optuna.create_study(
         direction=optuna.study.StudyDirection.MAXIMIZE,
         study_name=study_name,
-        storage="sqlite:///data/optuna-aprc.db",
+        storage="sqlite:///data/optuna.db",
         load_if_exists=True,
     )
 
