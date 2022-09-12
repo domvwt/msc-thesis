@@ -140,7 +140,6 @@ def evaluate(
 
     for split in eval_splits:
 
-        masks = []
         actuals = []
         predictions = []
 
@@ -150,7 +149,6 @@ def evaluate(
             actual = dataset.y_dict[node_type][mask]
             prediction = prediction_dict[node_type][mask]
 
-            masks.append(mask)
             predictions.append(prediction)
             actuals.append(actual)
 
