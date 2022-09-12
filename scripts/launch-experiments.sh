@@ -1,3 +1,4 @@
+pip install . --no-dependencies
 #python src/mscproject/experiment.py -m ALL
 python src/mscproject/experiment.py -m GCN
 python src/mscproject/experiment.py -m GraphSAGE

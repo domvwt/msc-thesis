@@ -27,8 +27,7 @@ RUN ${CONDA} init \
 # Install the project.
 COPY ./requirements.txt pyproject.toml src ./
 RUN python -m pip install -r requirements.txt \
- && pip install torchmetrics --no-dependencies \
- && pip install . --no-dependencies
+ && pip install torchmetrics --no-dependencies
 
 # Set default command.
 CMD ["/bin/bash"]
