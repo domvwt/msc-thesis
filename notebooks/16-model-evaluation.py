@@ -21,7 +21,6 @@ import numpy as np
 import optuna
 import pandas as pd
 import torch
-import catboost as cb
 from tqdm import tqdm
 
 from mscproject.datasets import CompanyBeneficialOwners
@@ -105,27 +104,6 @@ for study_name, df in zip(study_names, trials_dfs):
     best_trials[model_type]["model_type"] = model_type
 
     print()
-
-# %%
-train_df = df.dropna()
-feature_columns = [col for col in train_df.columns if col.startswith("params")]
-X = train_df[feature_columns]
-y = train_df[metric]
-
-# %%
-cat_features = [i for i, d in enumerate(X.dtypes) if d != "float64"]
-
-# %%
-train_df = top
-cb_model = cb.CatBoostRegressor(
-    verbose=100, iterations=10, eval_metric="RMSE", max_depth=2
-)
-# Train on top df
-cb_model.fit(X, y, cat_features=cat_features)
-cb_model.predict(X)
-best = np.argmax(cb_model.predict(X))
-print()
-print(X.iloc[best], y.iloc[best])
 
 # %%
 import mscproject.experiment as exp
