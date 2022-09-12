@@ -17,6 +17,7 @@ from torch_geometric.transforms import AddSelfLoops
 import mscproject.models as mod
 from mscproject.datasets import CompanyBeneficialOwners
 from mscproject.metrics import EvalMetrics
+from mscproject.transforms import RemoveSelfLoops
 
 
 # Create parser for command line arguments.
@@ -270,6 +271,8 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
 
     if add_self_loops:
         dataset: HeteroData = AddSelfLoops(fill_value=1.0)(dataset)  # type: ignore
+    else:
+        dataset: HeteroData = RemoveSelfLoops()(dataset)
 
     param_dict.update(
         dict(
