@@ -22,6 +22,8 @@ import optuna
 import pandas as pd
 import torch
 from tqdm import tqdm
+from torch_geometric.transforms import AddSelfLoops
+from mscproject.transforms import RemoveSelfLoops
 
 from mscproject.datasets import CompanyBeneficialOwners
 from mscproject.transforms import RemoveSelfLoops
@@ -190,9 +192,6 @@ for model_name in best_trials.keys():
     print()
 
 # %%
-from torch_geometric.transforms import AddSelfLoops
-from mscproject.transforms import RemoveSelfLoops
-
 # Load and evaluate models
 for model_name in best_trials.keys():
     trial_params = best_trials[model_name]
