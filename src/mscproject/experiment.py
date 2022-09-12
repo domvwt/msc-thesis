@@ -93,8 +93,8 @@ def train(model, input_data, optimizer, on_train=True, on_val=False, on_test=Fal
         person_mask += input_data["person"].val_mask
 
     if on_test:
-        company_mask = company_mask + input_data["company"].test_mask
-        person_mask = person_mask + input_data["person"].test_mask
+        company_mask += input_data["company"].test_mask
+        person_mask += input_data["person"].test_mask
 
     companies_out = out["company"][company_mask]
     persons_out = out["person"][person_mask]
