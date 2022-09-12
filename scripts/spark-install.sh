@@ -10,7 +10,7 @@ SPARK_VERSION="3.1.1"
 HADOOP_VERSION="3.2"
 
 echo "Installing Spark..."
-if ! test -d "/opt/spark"; then
+if [[ ! -d "/opt/spark" ]]; then
   echo "Updating system..." && \
   sudo apt update -y && \
   sudo apt upgrade -y && \

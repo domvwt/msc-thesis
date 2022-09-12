@@ -1,8 +1,13 @@
 # Project specific
 catboost_info
 /data*
+/models*
 /spark-checkpoints
 /.vscode
+gephi/*
+nohup.out
+*.db
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -164,5 +169,3 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
-gephi/uk-companies.gephi
-gephi/uk-companies.gephi_temp1658092942233

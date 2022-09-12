@@ -1,8 +1,8 @@
 import argparse
+import dataclasses as dc
 import functools as ft
 import math
-import time
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -76,20 +76,32 @@ class EarlyStopping:
             self.counter = 0
 
 
-def train(model, input_data, optimizer):
+def train(model, input_data, optimizer, on_train=True, on_val=False, on_test=False):
     model.train()
     optimizer.zero_grad()
     out = model(input_data.x_dict, input_data.edge_index_dict)
 
-    company_train_mask = input_data["company"].train_mask
-    person_train_mask = input_data["person"].train_mask
+    company_mask = torch.empty_like(input_data["company"].train_mask).to(torch.bool)
+    person_mask = torch.empty_like(input_data["person"].train_mask).to(torch.bool)
 
-    companies_out = out["company"][company_train_mask]
-    persons_out = out["person"][person_train_mask]
+    if on_train:
+        company_mask += input_data["company"].train_mask
+        person_mask += input_data["person"].train_mask
+
+    if on_val:
+        company_mask += input_data["company"].val_mask
+        person_mask += input_data["person"].val_mask
+
+    if on_test:
+        company_mask = company_mask + input_data["company"].test_mask
+        person_mask = person_mask + input_data["person"].test_mask
+
+    companies_out = out["company"][company_mask]
+    persons_out = out["person"][person_mask]
     out_tensor = torch.cat((companies_out, persons_out), dim=0).float().squeeze()
 
-    companies_y = input_data.y_dict["company"][company_train_mask]
-    persons_y = input_data.y_dict["person"][person_train_mask]
+    companies_y = input_data.y_dict["company"][company_mask]
+    persons_y = input_data.y_dict["person"][person_mask]
 
     y_tensor = torch.cat((companies_y, persons_y), dim=0).float().squeeze()
 
@@ -103,27 +115,36 @@ def train(model, input_data, optimizer):
     return float(loss)
 
 
-class EvalResult(NamedTuple):
-    train: EvalMetrics
-    val: EvalMetrics
+@dc.dataclass
+class EvalResult:
+    train: Optional[EvalMetrics] = None
+    val: Optional[EvalMetrics] = None
+    test: Optional[EvalMetrics] = None
 
 
 @torch.no_grad()
-def test(model, dataset) -> EvalResult:
+def evaluate(
+    model, dataset: HeteroData, on_train=True, on_val=True, on_test=False
+) -> EvalResult:
     model.eval()
 
     prediction_dict = model(dataset.x_dict, dataset.edge_index_dict)
 
-    eval_metrics_list = []
+    eval_split_mask = [on_train, on_val, on_test]
+    eval_split_names = np.array(["train", "val", "test"])
+    eval_splits = eval_split_names[eval_split_mask]
 
-    for split in ["train_mask", "val_mask"]:
+    eval_result = EvalResult()
+
+    for split in eval_splits:
 
         masks = []
         actuals = []
         predictions = []
 
-        for node_type in ["company", "person"]:
-            mask = dataset[node_type][split]
+        for node_type in dataset.node_types:
+            mask_name = f"{split}_mask"
+            mask = dataset[node_type][mask_name]
             actual = dataset.y_dict[node_type][mask]
             prediction = prediction_dict[node_type][mask]
 
@@ -134,13 +155,13 @@ def test(model, dataset) -> EvalResult:
         combined_predictions = torch.cat(predictions, dim=0).squeeze()
         combined_actuals = torch.cat(actuals, dim=0).squeeze()
 
-        eval_metrics_list.append(
-            EvalMetrics.from_tensors(
-                combined_predictions, combined_actuals, pos_weight_multiplier=10
-            )
+        result = EvalMetrics.from_tensors(
+            combined_predictions, combined_actuals, pos_weight_multiplier=10
         )
 
-    return EvalResult(*eval_metrics_list)
+        setattr(eval_result, split, result)
+
+    return eval_result
 
 
 def get_model_and_optimiser(
@@ -209,12 +230,15 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     aggr_choices = ["sum", "mean", "min", "max"]
     heads_choices = [1, 2, 4, 8, 16]
     hidden_channels_min = 1
+    num_layers_max = 5
 
     if model_type.__name__ == "GCN":
         param_dict["aggr"] = trial.suggest_categorical("gcn_aggr", aggr_choices)
         param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
+    elif model_type.__name__ == "GraphSAGE":
+        num_layers_max = 10
     elif model_type.__name__ == "GAT":
-        param_dict["v2"] = True
+        param_dict["v2"] = trial.suggest_categorical("v2", [True])
         param_dict["heads"] = trial.suggest_categorical("heads", heads_choices)
         param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
         if param_dict["concat"]:
@@ -229,6 +253,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
         hidden_channels_min = int(math.log2(param_dict["heads"]))
 
+    # NOTE: Hidden channels restricted to '2**8' due to resource constraints.
     hidden_channels_log2 = trial.suggest_int(
         "hidden_channels_log2", hidden_channels_min, 8
     )
@@ -240,7 +265,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         dict(
             in_channels=-1,
             hidden_channels=hidden_channels,
-            num_layers=trial.suggest_int("n_layers", 1, 10),
+            num_layers=trial.suggest_int("num_layers", 1, num_layers_max),
             out_channels=1,
             dropout=trial.suggest_float("dropout", 0, 1),
             act=trial.suggest_categorical("act", ["relu", "gelu"]),
@@ -249,7 +274,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
             jk=jk_choice,
-            add_self_loops=False,
+            add_self_loops=trial.suggest_categorical("add_self_loops", [True, False]),
         )
     )
 
@@ -277,7 +302,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
-        eval_metrics = test(model, dataset)
+        eval_metrics = evaluate(model, dataset)
         val_loss = eval_metrics.val.loss
         if val_loss < best_loss:
             best_loss = val_loss
@@ -289,6 +314,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     trial.set_user_attr("best_epoch", early_stopping.best_epoch)
 
     if best_eval_metrics:
+        trial.set_user_attr("loss", best_eval_metrics.val.loss)
         trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
         trial.set_user_attr("precision", best_eval_metrics.val.precision)
         trial.set_user_attr("recall", best_eval_metrics.val.recall)
@@ -296,9 +322,9 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         trial.set_user_attr("auc", best_eval_metrics.val.auroc)
         trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
 
-    print(best_eval_metrics.val)
+    print(best_eval_metrics.val, flush=True)
 
-    return early_stopping.best_loss
+    return best_eval_metrics.val.average_precision
 
 
 def main():
@@ -323,19 +349,19 @@ def main():
     dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
     dataset = dataset.data.to(device)
 
-    study_name = f"pyg_model_selection_{args.model_type_name}"
+    study_name = f"pyg_model_selection_aprc_{args.model_type_name}"
 
     # Delete study if it already exists.
     # optuna.delete_study(study_name, storage="sqlite:///optuna.db")
 
     # Set optuna verbosity.
-    #optuna.logging.set_verbosity(optuna.logging.WARNING)
+    # optuna.logging.set_verbosity(optuna.logging.WARNING)
 
     # Optimize the model.
     study = optuna.create_study(
-        direction="minimize",
+        direction=optuna.study.StudyDirection.MAXIMIZE,
         study_name=study_name,
-        storage="sqlite:///data/optuna.db",
+        storage="sqlite:///data/optuna-aprc.db",
         load_if_exists=True,
     )
 
