@@ -17,5 +17,6 @@ fi
 
 # Sync the data to Google Cloud Storage
 echo "Downloading data from Google Cloud Storage..."
-gsutil -m rsync -r gs://$GCP_BUCKET_NAME data
+gsutil -m rsync -r gs://$GCP_BUCKET_NAME/models/ data/models/
+gsutil cp gs://$GCP_BUCKET_NAME/optuna.db data/optuna.db
 echo "Complete."
