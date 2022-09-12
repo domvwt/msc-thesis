@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.8
+#       jupytext_version: 1.14.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -37,16 +37,24 @@ import mscproject.simulate as sim
 # %autoreload 2
 
 # %%
-rng = np.random.default_rng()
+import torch
+from mscproject.datasets import CompanyBeneficialOwners
+
+dataset_path = "data/pyg/"
+
+# Set the device.
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Load the dataset.
+dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
+dataset = dataset.data.to(device)
 
 # %%
-ints1 = rng.integers(4, size=100)
-ints2 = rng.integers(100, size=100)
+from torch_geometric.loader import DataLoader
+
+loader = DataLoader(dataset, batch_size=32, shuffle=True)
 
 # %%
-df = pd.DataFrame({"a": ints1, "b": ints2})
-
-# %%
-df.groupby("a").sample(n=1, random_state=42)
-
-# %%
+for batch in loader:
+    print(batch.num_graphs)
+    break

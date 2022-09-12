@@ -265,7 +265,6 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
         param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
         hidden_channels_min = int(param_dict["heads_log2"])
-        
 
     # NOTE: Hidden channels restricted to '2**8' due to resource constraints.
     hidden_channels_log2 = trial.suggest_int(
@@ -276,7 +275,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     trial.set_user_attr("n_hidden", hidden_channels)
 
     if "heads_log2" in param_dict:
-        heads = 2**param_dict["heads_log2"]
+        heads = 2 ** param_dict["heads_log2"]
         param_dict["heads"] = heads
         trial.set_user_attr("n_heads", heads)
 

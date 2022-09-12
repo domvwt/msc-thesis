@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.8
+#       jupytext_version: 1.14.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -79,13 +79,13 @@ train_df.query("isCompany == False and indegree > 0")
 cat_features = ["isCompany"]
 
 X_train = train_df.drop(target, axis=1)
-y_train = train_df[target]
+y_train = train_df[target].astype(np.int8)
 
 X_valid = valid_df.drop(target, axis=1)
-y_valid = valid_df[target]
+y_valid = valid_df[target].astype(np.int8)
 
 X_test = test_df.drop(target, axis=1)
-y_test = test_df[target]
+y_test = test_df[target].astype(np.int8)
 
 # %%
 train_pool = cb.Pool(
@@ -110,13 +110,19 @@ test_pool = cb.Pool(
 )
 
 # %%
+class_weights = {0: 1, 1: 10}
+
+# %%
 # Create CatBoost model.
 clf = cb.CatBoostClassifier(
     iterations=2001,
     # learning_rate=0.1,
     depth=6,
     # eval_metric="Accuracy",
+    class_weights=class_weights,
     random_seed=42,
+    loss_function="Logloss",
+    eval_metric="PRAUC",
 )
 
 
@@ -136,7 +142,7 @@ print(pd.crosstab(y_test, y_pred, rownames=["Actual"], colnames=["Predicted"]))
 # %%
 # Evaluate model.
 y_test_pred = np.array([x[1] for x in clf.predict_proba(test_pool)])
-eval_metrics = EvalMetrics.from_numpy(y_test_pred, y_test.astype(int).to_numpy())
+eval_metrics = EvalMetrics.from_numpy(y_test_pred, y_test.to_numpy())
 print(eval_metrics)
 
 # %%
