@@ -40,12 +40,10 @@ def main() -> None:
     print("Updating component ids...")
     new_graph = feat.make_graph(edges_anomalised)
     node_id_to_cc_id_map = feat.get_node_id_to_cc_id_map(new_graph)
-    companies_anomalised[
-        "component"
-    ] = companies_anomalised["id"].map(node_id_to_cc_id_map)
-    persons_anomalised["component"] = persons_anomalised[
-        "id"
-    ].map(node_id_to_cc_id_map)
+    companies_anomalised["component"] = companies_anomalised["id"].map(
+        node_id_to_cc_id_map
+    )
+    persons_anomalised["component"] = persons_anomalised["id"].map(node_id_to_cc_id_map)
     edges_df["component"] = edges_df["src"].map(node_id_to_cc_id_map)
 
     # Save features.

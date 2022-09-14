@@ -33,14 +33,9 @@ def main() -> None:
     print("Generating graph features...")
     graph_nx = feat.make_graph(edges_df)
     node_features_df = feat.generate_node_features(graph_nx)
-    # neighbourhood_features_df = feat.get_local_neighbourhood_features_fast(
-    #     graph_nx, node_features_df, 2
-    # )
-    print("Generating connected component map...")
-    cc_map = feat.get_node_to_cc_graph_map(graph_nx)
     print("Generating local neighbourhood features...")
-    neighbourhood_features_df = feat.get_local_neighbourhood_features_parallel(
-        graph=graph_nx, node_features=node_features_df, radius=2, cc_map=cc_map
+    neighbourhood_features_df = feat.get_local_neighbourhood_features(
+        graph=graph_nx, node_features=node_features_df, radius=1, n_jobs=1
     )
 
     # Make index into id column.
