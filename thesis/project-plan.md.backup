@@ -10,7 +10,7 @@
 	+ how useful are the results for real world investigations without interpretation?
 - Class imbalance
 	+ loss is multiplied by 10 for anomalous nodes
-equalise their importance in model training
+	+ should equalise their importance during model training
 
 ## Journal
 
