@@ -101,10 +101,16 @@ for study_name, df in zip(study_names, trials_dfs):
     top = df.sort_values(metric, ascending=False)[:30]
     param_columns = [x for x in top.columns if x.startswith("params")]
     top = mark_outliers(top)
-    display(top[["outlier", "value", metric, *param_columns]][:10])
+    display(top[["outlier", "value", metric, *param_columns]][:10].T)
 
     model_type = study_name.split("_")[-1]
-    best_trials[model_type] = top.query("not outlier").iloc[0].to_dict()
+    best_trials[model_type] = (
+        top.query(
+            "not outlier and (params_hidden_channels_log2 * params_num_layers) < 40"
+        )
+        .iloc[0]
+        .to_dict()
+    )
     best_trials[model_type]["model_type"] = model_type
 
     print()
@@ -180,7 +186,8 @@ for model_name in best_trials.keys():
     )
 
     # Train and evaluate the model.
-    best_epoch = int(trial_dict["user_attrs_best_epoch"])
+    best_epoch = trial_dict["user_attrs_best_epoch"]
+    best_epoch = int(best_epoch) if not np.isnan(best_epoch) else 200
 
     progress = tqdm(range(best_epoch))
 
@@ -202,6 +209,8 @@ for model_name in best_trials.keys():
 # %%
 # Load and evaluate models
 for model_name in best_trials.keys():
+
+    print("Evaluating model:", model_name)
 
     model_path = MODEL_DIR / f"{model_name}.pt"
     if not model_path.exists():
@@ -230,18 +239,22 @@ for model_name in best_trials.keys():
     model_metrics[model_name] = eval_metrics.test
     print(model_name, eval_metrics.test)
 
+    print("Making predictions...")
     prediction_dict = model(dataset.x_dict, dataset.edge_index_dict)
     prediction_df_list = []
 
+    print("Saving predictions...")
     for node_type in dataset.node_types:
         prediction = (
             prediction_dict[node_type][dataset[node_type].test_mask]
+            .cpu()
             .detach()
             .numpy()
             .flatten()
         )
         actual = (
             dataset.y_dict[node_type][dataset[node_type].test_mask]
+            .cpu()
             .detach()
             .numpy()
             .flatten()
