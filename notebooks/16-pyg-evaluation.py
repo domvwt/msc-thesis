@@ -207,7 +207,7 @@ for model_name in best_trials.keys():
         model_metrics[model_name] = eval_metrics.test
         print(i, eval_metrics.test)
 
-        if eval_metrics.test.aprc < best_aprc:
+        if eval_metrics.test.average_precision < best_aprc:
             # Save the trained model.
             torch.save(model.state_dict(), model_path)
             print()
