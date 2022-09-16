@@ -189,13 +189,14 @@ for model_name in best_trials.keys():
     best_epoch = trial_dict["user_attrs_best_epoch"]
     best_epoch = int(best_epoch) if not np.isnan(best_epoch) else 200
 
-    progress = tqdm(range(best_epoch))
-
     # Train model ten times and keep the best one
     best_model = None
     best_aprc = -np.inf
 
     for i in range(10):
+
+        progress = tqdm(range(best_epoch))
+
         for epoch in progress:
             loss = exp.train(model, dataset, optimiser, on_val=True)
             progress.set_description(f"Train loss: {loss:.4f}")
