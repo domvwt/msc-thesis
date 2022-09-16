@@ -19,9 +19,9 @@ from mscproject.datasets import CompanyBeneficialOwners
 from mscproject.metrics import EvalMetrics
 from mscproject.transforms import RemoveSelfLoops
 
-
 MIN_TRIALS = 200
-MAX_TRIALS = 500
+MAX_TRIALS = 300
+
 
 # Create parser for command line arguments.
 def get_parser():
@@ -40,19 +40,22 @@ def get_parser():
         required=False,
         help="Overwrite the study if it exists.",
     )
+    parser.add_argument(
+        "--db", type=str, required=True, help="Database path for Optuna"
+    )
     return parser
 
 
 # Early Stopping Callback
 class EarlyStopping:
-    """Early stops the training if validation loss doesn't improve after a given patience."""
+    """Early stops the training if score doesn't improve after a given patience."""
 
     def __init__(self, patience=7, verbose=False, delta=0):
         """
         Args:
-            patience (int): How long to wait after last time validation loss improved.
+            patience (int): How long to wait after last time validation score improved.
                             Default: 7
-            verbose (bool): If True, prints a message for each validation loss improvement.
+            verbose (bool): If True, prints a message for each validation score improvement.
                             Default: False
             delta (float): Minimum change in the monitored quantity to qualify as an improvement.
                             Default: 0
@@ -62,19 +65,16 @@ class EarlyStopping:
         self.epoch = 0
         self.counter = 0
         self.best_score = None
-        self.best_loss = None
         self.best_epoch = None
         self.early_stop = False
         self.delta = delta
 
-    def __call__(self, val_loss):
+    def __call__(self, score):
 
         self.epoch += 1
-        score = -val_loss
 
         if self.best_score is None:
             self.best_score = score
-            self.best_loss = val_loss
         elif score < self.best_score + self.delta:
             self.counter += 1
             if self.verbose:
@@ -83,7 +83,6 @@ class EarlyStopping:
                 self.early_stop = True
         else:
             self.best_score = score
-            self.best_loss = val_loss
             self.best_epoch = self.epoch
             self.counter = 0
 
@@ -218,7 +217,6 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     if trial.study.best_trial is not None and trial.number > MIN_TRIALS:
         if trial.study.best_trial.number < trial.number - 100:
             trial.study.stop()
-    
 
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -252,7 +250,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     )
 
     aggr_choices = ["sum", "mean", "min", "max"]
-    heads_min = 1
+    heads_min = 0
     heads_max = 3
     hidden_channels_min = 1
     hidden_channels_max = 8
@@ -290,6 +288,10 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     hidden_channels_log2 = trial.suggest_int(
         "hidden_channels_log2", hidden_channels_min, hidden_channels_max
     )
+    # Fix memory issues.
+    if hidden_channels_log2 == 8:
+        num_layers_max = 4
+    num_layers = trial.suggest_int("num_layers", 1, num_layers_max)
     param_dict["hidden_channels_log2"] = hidden_channels_log2
     hidden_channels = 2**hidden_channels_log2
     trial.set_user_attr("n_hidden", hidden_channels)
@@ -302,7 +304,7 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     param_dict.update(
         dict(
             in_channels=-1,
-            num_layers=trial.suggest_int("num_layers", 1, num_layers_max),
+            num_layers=num_layers,
             out_channels=1,
             dropout=trial.suggest_float("dropout", 0, 1),
             act=trial.suggest_categorical("act", ["relu", "gelu"]),
@@ -329,27 +331,28 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     )
 
     # Initialise the early stopping callback.
-    early_stopping = EarlyStopping(patience=10, verbose=False)
+    early_stopping = EarlyStopping(patience=50, verbose=False)
 
     # Train and evaluate the model.
-    max_epochs = 300
-    val_loss = np.inf
+    max_epochs = 1000
+    val_aprc = -np.inf
 
-    best_loss = np.inf
+    best_aprc = -np.inf
     best_eval_metrics = None
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
-        val_loss = eval_metrics.val.loss
-        if val_loss < best_loss:
-            best_loss = val_loss
+        val_aprc = eval_metrics.val.loss
+        if val_aprc > best_aprc:
+            best_aprc = val_aprc
             best_eval_metrics = eval_metrics
-        early_stopping(val_loss)
+        early_stopping(eval_metrics.val.average_precision)
 
     # Log the number of epochs.
+    best_epoch = early_stopping.best_epoch or early_stopping.epoch
     trial.set_user_attr("total_epochs", early_stopping.epoch)
-    trial.set_user_attr("best_epoch", early_stopping.best_epoch)
+    trial.set_user_attr("best_epoch", best_epoch)
 
     if best_eval_metrics:
         trial.set_user_attr("loss", best_eval_metrics.val.loss)
@@ -391,7 +394,7 @@ def main():
 
     if args.overwrite:
         # Delete study if it already exists.
-        optuna.delete_study(study_name, storage="sqlite:///data/optuna.db")
+        optuna.delete_study(study_name, storage=args.db)
 
     # Set optuna verbosity.
     # optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -400,7 +403,7 @@ def main():
     study = optuna.create_study(
         direction=optuna.study.StudyDirection.MAXIMIZE,
         study_name=study_name,
-        storage="sqlite:///data/optuna.db",
+        storage=args.db,
         load_if_exists=True,
     )
 

@@ -7,18 +7,19 @@ run_until_success () {
   done
 }
 
-#python src/mscproject/experiment.py -m ALL  # COMPLETED
-python src/mscproject/experiment.py -m GCN  # COMPLETED
-python src/mscproject/experiment.py -m GraphSAGE  # COMPLETED
-#python src/mscproject/experiment.py -m GAT  # ONGOING
-python src/mscproject/experiment.py -m HGT  # COMPLETED
-#python src/mscproject/experiment.py -m HAN  # COMPLETED
+OPTUNA_DB="sqlite:///optuna-02.db"
 
-#python src/mscproject/experiment.py -m GCN --overwrite
+#python src/mscproject/experiment.py -m ALL
 
-export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+python src/mscproject/experiment.py -m GCN -db $OPTUNA_DB
+python src/mscproject/experiment.py -m GraphSAGE -db $OPTUNA_DB
+python src/mscproject/experiment.py -m GAT -db $OPTUNA_DB
+python src/mscproject/experiment.py -m HGT -db $OPTUNA_DB
+python src/mscproject/experiment.py -m HAN -db $OPTUNA_DB
 
-run_until_success python src/mscproject/experiment.py -m GAT
-run_until_success python src/mscproject/experiment.py -m HAN
+# export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+
+# run_until_success python src/mscproject/experiment.py -m GAT
+# run_until_success python src/mscproject/experiment.py -m HAN
 
 exit 0 
