@@ -16,3 +16,5 @@
 
 - Anomalies designed to simulate the occurrence of real entities (companies and natural persons) that are not anomalous in their own right but are anomalous in the context of the businesses that they have an interest in.
 - Could be possible to use the Paradise Papers and other leaked sources to construct a dataset of genuine anomalies.
+- Improve the anomaly simulation algorithm to generate more realistic anomalies and preserve the original distribution of the dataset.
+- Frequency of anomalies is a parameter of the simulation algorithm. However alternative values were not tested in this work.
