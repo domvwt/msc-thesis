@@ -20,6 +20,9 @@ from mscproject.metrics import EvalMetrics
 from mscproject.transforms import RemoveSelfLoops
 
 
+MIN_TRIALS = 200
+MAX_TRIALS = 500
+
 # Create parser for command line arguments.
 def get_parser():
     parser = argparse.ArgumentParser(description="Optimise MSC model.")
@@ -211,7 +214,10 @@ def get_model_and_optimiser(
 
 def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
 
-    # Terminate the study if n trials > min_trials and no improvement in 100 trials.
+    # Terminate the study if n trials > MIN_TRIALS and no improvement in 100 trials.
+    if trial.study.best_trial is not None and trial.number > MIN_TRIALS:
+        if trial.study.best_trial.number < trial.number - 100:
+            trial.study.stop()
     
 
     # Clear the CUDA cache if applicable.
@@ -398,9 +404,8 @@ def main():
         load_if_exists=True,
     )
 
-    total_num_trials = 400
     current_trials = len(study.trials)
-    remaining_trials = total_num_trials - current_trials
+    remaining_trials = MAX_TRIALS - current_trials
     optimise_model_partial = ft.partial(
         optimise_model, dataset=dataset, model_type_name=args.model_type_name
     )
