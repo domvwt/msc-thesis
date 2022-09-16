@@ -191,20 +191,26 @@ for model_name in best_trials.keys():
 
     progress = tqdm(range(best_epoch))
 
-    for epoch in progress:
-        loss = exp.train(model, dataset, optimiser, on_val=True)
-        progress.set_description(f"Train loss: {loss:.4f}")
+    # Train model ten times and keep the best one
+    best_model = None
+    best_aprc = np.inf
 
-    eval_metrics = exp.evaluate(
-        model, dataset, on_train=False, on_val=False, on_test=True
-    )
+    for i in range(10):
+        for epoch in progress:
+            loss = exp.train(model, dataset, optimiser, on_val=True)
+            progress.set_description(f"Train loss: {loss:.4f}")
 
-    model_metrics[model_name] = eval_metrics.test
-    print(eval_metrics.test)
+        eval_metrics = exp.evaluate(
+            model, dataset, on_train=False, on_val=False, on_test=True
+        )
 
-    # Save the trained model.
-    torch.save(model.state_dict(), model_path)
-    print()
+        model_metrics[model_name] = eval_metrics.test
+        print(i, eval_metrics.test)
+
+        if eval_metrics.test.aprc < best_aprc:
+            # Save the trained model.
+            torch.save(model.state_dict(), model_path)
+            print()
 
 # %%
 # Load and evaluate models
