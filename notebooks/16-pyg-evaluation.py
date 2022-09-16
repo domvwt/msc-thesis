@@ -191,7 +191,7 @@ for model_name in best_trials.keys():
 
     # Train model ten times and keep the best one
     best_model = None
-    best_aprc = -np.inf
+    best_average_precision = -np.inf
 
     for i in range(10):
 
@@ -202,16 +202,17 @@ for model_name in best_trials.keys():
             progress.set_description(f"Train loss: {loss:.4f}")
 
         eval_metrics = exp.evaluate(
-            model, dataset, on_train=False, on_val=False, on_test=True
+            model, dataset, on_train=True, on_val=False, on_test=True
         )
 
-        model_metrics[model_name] = eval_metrics.test
-        print(i, eval_metrics.test)
-
-        if eval_metrics.test.average_precision > best_aprc:
+        if eval_metrics.train.average_precision > best_average_precision:
             # Save the trained model.
             torch.save(model.state_dict(), model_path)
             print()
+
+        model_metrics[model_name] = eval_metrics.test
+        print("Test performance:", eval_metrics.test)
+
 
 # %%
 # Load and evaluate models
