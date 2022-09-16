@@ -199,6 +199,7 @@ for model_name in best_trials.keys():
 
         for epoch in progress:
             loss = exp.train(model, dataset, optimiser, on_val=True)
+            print(loss)
             progress.set_description(f"Train loss: {loss:.4f}")
 
         eval_metrics = exp.evaluate(
@@ -211,6 +212,7 @@ for model_name in best_trials.keys():
             print()
 
         model_metrics[model_name] = eval_metrics.test
+        print("Train performance:", eval_metrics.train)
         print("Test performance:", eval_metrics.test)
 
 
