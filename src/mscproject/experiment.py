@@ -214,9 +214,12 @@ def get_model_and_optimiser(
 def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
 
     # Terminate the study if n trials > MIN_TRIALS and no improvement in 100 trials.
-    if trial.study.best_trial is not None and trial.number > MIN_TRIALS:
-        if trial.study.best_trial.number < trial.number - 100:
-            trial.study.stop()
+    try:
+        if trial.study.best_trial is not None and trial.number > MIN_TRIALS:
+            if trial.study.best_trial.number < trial.number - 100:
+                trial.study.stop()
+    except ValueError:
+        pass
 
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
