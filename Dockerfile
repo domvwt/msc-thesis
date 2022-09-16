@@ -25,7 +25,7 @@ RUN ${CONDA} init \
  && echo "conda activate base" >> ~/.bashrc
 
 # Install the project.
-COPY ./requirements.txt pyproject.toml src ./
+COPY ./requirements.txt ./
 RUN python -m pip install -r requirements.txt \
  && pip install torchmetrics --no-dependencies
 

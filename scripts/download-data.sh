@@ -12,7 +12,6 @@ fi
 # Check if the environment variables are set
 if [ -z "$GCP_BUCKET_NAME" ]; then
   echo "GCP_BUCKET_NAME is not set"
-  exit 1
 fi
 
 # Sync the data to Google Cloud Storage

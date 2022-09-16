@@ -27,8 +27,15 @@ def get_parser():
         "-m",
         "--model-type-name",
         type=str,
-        help="Model type to optimise. One of ['GCN', 'GraphSAGE', 'GAT', 'HAN', 'HGT'] or 'ALL'",
         required=True,
+        help="Model type to optimise. One of ['GCN', 'GraphSAGE', 'GAT', 'HAN', 'HGT'] or 'ALL'",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Overwrite the study if it exists.",
     )
     return parser
 
@@ -204,6 +211,9 @@ def get_model_and_optimiser(
 
 def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
 
+    # Terminate the study if n trials > min_trials and no improvement in 100 trials.
+    
+
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
@@ -373,8 +383,9 @@ def main():
 
     study_name = f"pyg_model_selection_{args.model_type_name}"
 
-    # Delete study if it already exists.
-    # optuna.delete_study(study_name, storage="sqlite:///data/optuna.db")
+    if args.overwrite:
+        # Delete study if it already exists.
+        optuna.delete_study(study_name, storage="sqlite:///data/optuna.db")
 
     # Set optuna verbosity.
     # optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -387,7 +398,7 @@ def main():
         load_if_exists=True,
     )
 
-    total_num_trials = 200
+    total_num_trials = 400
     current_trials = len(study.trials)
     remaining_trials = total_num_trials - current_trials
     optimise_model_partial = ft.partial(
