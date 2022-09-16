@@ -193,7 +193,7 @@ for model_name in best_trials.keys():
 
     # Train model ten times and keep the best one
     best_model = None
-    best_aprc = np.inf
+    best_aprc = -np.inf
 
     for i in range(10):
         for epoch in progress:
@@ -207,7 +207,7 @@ for model_name in best_trials.keys():
         model_metrics[model_name] = eval_metrics.test
         print(i, eval_metrics.test)
 
-        if eval_metrics.test.average_precision < best_aprc:
+        if eval_metrics.test.average_precision > best_aprc:
             # Save the trained model.
             torch.save(model.state_dict(), model_path)
             print()
