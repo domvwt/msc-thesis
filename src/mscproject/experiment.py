@@ -500,6 +500,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     # Initialise the early stopping callback.
     early_stopping = EarlyStopping(patience=200, verbose=False)
 
+    print("Training...", flush=True)
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
