@@ -15,15 +15,15 @@ TARGET_TRIALS=200
 
 python src/mscproject/experiment.py \
   -m GCN \
-  -db $OPTUNA_DB \
+  --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e DESIGN
+  -e $EXPERIMENT_TYPE
 
 python src/mscproject/experiment.py \
   -m GraphSAGE \
-  -db $OPTUNA_DB \
+  --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e DESIGN
+  -e $EXPERIMENT_TYPE
 
 # python src/mscproject/experiment.py -m GAT -db $OPTUNA_DB
 # python src/mscproject/experiment.py -m HGT -db $OPTUNA_DB
