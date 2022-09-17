@@ -190,6 +190,8 @@ def evaluate(
 def get_model_and_optimiser(
     param_dict: dict, dataset: HeteroData, learning_rate: float
 ):
+    param_dict = param_dict.copy()
+
     model_type = param_dict.pop("model_type")
     edge_aggregator = param_dict.pop("edge_aggr")
     weight_decay = param_dict.pop("weight_decay")
