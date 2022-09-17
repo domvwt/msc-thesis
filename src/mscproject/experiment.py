@@ -2,6 +2,7 @@ import argparse
 import dataclasses as dc
 import functools as ft
 import math
+import time
 from typing import NamedTuple, Optional
 from pprint import pprint, pformat
 
@@ -505,6 +506,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
 
     print("Training model:", flush=True)
     print(pformat(param_dict), flush=True)
+    start_time = time.time()
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
@@ -513,6 +515,8 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
             best_aprc = val_aprc
             best_eval_metrics = eval_metrics
         early_stopping(eval_metrics.val.average_precision)
+        
+    print(f"Training time: {time.time() - start_time:.2f}s", flush=True)
 
     # Log the number of epochs.
     best_epoch = early_stopping.best_epoch or early_stopping.epoch
