@@ -279,7 +279,7 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
             end="\r",
         )
 
-    print(flush=True)
+    print()
 
     # Training time in HH:MM:SS.
     training_time = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
