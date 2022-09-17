@@ -516,7 +516,13 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
             best_eval_metrics = eval_metrics
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
-        print(f"Epoch: {early_stopping.epoch}; time per epoch: {time_per_epoch:.2f}s", flush=True, end="\r")
+        print(
+            f"Epoch: {early_stopping.epoch};"
+            f"Time per epoch: {time_per_epoch:.2f}s;"
+            f"Val APRC: {eval_metrics.val.average_precision:.4f}",
+            flush=True,
+            end="\r",
+        )
 
     # Training time in HH:MM:SS.
     training_time = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
