@@ -523,6 +523,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         trial.set_user_attr("auc", best_eval_metrics.val.auroc)
         trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
 
+    print(f"Best epoch: {best_epoch}")
     print(best_eval_metrics.val, flush=True)
 
     return best_eval_metrics.val.average_precision
