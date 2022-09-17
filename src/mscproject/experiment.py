@@ -496,7 +496,7 @@ def main():
                 study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
                 storage=args.db,
             )
-            user_attrs=dict(design_study.best_trial.user_attrs),
+            user_attrs=design_study.best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
             trial_function = ft.partial(
                 optimise_hyperparameters,
