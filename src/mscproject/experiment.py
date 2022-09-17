@@ -529,6 +529,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
             flush=True,
             end="\r",
         )
+    print(flush=True)
 
     # Training time in HH:MM:SS.
     training_time = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
@@ -575,14 +576,14 @@ def main():
         load_if_exists=True,
     )
 
-    current_trials = len(study.get_trials(states=(optuna.trial.TrialState.COMPLETE,)))
-    remaining_trials = args.n_trials - current_trials
+    completed_trials = len(study.get_trials(states=(optuna.trial.TrialState.COMPLETE,)))
+    remaining_trials = args.n_trials - completed_trials
 
-    print(f"Completed trials: {current_trials}")
+    print(f"Completed trials: {completed_trials}")
     print(f"Remaining trials: {remaining_trials}")
 
     if remaining_trials <= 0:
-        print(f"Study already contains {current_trials} trials.")
+        print(f"Study already contains {completed_trials} trials.")
     else:
         # Set the device.
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
