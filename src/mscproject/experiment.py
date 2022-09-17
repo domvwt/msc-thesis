@@ -547,7 +547,7 @@ def main():
             )
         elif args.experiment_type == "TRAIN_ONLY":
             design_study = optuna.load_study(
-                study_name=f"pyg_model_selection_{args.model_type_name}_TRAIN_ONLY",
+                study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
                 storage=args.db,
             )
             model_params = design_study.best_params
