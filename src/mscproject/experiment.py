@@ -65,7 +65,7 @@ def get_parser():
 class EarlyStopping:
     """Early stops the training if score doesn't improve after a given patience."""
 
-    def __init__(self, patience=7, verbose=False, delta=0):
+    def __init__(self, patience=7, verbose=False, delta=0.0):
         """
         Args:
             patience (int): How long to wait after last time validation score improved.
@@ -502,7 +502,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     best_eval_metrics = None
 
     # Initialise the early stopping callback.
-    early_stopping = EarlyStopping(patience=200, verbose=False)
+    early_stopping = EarlyStopping(patience=200, delta=0.001, verbose=False)
 
     print("Training model:", flush=True)
     print(pformat(param_dict), flush=True)
