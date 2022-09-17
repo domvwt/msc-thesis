@@ -230,7 +230,7 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best=False, model_name=None):
+def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best=False, model_path=None):
     # Train and evaluate the model.
     max_epochs = 2000
     val_aprc = -np.inf
@@ -258,8 +258,7 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
         ):
             print()
             print("Saving best model of study...", flush=True)
-            model_name = model_name or trial.study.study_name
-            model_path = MODEL_DIR / f"{model_name}.pt"
+            assert model_path is not None, "Model path must be specified."
             torch.save(model.state_dict(), model_path)
 
         if val_aprc > best_aprc:
@@ -418,8 +417,8 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     model, optimiser = get_model_and_optimiser(
         param_dict, dataset, learning_rate=learning_rate
     )
-
-    return _train(trial, param_dict, dataset, model, optimiser)
+    model_path = MODEL_DIR / "unregularised" / "f{model_type_name}.pt"
+    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_path=model_path)
 
 
 def remove_prefix(text, prefix):
@@ -463,8 +462,8 @@ def optimise_hyperparameters(
     model, optimiser, param_dict = build_experiment_from_trial_params(
         model_params, user_attrs, dataset
     )
-
-    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_name=user_attrs["model_type"])
+    model_path = MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
+    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_path=model_path)
 
 
 def main():
