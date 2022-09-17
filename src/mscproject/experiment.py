@@ -521,7 +521,9 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
                 [
                     f"Epoch: {early_stopping.epoch}",
                     f"Time per epoch: {time_per_epoch:.2f}s",
-                    f"Val APRC: {eval_metrics.val.average_precision:.4f}",
+                    f"Val loss: {eval_metrics.val.loss:.4f}",
+                    f"Val APRC: {val_aprc:.4f}",
+                    f"Best Val APRC: {best_aprc:.4f}",
                 ]
             ),
             flush=True,
