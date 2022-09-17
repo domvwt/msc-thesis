@@ -444,9 +444,6 @@ def optimise_hyperparameters(
     )
     model_params["dropout"] = trial.suggest_uniform("dropout", 0.0, 0.5)
 
-    for k, v in model_params.items():
-        trial.set_user_attr(k, v)
-
     model, optimiser, param_dict = build_experiment_from_trial_params(
         model_params, user_attrs, dataset
     )
