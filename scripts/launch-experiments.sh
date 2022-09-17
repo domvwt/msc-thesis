@@ -51,12 +51,14 @@ python src/mscproject/experiment.py \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
   -e $EXPERIMENT_TYPE \
+  --overwrite
 
 python src/mscproject/experiment.py \
   -m GraphSAGE \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
   -e $EXPERIMENT_TYPE \
+  --overwrite
 
 
 exit 0 
