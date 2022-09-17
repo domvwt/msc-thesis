@@ -63,6 +63,7 @@ prediction_dict = {
     preds_csv.stem: pd.read_csv(preds_csv, usecols=["pred_proba", "actual"])
     for preds_csv in PREDICTION_DIR.glob("*.csv")
 }
+POSITIVE_PROPORTION = next(iter(prediction_dict.values()))["actual"].mean()
 
 
 # %%
@@ -115,10 +116,21 @@ def plot_roc_pr_curves(preds_dict, xlim=(0, 1), ylim=(0, 1), **updated_plot_kwar
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
 
+    positive_proportion = next(iter(preds_dict.values()))["actual"].mean()
+
     for model_name in sorted(preds_dict.keys()):
         preds = preds_dict[model_name]
         plot_roc_curve(axes[0], preds, model_name, xlim, ylim, **updated_plot_kwargs)
         plot_pr_curve(axes[1], preds, model_name, xlim, ylim, **updated_plot_kwargs)
+    axes[0].plot([0, 1], [0, 1], linestyle="--", color="grey", alpha=0.6)
+    axes[1].plot(
+        [0, 1],
+        [positive_proportion, positive_proportion],
+        linestyle="--",
+        color="grey",
+        alpha=0.6,
+        label="No Skill",
+    )
 
     axes[0].legend(loc="upper left", bbox_to_anchor=(0, -0.1))
     axes[1].legend(loc="upper left", bbox_to_anchor=(0, -0.1))
@@ -589,7 +601,7 @@ def plot_bootstrap_interval_hists(bootstrap_trials_df):
         ax.set_xlabel(col)
         ax.set_ylabel("Frequency")
         bootstrap_trials_df.groupby("Model")[col].plot(
-            kind="hist", bins=100, alpha=0.4, legend=True, ax=ax
+            kind="hist", bins=100, alpha=0.4, legend=False, ax=ax
         )
         # Plot vertical line at mean
         for i, model in enumerate(sorted(bootstrap_trials_df["Model"].unique())):
@@ -599,6 +611,11 @@ def plot_bootstrap_interval_hists(bootstrap_trials_df):
                 linestyle="dashed",
                 linewidth=1.5,
             )
+    ax.legend(
+        sorted(bootstrap_trials_df["Model"].unique()),
+        loc="upper left",
+        bbox_to_anchor=(0, -0.1),
+    )
 
 
 # %%

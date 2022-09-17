@@ -101,11 +101,18 @@ train_pool = cb.Pool(
     feature_names=X_train.columns.to_list(),
 )
 
-valid_pool = cb.Pool(
+val_pool = cb.Pool(
     X_valid.to_numpy(),
     y_valid.to_numpy(),
     cat_features=cat_features,
     feature_names=X_valid.columns.to_list(),
+)
+
+trail_val_pool = cb.Pool(
+    pd.concat([X_train, X_valid]).to_numpy(),
+    pd.concat([y_train, y_valid]).to_numpy(),
+    cat_features=cat_features,
+    feature_names=X_test.columns.to_list(),
 )
 
 test_pool = cb.Pool(
@@ -135,10 +142,26 @@ clf = cb.CatBoostClassifier(
 # Fit model.
 clf.fit(
     train_pool,
-    eval_set=valid_pool,
+    eval_set=val_pool,
     use_best_model=True,
     verbose=200,
 )
+
+best_iter = clf.get_best_iteration()
+
+# %%
+# Fit model on all data.
+clf = cb.CatBoostClassifier(
+    iterations=best_iter,
+    depth=6,
+    # eval_metric="Accuracy",
+    class_weights=class_weights,
+    random_seed=42,
+    loss_function="Logloss",
+    eval_metric="PRAUC",
+)
+
+clf.fit(trail_val_pool, verbose=200)
 
 # %%
 # Print confusion matrix.

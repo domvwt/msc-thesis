@@ -4,8 +4,8 @@ import functools as ft
 import math
 import time
 from pathlib import Path
+from pprint import pformat, pprint
 from typing import NamedTuple, Optional
-from pprint import pprint, pformat
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,9 +22,7 @@ from mscproject.datasets import CompanyBeneficialOwners
 from mscproject.metrics import EvalMetrics
 from mscproject.transforms import RemoveSelfLoops
 
-
 MODEL_DIR = Path("data/models/pyg")
-MODEL_DIR.mkdir(exist_ok=True)
 
 
 # Create parser for command line arguments.
@@ -200,7 +198,7 @@ def get_model_and_optimiser(
 
     model_type = param_dict.pop("model_type")
     edge_aggregator = param_dict.pop("edge_aggr")
-    weight_decay = param_dict.pop("weight_decay")
+    weight_decay = param_dict.pop("weight_decay", 0)
 
     if "hidden_channels_log2" in param_dict:
         param_dict["hidden_channels"] = 2 ** param_dict.pop("hidden_channels_log2")
@@ -230,7 +228,15 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best=False, model_path=None):
+def _train(
+    trial: optuna.Trial,
+    param_dict,
+    dataset,
+    model,
+    optimiser,
+    save_best=False,
+    model_path=None,
+):
     # Train and evaluate the model.
     max_epochs = 2000
     val_aprc = -np.inf
@@ -419,7 +425,15 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         param_dict, dataset, learning_rate=learning_rate
     )
     model_path = MODEL_DIR / "unregularised" / "f{model_type_name}.pt"
-    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_path=model_path)
+    return _train(
+        trial,
+        param_dict,
+        dataset,
+        model,
+        optimiser,
+        save_best=True,
+        model_path=model_path,
+    )
 
 
 def remove_prefix(text, prefix):
@@ -464,7 +478,15 @@ def optimise_hyperparameters(
         model_params, user_attrs, dataset
     )
     model_path = MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
-    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_path=model_path)
+    return _train(
+        trial,
+        param_dict,
+        dataset,
+        model,
+        optimiser,
+        save_best=True,
+        model_path=model_path,
+    )
 
 
 def train_only(
@@ -487,7 +509,15 @@ def train_only(
         model_params, user_attrs, dataset
     )
     model_path = MODEL_DIR / "unregularised" / f"{user_attrs['model_type']}.pt"
-    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_path=model_path)
+    return _train(
+        trial,
+        param_dict,
+        dataset,
+        model,
+        optimiser,
+        save_best=True,
+        model_path=model_path,
+    )
 
 
 def main():
