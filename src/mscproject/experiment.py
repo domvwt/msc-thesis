@@ -256,6 +256,7 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
             (trial.number == 0 and val_aprc > best_aprc)
             or (trial.number > 0 and val_aprc > best_aprc > trial.study.best_value)
         ):
+            print()
             print("Saving best model of study...", flush=True)
             model_path = MODEL_DIR / f"{type(model).__name__}.pt"
             torch.save(model.state_dict(), model_path)
