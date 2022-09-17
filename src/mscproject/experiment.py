@@ -3,7 +3,7 @@ import dataclasses as dc
 import functools as ft
 import math
 from typing import NamedTuple, Optional
-from pprint import pprint
+from pprint import pprint, pformat
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -501,8 +501,8 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     # Initialise the early stopping callback.
     early_stopping = EarlyStopping(patience=200, verbose=False)
 
-    print("Training model:")
-    pprint(param_dict)
+    print("Training model:", flush=True)
+    print(pformat(param_dict), flush=True)
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
