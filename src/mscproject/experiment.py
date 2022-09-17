@@ -412,7 +412,7 @@ def build_experiment_from_trial_params(model_params, user_attrs, dataset, verbos
     model_params["out_channels"] = 1
     model_params["act_first"] = True
     model_params["add_self_loops"] = False
-    model_params["model_type"] = mod.get_model(model_params["model_type"])
+    model_params["model_type"] = mod.get_model(user_attrs["model_type"])
     model_params["v2"] = True
     lr = user_attrs["learning_rate"]
     model_params["jk"] = None if model_params["jk"] == "none" else model_params["jk"]
@@ -496,11 +496,13 @@ def main():
                 study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
                 storage=args.db,
             )
+            user_attrs=design_study.best_trial.user_attrs,
+            user_attrs["model_type"] = args.model_type_name
             trial_function = ft.partial(
                 optimise_hyperparameters,
                 dataset=dataset,
                 model_params=design_study.best_params,
-                user_attrs=design_study.best_trial.user_attrs,
+                user_attrs=user_attrs,
             )
         else:
             raise ValueError(f"Unknown experiment type: {args.experiment_type}")
