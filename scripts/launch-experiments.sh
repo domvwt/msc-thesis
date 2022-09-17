@@ -44,21 +44,19 @@ python src/mscproject/experiment.py \
 
 
 EXPERIMENT_TYPE="TRAIN_ONLY"
-TARGET_TRIALS=20
+TARGET_TRIALS=10
 
 python src/mscproject/experiment.py \
   -m GCN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE \
-  --overwrite
+  -e $EXPERIMENT_TYPE
 
 python src/mscproject/experiment.py \
   -m GraphSAGE \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE \
-  --overwrite
+  -e $EXPERIMENT_TYPE
 
 
 exit 0 
