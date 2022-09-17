@@ -456,7 +456,7 @@ def optimise_hyperparameters(
     val_aprc = _train(trial, param_dict, dataset, model, optimiser)
 
     # If this is the best trial so far, save the model.
-    if trial.number == 0 or val_aprc < trial.study.best_value:
+    if trial.number == 0 or val_aprc > trial.study.best_value:
         print("Saving best model.")
         model_path = MODEL_DIR / f"{user_attrs['model_type']}.pt"
         torch.save(model.state_dict(), model_path)
