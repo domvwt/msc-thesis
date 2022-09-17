@@ -395,7 +395,6 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         )
     else:
         model_type = mod.get_model(model_type_name)
-    param_dict["model_type"] = model_type
 
     # NOTE: Jumping Knowledge restricted to 'last' due to difficulty of implementation
     #   for heterogeneous models. Other modes will *not* work.
@@ -464,11 +463,12 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
 
     param_dict.update(
         dict(
+            model_type=model_type,
             in_channels=-1,
             hidden_channels=hidden_channels,
             out_channels=1,
             num_layers=num_layers,
-            dropout=trial.suggest_float("dropout", 0, 1),
+            dropout=0,
             act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
             # NOTE: act_first only has an effect when normalisation is used.
             act_first=True,
@@ -500,7 +500,8 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     # Initialise the early stopping callback.
     early_stopping = EarlyStopping(patience=200, verbose=False)
 
-    print("Training...", flush=True)
+    print("Training model:")
+    print(param_dict)
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
