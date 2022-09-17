@@ -431,7 +431,7 @@ def optimise_hyperparameters(
     trial: optuna.Trial, dataset: HeteroData, trial_params: dict
 ):
     print("Using trial params:", pformat(trial_params))
-    
+
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
@@ -502,7 +502,7 @@ def main():
                 study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
                 storage=args.db,
             )
-            trial_params = design_study.best_params
+            trial_params = design_study.best_trial
             trial_function = ft.partial(
                 optimise_hyperparameters,
                 dataset=dataset,
