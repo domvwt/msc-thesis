@@ -575,7 +575,7 @@ def main():
         load_if_exists=True,
     )
 
-    current_trials = len(study.trials)
+    current_trials = len(study.get_trials(states=(optuna.trial.TrialState.COMPLETE,)))
     remaining_trials = args.n_trials - current_trials
 
     print(f"Completed trials: {current_trials}")
