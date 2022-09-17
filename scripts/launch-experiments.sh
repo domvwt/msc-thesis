@@ -9,18 +9,18 @@ run_until_success () {
 
 OPTUNA_DB="sqlite:///data/optuna-03.db"
 EXPERIMENT_TYPE="DESIGN"
-TARGET_TRIALS=200
+TARGET_TRIALS=50
 
 #python src/mscproject/experiment.py -m ALL
 
 python src/mscproject/experiment.py \
-  -m GCN \
+  -m GraphSAGE \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
   -e $EXPERIMENT_TYPE
 
 python src/mscproject/experiment.py \
-  -m GraphSAGE \
+  -m GCN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
   -e $EXPERIMENT_TYPE
