@@ -3,6 +3,7 @@ import dataclasses as dc
 import functools as ft
 import math
 from typing import NamedTuple, Optional
+from pprint import pprint
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -501,7 +502,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     early_stopping = EarlyStopping(patience=200, verbose=False)
 
     print("Training model:")
-    print(param_dict)
+    pprint(param_dict)
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
