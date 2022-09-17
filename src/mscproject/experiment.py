@@ -248,12 +248,22 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
         val_aprc = eval_metrics.val.average_precision
+
+        early_stopping(eval_metrics.val.average_precision)
+        time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
+
+        if save_best and (
+            (trial.number == 0 and val_aprc > best_aprc)
+            or (trial.number > 0 and val_aprc > best_aprc > trial.study.best_value)
+        ):
+            print("Saving best model of study...", flush=True)
+            model_path = MODEL_DIR / f"{type(model).__name__}.pt"
+            torch.save(model.state_dict(), model_path)
+
         if val_aprc > best_aprc:
             best_aprc = val_aprc
             best_eval_metrics = eval_metrics
 
-        early_stopping(eval_metrics.val.average_precision)
-        time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
         print(
             "; ".join(
                 [
@@ -267,14 +277,6 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
             flush=True,
             end="\r",
         )
-
-        if save_best and (
-            (trial.number == 0 and val_aprc > best_aprc)
-            or (trial.number > 0 and val_aprc > best_aprc > trial.study.best_value)
-        ):
-            print("Saving best model of study...", flush=True)
-            model_path = MODEL_DIR / f"{type(model).__name__}.pt"
-            torch.save(model.state_dict(), model_path)
 
     print(flush=True)
 
