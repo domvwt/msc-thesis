@@ -230,7 +230,7 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def _train(trial, param_dict, dataset, model, optimiser, save_best=False):
+def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best=False):
     # Train and evaluate the model.
     max_epochs = 2000
     val_aprc = -np.inf
@@ -251,7 +251,7 @@ def _train(trial, param_dict, dataset, model, optimiser, save_best=False):
         if val_aprc > best_aprc:
             best_aprc = val_aprc
             best_eval_metrics = eval_metrics
-        
+
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
         print(
@@ -268,7 +268,12 @@ def _train(trial, param_dict, dataset, model, optimiser, save_best=False):
             end="\r",
         )
 
-        if save_best and (trial.number == 0 or val_aprc > trial.study.best_value):
+        if (
+            save_best
+            and trial.number > 0
+            and val_aprc > trial.study.best_value
+            and val_aprc > best_aprc
+        ):
             print("Saving best model of study...", flush=True)
             model_path = MODEL_DIR / f"{type(model).__name__}.pt"
             torch.save(model.state_dict(), model_path)
