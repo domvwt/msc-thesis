@@ -7,6 +7,7 @@ run_until_success () {
   done
 }
 
+
 OPTUNA_DB="sqlite:///data/optuna-03.db"
 EXPERIMENT_TYPE="DESIGN"
 TARGET_TRIALS=30
@@ -25,13 +26,20 @@ python src/mscproject/experiment.py \
   -n $TARGET_TRIALS \
   -e $EXPERIMENT_TYPE
 
-# python src/mscproject/experiment.py -m GAT -db $OPTUNA_DB
-# python src/mscproject/experiment.py -m HGT -db $OPTUNA_DB
-# python src/mscproject/experiment.py -m HAN -db $OPTUNA_DB
 
-# export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+EXPERIMENT_TYPE="HYPERPARAMETERS"
+TARGET_TRIALS=30
 
-# run_until_success python src/mscproject/experiment.py -m GAT
-# run_until_success python src/mscproject/experiment.py -m HAN
+python src/mscproject/experiment.py \
+  -m GraphSAGE \
+  --db $OPTUNA_DB \
+  -n $TARGET_TRIALS \
+  -e $EXPERIMENT_TYPE
+
+python src/mscproject/experiment.py \
+  -m GCN \
+  --db $OPTUNA_DB \
+  -n $TARGET_TRIALS \
+  -e $EXPERIMENT_TYPE
 
 exit 0 

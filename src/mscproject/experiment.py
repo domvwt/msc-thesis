@@ -222,163 +222,66 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def optimise_hyperparameters(
-    trial: optuna.Trial, dataset: HeteroData, model_type_name: str
-):
-    pass
-    # # Clear the CUDA cache if applicable.
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # if device == "cuda":
-    #     torch.cuda.empty_cache()
+def _train(trial, param_dict, dataset, model, optimiser):
+    # Train and evaluate the model.
+    max_epochs = 2000
+    val_aprc = -np.inf
 
-    # # Set the hyperparameters of the model.
-    # param_dict = {}
+    best_aprc = -np.inf
+    best_eval_metrics = None
 
-    # # Select the model.
-    # if model_type_name == "ALL":
-    #     model_type = mod.get_model(
-    #         trial.suggest_categorical(
-    #             "model", ["GCN", "GraphSAGE", "GAT", "HAN", "HGT"]
-    #         )
-    #     )
-    # else:
-    #     model_type = mod.get_model(model_type_name)
-    # param_dict["model_type"] = model_type
+    # Initialise the early stopping callback.
+    early_stopping = EarlyStopping(patience=200, delta=0.001, verbose=False)
 
-    # # NOTE: Jumping Knowledge restricted to 'last' due to difficulty of implementation
-    # #   for heterogeneous models. Other modes will *not* work.
-    # jk_choices = {
-    #     "none": None,
-    #     "last": "last",
-    #     # "cat": "cat",
-    #     # "max": "max",
-    # }
-    # jk_choice = jk_choices.get(
-    #     str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
-    # )
+    print("Training model:", flush=True)
+    print(pformat(param_dict), flush=True)
+    start_time = time.time()
+    while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
+        _ = train(model, dataset, optimiser)
+        eval_metrics = evaluate(model, dataset)
+        val_aprc = eval_metrics.val.average_precision
+        if val_aprc > best_aprc:
+            best_aprc = val_aprc
+            best_eval_metrics = eval_metrics
+        early_stopping(eval_metrics.val.average_precision)
+        time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
+        print(
+            "; ".join(
+                [
+                    f"Epoch: {early_stopping.epoch}",
+                    f"Time per epoch: {time_per_epoch:.2f}s",
+                    f"Val loss: {eval_metrics.val.loss:.4f}",
+                    f"Val APRC: {val_aprc:.4f}",
+                    f"Best Val APRC: {best_aprc:.4f}",
+                ]
+            ),
+            flush=True,
+            end="\r",
+        )
+    print(flush=True)
 
-    # aggr_choices = ["sum", "mean", "min", "max"]
-    # heads_min = 0
-    # heads_max = 3
-    # hidden_channels_min = 1
-    # hidden_channels_max = 8
-    # num_layers_max = 8
+    # Training time in HH:MM:SS.
+    training_time = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
+    print(f"Training time: {training_time}", flush=True)
 
-    # add_self_loops = trial.suggest_categorical("add_self_loops", [True, False])
+    # Log the number of epochs.
+    best_epoch = early_stopping.best_epoch or early_stopping.epoch
+    trial.set_user_attr("total_epochs", early_stopping.epoch)
+    trial.set_user_attr("best_epoch", best_epoch)
 
-    # if add_self_loops:
-    #     dataset: HeteroData = AddSelfLoops(fill_value=1.0)(dataset)  # type: ignore
-    # else:
-    #     dataset: HeteroData = RemoveSelfLoops()(dataset)
+    if best_eval_metrics:
+        trial.set_user_attr("loss", best_eval_metrics.val.loss)
+        trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
+        trial.set_user_attr("precision", best_eval_metrics.val.precision)
+        trial.set_user_attr("recall", best_eval_metrics.val.recall)
+        trial.set_user_attr("f1", best_eval_metrics.val.f1)
+        trial.set_user_attr("auc", best_eval_metrics.val.auroc)
+        trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
 
-    # if model_type.__name__ == "GCN":
-    #     param_dict["aggr"] = trial.suggest_categorical("gcn_aggr", aggr_choices)
-    #     param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
-    # elif model_type.__name__ == "GraphSAGE":
-    #     num_layers_max = 10
-    # elif model_type.__name__ == "GAT":
-    #     param_dict["v2"] = trial.suggest_categorical("v2", [True])
-    #     param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
-    #     param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
-    #     if param_dict["concat"]:
-    #         hidden_channels_min = int(param_dict["heads_log2"])
-    # elif model_type.__name__ == "HAN":
-    #     param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
-    #     param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
-    #     param_dict["dropout"] = trial.suggest_float("han_dropout", 0, 1)
-    #     hidden_channels_min = int(param_dict["heads_log2"])
-    # elif model_type.__name__ == "HGT":
-    #     param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
-    #     param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
-    #     hidden_channels_min = int(param_dict["heads_log2"])
+    print(f"Best epoch: {best_epoch}")
+    print(best_eval_metrics.val, flush=True)
 
-    # # NOTE: Hidden channels restricted to '2**8' due to resource constraints.
-    # hidden_channels_log2 = trial.suggest_int(
-    #     "hidden_channels_log2", hidden_channels_min, hidden_channels_max
-    # )
-
-    # # Fix memory issues.
-    # # if hidden_channels_log2 == 8:
-    # #     num_layers_max = 4
-
-    # num_layers = trial.suggest_int("num_layers", 1, num_layers_max)
-    # param_dict["hidden_channels_log2"] = hidden_channels_log2
-    # hidden_channels = 2**hidden_channels_log2
-    # trial.set_user_attr("n_hidden", hidden_channels)
-
-    # if "heads_log2" in param_dict:
-    #     heads = 2 ** param_dict["heads_log2"]
-    #     param_dict["heads"] = heads
-    #     trial.set_user_attr("n_heads", heads)
-
-    # # param_dict["edge_aggr"] = trial.suggest_categorical("edge_aggr", aggr_choices)
-    # # param_dict["weight_decay"] = trial.suggest_float("weight_decay", 0.0, 0.2)
-
-    # param_dict["edge_aggr"] = trial.suggest_categorical("edge_aggr", aggr_choices)
-    # param_dict["weight_decay"] = 0
-
-    # param_dict.update(
-    #     dict(
-    #         in_channels=-1,
-    #         num_layers=num_layers,
-    #         out_channels=1,
-    #         dropout=trial.suggest_float("dropout", 0, 1),
-    #         act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
-    #         # NOTE: act_first only has an effect when normalisation is used.
-    #         act_first=True,
-    #         # NOTE: normalisation is not used as data is not batched.
-    #         norm=None,
-    #         jk=jk_choice,
-    #         # NOTE: add_self_loops is directly applied to the dataset.
-    #         add_self_loops=False,
-    #     )
-    # )
-
-    # # Set the learning rate.
-    # learning_rate = 0.01
-    # trial.set_user_attr("learning_rate", learning_rate)
-
-    # # Get the model and optimiser.
-    # model, optimiser = get_model_and_optimiser(
-    #     param_dict, dataset, learning_rate=learning_rate
-    # )
-
-    # # Train and evaluate the model.
-    # max_epochs = 1500
-    # val_aprc = -np.inf
-
-    # best_aprc = -np.inf
-    # best_eval_metrics = None
-
-    # # Initialise the early stopping callback.
-    # early_stopping = EarlyStopping(patience=500, verbose=False)
-
-    # while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
-    #     _ = train(model, dataset, optimiser)
-    #     eval_metrics = evaluate(model, dataset)
-    #     val_aprc = eval_metrics.val.loss
-    #     if val_aprc > best_aprc:
-    #         best_aprc = val_aprc
-    #         best_eval_metrics = eval_metrics
-    #     early_stopping(eval_metrics.val.average_precision)
-
-    # # Log the number of epochs.
-    # best_epoch = early_stopping.best_epoch or early_stopping.epoch
-    # trial.set_user_attr("total_epochs", early_stopping.epoch)
-    # trial.set_user_attr("best_epoch", best_epoch)
-
-    # if best_eval_metrics:
-    #     trial.set_user_attr("loss", best_eval_metrics.val.loss)
-    #     trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
-    #     trial.set_user_attr("precision", best_eval_metrics.val.precision)
-    #     trial.set_user_attr("recall", best_eval_metrics.val.recall)
-    #     trial.set_user_attr("f1", best_eval_metrics.val.f1)
-    #     trial.set_user_attr("auc", best_eval_metrics.val.auroc)
-    #     trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
-
-    # print(best_eval_metrics.val, flush=True)
-
-    # return best_eval_metrics.val.average_precision
+    return best_eval_metrics.val.average_precision
 
 
 def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
@@ -494,65 +397,62 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         param_dict, dataset, learning_rate=learning_rate
     )
 
-    # Train and evaluate the model.
-    max_epochs = 2000
-    val_aprc = -np.inf
+    return _train(trial, param_dict, dataset, model, optimiser)
 
-    best_aprc = -np.inf
-    best_eval_metrics = None
 
-    # Initialise the early stopping callback.
-    early_stopping = EarlyStopping(patience=200, delta=0.001, verbose=False)
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix) :]
+    return text
 
-    print("Training model:", flush=True)
-    print(pformat(param_dict), flush=True)
-    start_time = time.time()
-    while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
-        _ = train(model, dataset, optimiser)
-        eval_metrics = evaluate(model, dataset)
-        val_aprc = eval_metrics.val.average_precision
-        if val_aprc > best_aprc:
-            best_aprc = val_aprc
-            best_eval_metrics = eval_metrics
-        early_stopping(eval_metrics.val.average_precision)
-        time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
-        print(
-            "; ".join(
-                [
-                    f"Epoch: {early_stopping.epoch}",
-                    f"Time per epoch: {time_per_epoch:.2f}s",
-                    f"Val loss: {eval_metrics.val.loss:.4f}",
-                    f"Val APRC: {val_aprc:.4f}",
-                    f"Best Val APRC: {best_aprc:.4f}",
-                ]
-            ),
-            flush=True,
-            end="\r",
-        )
-    print(flush=True)
 
-    # Training time in HH:MM:SS.
-    training_time = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
-    print(f"Training time: {training_time}", flush=True)
+def build_experiment_from_trial_params(trial_params, dataset, verbose=False):
+    param_dict = {
+        remove_prefix(k, "params_"): v
+        for k, v in trial_params.items()
+        if k.startswith("params")
+    }
+    # Rename key from "n_layers" to "num_layers"
+    param_dict["in_channels"] = -1
+    param_dict["out_channels"] = 1
+    param_dict["act_first"] = True
+    param_dict["add_self_loops"] = False
+    param_dict["model_type"] = mod.get_model(trial_params["model_type"])
+    param_dict["v2"] = True
+    lr = trial_params["user_attrs_learning_rate"]
+    param_dict["jk"] = None if param_dict["jk"] == "none" else param_dict["jk"]
+    if verbose:
+        print(param_dict)
+    model, optimiser = get_model_and_optimiser(param_dict, dataset, lr)
+    return model, optimiser, param_dict
 
-    # Log the number of epochs.
-    best_epoch = early_stopping.best_epoch or early_stopping.epoch
-    trial.set_user_attr("total_epochs", early_stopping.epoch)
-    trial.set_user_attr("best_epoch", best_epoch)
 
-    if best_eval_metrics:
-        trial.set_user_attr("loss", best_eval_metrics.val.loss)
-        trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
-        trial.set_user_attr("precision", best_eval_metrics.val.precision)
-        trial.set_user_attr("recall", best_eval_metrics.val.recall)
-        trial.set_user_attr("f1", best_eval_metrics.val.f1)
-        trial.set_user_attr("auc", best_eval_metrics.val.auroc)
-        trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
+def optimise_hyperparameters(
+    trial: optuna.Trial, dataset: HeteroData, trial_params: dict
+):
+    # Clear the CUDA cache if applicable.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device == "cuda":
+        torch.cuda.empty_cache()
 
-    print(f"Best epoch: {best_epoch}")
-    print(best_eval_metrics.val, flush=True)
+    if trial_params["params_add_self_loops"]:
+        dataset = AddSelfLoops(fill_value=1.0)(dataset)  # type: ignore
+    else:
+        dataset = RemoveSelfLoops()(dataset)
 
-    return best_eval_metrics.val.average_precision
+    trial_params["params_weight_decay"] = trial.suggest_loguniform(
+        "weight_decay", 1e-6, 1e-2
+    )
+    trial_params["params_dropout"] = trial.suggest_uniform("dropout", 0.0, 0.5)
+
+    for k, v in trial_params.items():
+        trial.set_user_attr(k, v)
+
+    model, optimiser, param_dict = build_experiment_from_trial_params(
+        trial_params, dataset
+    )
+
+    return _train(trial, param_dict, dataset, model, optimiser)
 
 
 def main():
@@ -564,9 +464,6 @@ def main():
     if args.overwrite:
         # Delete study if it already exists.
         optuna.delete_study(study_name, storage=args.db)
-
-    # Set optuna verbosity.
-    # optuna.logging.set_verbosity(optuna.logging.WARNING)
 
     # Create study
     study = optuna.create_study(
@@ -599,10 +496,15 @@ def main():
                 optimise_design, dataset=dataset, model_type_name=args.model_type_name
             )
         elif args.experiment_type == "HYPERPARAMETERS":
+            design_study = optuna.load_study(
+                study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
+                storage=args.db,
+            )
+            trial_params = design_study.best_params
             trial_function = ft.partial(
                 optimise_hyperparameters,
                 dataset=dataset,
-                model_type_name=args.model_type_name,
+                trial_params=trial_params,
             )
         else:
             raise ValueError(f"Unknown experiment type: {args.experiment_type}")
