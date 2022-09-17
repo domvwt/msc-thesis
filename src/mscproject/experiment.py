@@ -230,7 +230,7 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best=False):
+def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best=False, model_name=None):
     # Train and evaluate the model.
     max_epochs = 2000
     val_aprc = -np.inf
@@ -258,7 +258,8 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
         ):
             print()
             print("Saving best model of study...", flush=True)
-            model_path = MODEL_DIR / f"{model.__name__}.pt"
+            model_name = model_name or trial.study.study_name
+            model_path = MODEL_DIR / f"{model_name}.pt"
             torch.save(model.state_dict(), model_path)
 
         if val_aprc > best_aprc:
@@ -463,7 +464,7 @@ def optimise_hyperparameters(
         model_params, user_attrs, dataset
     )
 
-    return _train(trial, param_dict, dataset, model, optimiser, save_best=True)
+    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_name=user_attrs["model_type"])
 
 
 def main():
