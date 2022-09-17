@@ -239,7 +239,7 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
     best_eval_metrics = None
 
     # Initialise the early stopping callback.
-    early_stopping = EarlyStopping(patience=200, delta=0.001, verbose=False)
+    early_stopping = EarlyStopping(patience=200, delta=0.01, verbose=False)
 
     print("Training model:", flush=True)
     print(pformat(param_dict), flush=True)
