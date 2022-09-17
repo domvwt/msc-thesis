@@ -37,24 +37,36 @@ import mscproject.simulate as sim
 # %autoreload 2
 
 # %%
-import torch
-from mscproject.datasets import CompanyBeneficialOwners
-
-dataset_path = "data/pyg/"
-
-# Set the device.
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Load the dataset.
-dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
-dataset = dataset.data.to(device)
+companies_path = "data/graph-features/companies.parquet"
+persons_path = "data/graph-features/persons.parquet"
+edges_path = "data/graph-features/edges.parquet"
 
 # %%
-from torch_geometric.loader import DataLoader
-
-loader = DataLoader(dataset, batch_size=32, shuffle=True)
+companies_df = pd.read_parquet(companies_path)
+persons_df = pd.read_parquet(persons_path)
+edges_df = pd.read_parquet(edges_path)
 
 # %%
-for batch in loader:
-    print(batch.num_graphs)
-    break
+print(companies_df.columns)
+print(persons_df.columns)
+print(edges_df.columns)
+
+# %%
+companies_out = companies_df.loc[:, :"is_anomalous"]
+persons_out = persons_df.loc[:, :"is_anomalous"]
+edges_out = edges_df.loc[:, :"is_anomalous"]
+
+# %%
+print(companies_out.columns)
+print(persons_out.columns)
+print(edges_out.columns)
+
+# %%
+companies_output_path = "data/graph-anomalies/companies.parquet"
+persons_output_path = "data/graph-anomalies/persons.parquet"
+edges_output_path = "data/graph-anomalies/edges.parquet"
+
+# %%
+companies_out.to_parquet(companies_output_path)
+persons_out.to_parquet(persons_output_path)
+edges_out.to_parquet(edges_output_path)

@@ -46,6 +46,27 @@ def main() -> None:
     persons_anomalised["component"] = persons_anomalised["id"].map(node_id_to_cc_id_map)
     edges_df["component"] = edges_df["src"].map(node_id_to_cc_id_map)
 
+    companies_anomalised = pd.read_parquet(conf_dict["companies_anomalies"])
+    persons_anomalised = pd.read_parquet(conf_dict["persons_anomalies"])
+    edges_anomalised = pd.read_parquet(conf_dict["edges_anomalies"])
+
+    # Drop components with < 9 edges (i.e. 10 nodes).
+    print("Dropping components with < 9 edges...")
+    (
+        edges_anomalised,
+        dropped_component_set,
+    ) = feat.drop_components_with_less_than_n_edges(edges_anomalised, 9)
+    print(f"Dropped {len(dropped_component_set)} components...")
+
+    # Drop nodes with no edges.
+    print("Dropping nodes with no edges...")
+    companies_anomalised = companies_anomalised.query(
+        "component not in @dropped_component_set"
+    )
+    persons_anomalised = persons_anomalised.query(
+        "component not in @dropped_component_set"
+    )
+
     # Save features.
     print("Saving anomalies...")
     # ? Swapped dict for list of tuples as pd.DataFrame is unhashable.

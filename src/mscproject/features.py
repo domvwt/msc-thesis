@@ -1,5 +1,5 @@
 import functools as ft
-from typing import Optional
+from typing import Optional, Tuple
 
 import joblib as jl
 import networkx as nx
@@ -157,3 +157,15 @@ def get_local_neighbourhood_features(
         .T.set_axis(columns, axis=1, inplace=False)
         .fillna(0)
     )
+
+
+def drop_components_with_less_than_n_edges(
+    edges_df: pd.DataFrame, n: int
+) -> Tuple[pd.DataFrame, set[int]]:
+    """
+    Drop components with < n edges.
+    """
+    component_sizes = edges_df.groupby("component").size()
+    components_to_drop = component_sizes[component_sizes < n].index
+    edges_df = edges_df[~edges_df["component"].isin(components_to_drop)]
+    return edges_df, set(components_to_drop.values)

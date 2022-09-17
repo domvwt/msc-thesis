@@ -19,9 +19,6 @@ from mscproject.datasets import CompanyBeneficialOwners
 from mscproject.metrics import EvalMetrics
 from mscproject.transforms import RemoveSelfLoops
 
-MIN_TRIALS = 200
-MAX_TRIALS = 300
-
 
 # Create parser for command line arguments.
 def get_parser():
@@ -30,8 +27,24 @@ def get_parser():
         "-m",
         "--model-type-name",
         type=str,
+        choices=["GCN", "GraphSAGE", "GAT", "HAN", "HGT", "ALL"],
         required=True,
         help="Model type to optimise. One of ['GCN', 'GraphSAGE', 'GAT', 'HAN', 'HGT'] or 'ALL'",
+    )
+    parser.add_argument(
+        "-e",
+        "--experiment-type",
+        type=str,
+        choices=["DESIGN", "HYPERPARAMETERS"],
+        required=True,
+        help="Experiment type. One of ['DESIGN', 'HYPERPARAMETERS']",
+    )
+    parser.add_argument(
+        "-n",
+        "--n-trials",
+        type=int,
+        default=100,
+        help="Total number of trials to run. Default 100.",
     )
     parser.add_argument(
         "--overwrite",
@@ -118,8 +131,8 @@ def train(model, input_data, optimizer, on_train=True, on_val=False, on_test=Fal
 
     # Multiply importance of anomalous data by 10.
     importance = (y_tensor * 9) + 1
-
     loss = F.binary_cross_entropy(out_tensor, y_tensor, weight=importance)
+
     loss.backward()
     optimizer.step()
 
@@ -211,16 +224,166 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
+def optimise_hyperparameters(
+    trial: optuna.Trial, dataset: HeteroData, model_type_name: str
+):
+    pass
+    # # Clear the CUDA cache if applicable.
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # if device == "cuda":
+    #     torch.cuda.empty_cache()
 
-    # Terminate the study if n trials > MIN_TRIALS and no improvement in 100 trials.
-    try:
-        if trial.study.best_trial is not None and trial.number > MIN_TRIALS:
-            if trial.study.best_trial.number < trial.number - 100:
-                trial.study.stop()
-    except ValueError:
-        pass
+    # # Set the hyperparameters of the model.
+    # param_dict = {}
 
+    # # Select the model.
+    # if model_type_name == "ALL":
+    #     model_type = mod.get_model(
+    #         trial.suggest_categorical(
+    #             "model", ["GCN", "GraphSAGE", "GAT", "HAN", "HGT"]
+    #         )
+    #     )
+    # else:
+    #     model_type = mod.get_model(model_type_name)
+    # param_dict["model_type"] = model_type
+
+    # # NOTE: Jumping Knowledge restricted to 'last' due to difficulty of implementation
+    # #   for heterogeneous models. Other modes will *not* work.
+    # jk_choices = {
+    #     "none": None,
+    #     "last": "last",
+    #     # "cat": "cat",
+    #     # "max": "max",
+    # }
+    # jk_choice = jk_choices.get(
+    #     str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
+    # )
+
+    # aggr_choices = ["sum", "mean", "min", "max"]
+    # heads_min = 0
+    # heads_max = 3
+    # hidden_channels_min = 1
+    # hidden_channels_max = 8
+    # num_layers_max = 8
+
+    # add_self_loops = trial.suggest_categorical("add_self_loops", [True, False])
+
+    # if add_self_loops:
+    #     dataset: HeteroData = AddSelfLoops(fill_value=1.0)(dataset)  # type: ignore
+    # else:
+    #     dataset: HeteroData = RemoveSelfLoops()(dataset)
+
+    # if model_type.__name__ == "GCN":
+    #     param_dict["aggr"] = trial.suggest_categorical("gcn_aggr", aggr_choices)
+    #     param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
+    # elif model_type.__name__ == "GraphSAGE":
+    #     num_layers_max = 10
+    # elif model_type.__name__ == "GAT":
+    #     param_dict["v2"] = trial.suggest_categorical("v2", [True])
+    #     param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
+    #     param_dict["concat"] = trial.suggest_categorical("concat", [True, False])
+    #     if param_dict["concat"]:
+    #         hidden_channels_min = int(param_dict["heads_log2"])
+    # elif model_type.__name__ == "HAN":
+    #     param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
+    #     param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
+    #     param_dict["dropout"] = trial.suggest_float("han_dropout", 0, 1)
+    #     hidden_channels_min = int(param_dict["heads_log2"])
+    # elif model_type.__name__ == "HGT":
+    #     param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
+    #     param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
+    #     hidden_channels_min = int(param_dict["heads_log2"])
+
+    # # NOTE: Hidden channels restricted to '2**8' due to resource constraints.
+    # hidden_channels_log2 = trial.suggest_int(
+    #     "hidden_channels_log2", hidden_channels_min, hidden_channels_max
+    # )
+
+    # # Fix memory issues.
+    # # if hidden_channels_log2 == 8:
+    # #     num_layers_max = 4
+
+    # num_layers = trial.suggest_int("num_layers", 1, num_layers_max)
+    # param_dict["hidden_channels_log2"] = hidden_channels_log2
+    # hidden_channels = 2**hidden_channels_log2
+    # trial.set_user_attr("n_hidden", hidden_channels)
+
+    # if "heads_log2" in param_dict:
+    #     heads = 2 ** param_dict["heads_log2"]
+    #     param_dict["heads"] = heads
+    #     trial.set_user_attr("n_heads", heads)
+
+    # # param_dict["edge_aggr"] = trial.suggest_categorical("edge_aggr", aggr_choices)
+    # # param_dict["weight_decay"] = trial.suggest_float("weight_decay", 0.0, 0.2)
+
+    # param_dict["edge_aggr"] = trial.suggest_categorical("edge_aggr", aggr_choices)
+    # param_dict["weight_decay"] = 0
+
+    # param_dict.update(
+    #     dict(
+    #         in_channels=-1,
+    #         num_layers=num_layers,
+    #         out_channels=1,
+    #         dropout=trial.suggest_float("dropout", 0, 1),
+    #         act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
+    #         # NOTE: act_first only has an effect when normalisation is used.
+    #         act_first=True,
+    #         # NOTE: normalisation is not used as data is not batched.
+    #         norm=None,
+    #         jk=jk_choice,
+    #         # NOTE: add_self_loops is directly applied to the dataset.
+    #         add_self_loops=False,
+    #     )
+    # )
+
+    # # Set the learning rate.
+    # learning_rate = 0.01
+    # trial.set_user_attr("learning_rate", learning_rate)
+
+    # # Get the model and optimiser.
+    # model, optimiser = get_model_and_optimiser(
+    #     param_dict, dataset, learning_rate=learning_rate
+    # )
+
+    # # Train and evaluate the model.
+    # max_epochs = 1500
+    # val_aprc = -np.inf
+
+    # best_aprc = -np.inf
+    # best_eval_metrics = None
+
+    # # Initialise the early stopping callback.
+    # early_stopping = EarlyStopping(patience=500, verbose=False)
+
+    # while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
+    #     _ = train(model, dataset, optimiser)
+    #     eval_metrics = evaluate(model, dataset)
+    #     val_aprc = eval_metrics.val.loss
+    #     if val_aprc > best_aprc:
+    #         best_aprc = val_aprc
+    #         best_eval_metrics = eval_metrics
+    #     early_stopping(eval_metrics.val.average_precision)
+
+    # # Log the number of epochs.
+    # best_epoch = early_stopping.best_epoch or early_stopping.epoch
+    # trial.set_user_attr("total_epochs", early_stopping.epoch)
+    # trial.set_user_attr("best_epoch", best_epoch)
+
+    # if best_eval_metrics:
+    #     trial.set_user_attr("loss", best_eval_metrics.val.loss)
+    #     trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
+    #     trial.set_user_attr("precision", best_eval_metrics.val.precision)
+    #     trial.set_user_attr("recall", best_eval_metrics.val.recall)
+    #     trial.set_user_attr("f1", best_eval_metrics.val.f1)
+    #     trial.set_user_attr("auc", best_eval_metrics.val.auroc)
+    #     trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
+
+    # print(best_eval_metrics.val, flush=True)
+
+    # return best_eval_metrics.val.average_precision
+
+
+def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
@@ -254,10 +417,10 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
 
     aggr_choices = ["sum", "mean", "min", "max"]
     heads_min = 0
-    heads_max = 3
+    heads_max = 4
     hidden_channels_min = 1
     hidden_channels_max = 8
-    num_layers_max = 5
+    num_layers_max = 8
 
     add_self_loops = trial.suggest_categorical("add_self_loops", [True, False])
 
@@ -280,23 +443,19 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
     elif model_type.__name__ == "HAN":
         param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
         param_dict["negative_slope"] = trial.suggest_float("negative_slope", 0.0, 1.0)
-        param_dict["dropout"] = trial.suggest_float("han_dropout", 0, 1)
+        param_dict["han_dropout"] = trial.suggest_float("han_dropout", 0, 1)
         hidden_channels_min = int(param_dict["heads_log2"])
     elif model_type.__name__ == "HGT":
         param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
         param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
         hidden_channels_min = int(param_dict["heads_log2"])
 
-    # NOTE: Hidden channels restricted to '2**8' due to resource constraints.
     hidden_channels_log2 = trial.suggest_int(
         "hidden_channels_log2", hidden_channels_min, hidden_channels_max
     )
-    # Fix memory issues.
-    if hidden_channels_log2 == 8:
-        num_layers_max = 4
-    num_layers = trial.suggest_int("num_layers", 1, num_layers_max)
-    param_dict["hidden_channels_log2"] = hidden_channels_log2
     hidden_channels = 2**hidden_channels_log2
+
+    num_layers = trial.suggest_int("num_layers", 1, num_layers_max)
     trial.set_user_attr("n_hidden", hidden_channels)
 
     if "heads_log2" in param_dict:
@@ -304,15 +463,22 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         param_dict["heads"] = heads
         trial.set_user_attr("n_heads", heads)
 
+    # Not to be confused with GCN edge aggregation - this is used by the
+    # `to_hetero` function.
+    edge_aggr = trial.suggest_categorical("edge_aggr", aggr_choices)
+    param_dict["weight_decay"] = 0
+
     param_dict.update(
         dict(
             in_channels=-1,
-            num_layers=num_layers,
+            hidden_channels=hidden_channels,
             out_channels=1,
+            num_layers=num_layers,
             dropout=trial.suggest_float("dropout", 0, 1),
-            act=trial.suggest_categorical("act", ["relu", "gelu"]),
+            act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
             # NOTE: act_first only has an effect when normalisation is used.
             act_first=True,
+            edge_aggr=edge_aggr,
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
             jk=jk_choice,
@@ -320,9 +486,6 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
             add_self_loops=False,
         )
     )
-
-    param_dict["edge_aggr"] = trial.suggest_categorical("edge_aggr", aggr_choices)
-    param_dict["weight_decay"] = trial.suggest_float("weight_decay", 0.0, 0.2)
 
     # Set the learning rate.
     learning_rate = 0.01
@@ -333,20 +496,20 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
         param_dict, dataset, learning_rate=learning_rate
     )
 
-    # Initialise the early stopping callback.
-    early_stopping = EarlyStopping(patience=50, verbose=False)
-
     # Train and evaluate the model.
-    max_epochs = 1000
+    max_epochs = 2000
     val_aprc = -np.inf
 
     best_aprc = -np.inf
     best_eval_metrics = None
 
+    # Initialise the early stopping callback.
+    early_stopping = EarlyStopping(patience=200, verbose=False)
+
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
-        val_aprc = eval_metrics.val.loss
+        val_aprc = eval_metrics.val.average_precision
         if val_aprc > best_aprc:
             best_aprc = val_aprc
             best_eval_metrics = eval_metrics
@@ -374,26 +537,17 @@ def optimise_model(trial: optuna.Trial, dataset: HeteroData, model_type_name: st
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    assert args.model_type_name in {
-        "GCN",
-        "GraphSAGE",
-        "GAT",
-        "HAN",
-        "HGT",
-        "ALL",
-    }, "Model type must be one of: 'GCN', 'GraphSAGE', 'GAT', 'HAN', 'HGT', 'ALL'"
-
-    dataset_path = "data/pyg/"
 
     # Set the device.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {str(device).upper()}")
 
     # Load the dataset.
+    dataset_path = "data/pyg/"
     dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
     dataset = dataset.data.to(device)
 
-    study_name = f"pyg_model_selection_{args.model_type_name}"
+    study_name = f"pyg_model_selection_{args.model_type_name}_{args.experiment_type}"
 
     if args.overwrite:
         # Delete study if it already exists.
@@ -411,11 +565,22 @@ def main():
     )
 
     current_trials = len(study.trials)
-    remaining_trials = MAX_TRIALS - current_trials
-    optimise_model_partial = ft.partial(
-        optimise_model, dataset=dataset, model_type_name=args.model_type_name
-    )
-    study.optimize(optimise_model_partial, n_trials=remaining_trials)
+    remaining_trials = args.n_trials - current_trials
+
+    if args.experiment_type == "DESIGN":
+        trial_function = ft.partial(
+            optimise_design, dataset=dataset, model_type_name=args.model_type_name
+        )
+    elif args.experiment_type == "HYPERPARAMETERS":
+        trial_function = ft.partial(
+            optimise_hyperparameters,
+            dataset=dataset,
+            model_type_name=args.model_type_name,
+        )
+    else:
+        raise ValueError(f"Unknown experiment type: {args.experiment_type}")
+
+    study.optimize(trial_function, n_trials=remaining_trials)
 
     # Print top models.
     print()
