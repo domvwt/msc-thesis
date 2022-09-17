@@ -517,7 +517,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
         print(
-            ";".join(
+            "; ".join(
                 [
                     f"Epoch: {early_stopping.epoch}"
                     f"Time per epoch: {time_per_epoch:.2f}s"
