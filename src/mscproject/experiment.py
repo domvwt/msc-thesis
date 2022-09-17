@@ -42,9 +42,9 @@ def get_parser():
         "-e",
         "--experiment-type",
         type=str,
-        choices=["DESIGN", "HYPERPARAMETERS"],
+        choices=["DESIGN", "HYPERPARAMETERS", "TRAIN_ONLY"],
         required=True,
-        help="Experiment type. One of ['DESIGN', 'HYPERPARAMETERS']",
+        help="Experiment type. One of ['DESIGN', 'HYPERPARAMETERS', 'TRAIN_ONLY']",
     )
     parser.add_argument(
         "-n",
@@ -466,6 +466,29 @@ def optimise_hyperparameters(
     return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_path=model_path)
 
 
+def train_only(
+    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict
+):
+    # Clear the CUDA cache if applicable.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device == "cuda":
+        torch.cuda.empty_cache()
+
+    if model_params["add_self_loops"]:
+        dataset = AddSelfLoops(fill_value=1.0)(dataset)  # type: ignore
+    else:
+        dataset = RemoveSelfLoops()(dataset)
+
+    model_params["weight_decay"] = 0
+    model_params["dropout"] = 0
+
+    model, optimiser, param_dict = build_experiment_from_trial_params(
+        model_params, user_attrs, dataset
+    )
+    model_path = MODEL_DIR / "unregularised" / f"{user_attrs['model_type']}.pt"
+    return _train(trial, param_dict, dataset, model, optimiser, save_best=True, model_path=model_path)
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -518,6 +541,22 @@ def main():
             print("Using user attrs:\n", pformat(user_attrs))
             trial_function = ft.partial(
                 optimise_hyperparameters,
+                dataset=dataset,
+                model_params=model_params,
+                user_attrs=user_attrs,
+            )
+        elif args.experiment_type == "TRAIN_ONLY":
+            design_study = optuna.load_study(
+                study_name=f"pyg_model_selection_{args.model_type_name}_TRAIN_ONLY",
+                storage=args.db,
+            )
+            model_params = design_study.best_params
+            user_attrs = design_study.best_trial.user_attrs
+            user_attrs["model_type"] = args.model_type_name
+            print("Using model params:\n", pformat(model_params))
+            print("Using user attrs:\n", pformat(user_attrs))
+            trial_function = ft.partial(
+                train_only,
                 dataset=dataset,
                 model_params=model_params,
                 user_attrs=user_attrs,
