@@ -417,7 +417,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     heads_max = 4
     hidden_channels_min = 1
     hidden_channels_max = 8
-    num_layers_max = 10
+    num_layers_max = 8
 
     add_self_loops = trial.suggest_categorical("add_self_loops", [True, False])
 
