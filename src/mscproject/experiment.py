@@ -259,6 +259,7 @@ def _train(trial: optuna.Trial, param_dict, dataset, model, optimiser, save_best
             print()
             print("Saving best model of study...", flush=True)
             assert model_path is not None, "Model path must be specified."
+            Path(model_path).parent.mkdir(parents=True, exist_ok=True)
             torch.save(model.state_dict(), model_path)
 
         if val_aprc > best_aprc:
