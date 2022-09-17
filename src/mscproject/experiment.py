@@ -193,12 +193,6 @@ def get_model_and_optimiser(
     edge_aggregator = param_dict.pop("edge_aggr")
     weight_decay = param_dict.pop("weight_decay")
 
-    param_dict["hidden_channels"] = 2 ** param_dict.pop("hidden_channels_log2")
-
-    if "heads_log2" in param_dict:
-        heads = 2 ** param_dict.pop("heads_log2")
-        param_dict["heads"] = heads
-
     # Instantiate the model.
     if model_type.is_heterogeneous:
         model = model_type(**param_dict, metadata=dataset.metadata())
