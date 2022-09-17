@@ -430,6 +430,8 @@ def build_experiment_from_trial_params(trial_params, dataset, verbose=False):
 def optimise_hyperparameters(
     trial: optuna.Trial, dataset: HeteroData, trial_params: dict
 ):
+    print("Using trial params:", pformat(trial_params))
+    
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
