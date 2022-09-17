@@ -268,7 +268,7 @@ def _train(trial, param_dict, dataset, model, optimiser, save_best=False):
             end="\r",
         )
 
-        if save_best and val_aprc > trial.study.best_value:
+        if save_best and (trial.number == 0 or val_aprc > trial.study.best_value):
             print("Saving best model of study...", flush=True)
             model_path = MODEL_DIR / f"{type(model).__name__}.pt"
             torch.save(model.state_dict(), model_path)
