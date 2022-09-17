@@ -406,52 +406,46 @@ def remove_prefix(text, prefix):
     return text
 
 
-def build_experiment_from_trial_params(trial_params, dataset, verbose=False):
-    param_dict = {
-        remove_prefix(k, "params_"): v
-        for k, v in trial_params.items()
-        if k.startswith("params")
-    }
+def build_experiment_from_trial_params(model_params, user_attrs, dataset, verbose=False):
     # Rename key from "n_layers" to "num_layers"
-    param_dict["in_channels"] = -1
-    param_dict["out_channels"] = 1
-    param_dict["act_first"] = True
-    param_dict["add_self_loops"] = False
-    param_dict["model_type"] = mod.get_model(trial_params["model_type"])
-    param_dict["v2"] = True
-    lr = trial_params["user_attrs_learning_rate"]
-    param_dict["jk"] = None if param_dict["jk"] == "none" else param_dict["jk"]
-    if verbose:
-        print(param_dict)
-    model, optimiser = get_model_and_optimiser(param_dict, dataset, lr)
-    return model, optimiser, param_dict
+    model_params["in_channels"] = -1
+    model_params["out_channels"] = 1
+    model_params["act_first"] = True
+    model_params["add_self_loops"] = False
+    model_params["model_type"] = mod.get_model(model_params["model_type"])
+    model_params["v2"] = True
+    lr = user_attrs["learning_rate"]
+    model_params["jk"] = None if model_params["jk"] == "none" else model_params["jk"]
+    model, optimiser = get_model_and_optimiser(model_params, dataset, lr)
+    return model, optimiser, model_params
 
 
 def optimise_hyperparameters(
-    trial: optuna.Trial, dataset: HeteroData, trial_params: dict
+    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict
 ):
-    print("Using trial params:", pformat(trial_params))
+    print("Using model params:", pformat(model_params))
+    print("Using user attrs:", pformat(user_attrs))
 
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
         torch.cuda.empty_cache()
 
-    if trial_params["params_add_self_loops"]:
+    if model_params["add_self_loops"]:
         dataset = AddSelfLoops(fill_value=1.0)(dataset)  # type: ignore
     else:
         dataset = RemoveSelfLoops()(dataset)
 
-    trial_params["params_weight_decay"] = trial.suggest_loguniform(
+    model_params["weight_decay"] = trial.suggest_loguniform(
         "weight_decay", 1e-6, 1e-2
     )
-    trial_params["params_dropout"] = trial.suggest_uniform("dropout", 0.0, 0.5)
+    model_params["dropout"] = trial.suggest_uniform("dropout", 0.0, 0.5)
 
-    for k, v in trial_params.items():
+    for k, v in model_params.items():
         trial.set_user_attr(k, v)
 
     model, optimiser, param_dict = build_experiment_from_trial_params(
-        trial_params, dataset
+        model_params, user_attrs, dataset
     )
 
     return _train(trial, param_dict, dataset, model, optimiser)
@@ -502,11 +496,11 @@ def main():
                 study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
                 storage=args.db,
             )
-            trial_params = {**design_study.best_params, **design_study.best_trial.user_attrs}
             trial_function = ft.partial(
                 optimise_hyperparameters,
                 dataset=dataset,
-                trial_params=trial_params,
+                model_params=design_study.best_params,
+                user_attrs=design_study.best_trial.user_attrs,
             )
         else:
             raise ValueError(f"Unknown experiment type: {args.experiment_type}")
