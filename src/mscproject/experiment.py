@@ -517,7 +517,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
         print(
-            "; ".join(
+            " - ".join(
                 [
                     f"Epoch: {early_stopping.epoch}"
                     f"Time per epoch: {time_per_epoch:.2f}s"
@@ -556,15 +556,6 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    # Set the device.
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {str(device).upper()}")
-
-    # Load the dataset.
-    dataset_path = "data/pyg/"
-    dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
-    dataset = dataset.data.to(device)
-
     study_name = f"pyg_model_selection_{args.model_type_name}_{args.experiment_type}"
 
     if args.overwrite:
@@ -574,7 +565,7 @@ def main():
     # Set optuna verbosity.
     # optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-    # Optimize the model.
+    # Create study
     study = optuna.create_study(
         direction=optuna.study.StudyDirection.MAXIMIZE,
         study_name=study_name,
@@ -588,20 +579,32 @@ def main():
     print(f"Completed trials: {current_trials}")
     print(f"Remaining trials: {remaining_trials}")
 
-    if args.experiment_type == "DESIGN":
-        trial_function = ft.partial(
-            optimise_design, dataset=dataset, model_type_name=args.model_type_name
-        )
-    elif args.experiment_type == "HYPERPARAMETERS":
-        trial_function = ft.partial(
-            optimise_hyperparameters,
-            dataset=dataset,
-            model_type_name=args.model_type_name,
-        )
+    if remaining_trials <= 0:
+        print(f"Study already contains {current_trials} trials.")
     else:
-        raise ValueError(f"Unknown experiment type: {args.experiment_type}")
+        # Set the device.
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Using device: {str(device).upper()}")
 
-    study.optimize(trial_function, n_trials=remaining_trials)
+        # Load the dataset.
+        dataset_path = "data/pyg/"
+        dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
+        dataset = dataset.data.to(device)
+
+        if args.experiment_type == "DESIGN":
+            trial_function = ft.partial(
+                optimise_design, dataset=dataset, model_type_name=args.model_type_name
+            )
+        elif args.experiment_type == "HYPERPARAMETERS":
+            trial_function = ft.partial(
+                optimise_hyperparameters,
+                dataset=dataset,
+                model_type_name=args.model_type_name,
+            )
+        else:
+            raise ValueError(f"Unknown experiment type: {args.experiment_type}")
+
+        study.optimize(trial_function, n_trials=remaining_trials)
 
     # Print top models.
     print()
