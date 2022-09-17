@@ -230,7 +230,7 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def _train(trial, param_dict, dataset, model, optimiser):
+def _train(trial, param_dict, dataset, model, optimiser, save_best=False):
     # Train and evaluate the model.
     max_epochs = 2000
     val_aprc = -np.inf
@@ -251,6 +251,7 @@ def _train(trial, param_dict, dataset, model, optimiser):
         if val_aprc > best_aprc:
             best_aprc = val_aprc
             best_eval_metrics = eval_metrics
+        
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
         print(
@@ -266,6 +267,12 @@ def _train(trial, param_dict, dataset, model, optimiser):
             flush=True,
             end="\r",
         )
+
+        if save_best and val_aprc > trial.study.best_value:
+            print("Saving best model of study...", flush=True)
+            model_path = MODEL_DIR / f"{type(model).__name__}.pt"
+            torch.save(model.state_dict(), model_path)
+
     print(flush=True)
 
     # Training time in HH:MM:SS.
@@ -453,15 +460,7 @@ def optimise_hyperparameters(
         model_params, user_attrs, dataset
     )
 
-    val_aprc = _train(trial, param_dict, dataset, model, optimiser)
-
-    # If this is the best trial so far, save the model.
-    if trial.number == 0 or val_aprc > trial.study.best_value:
-        print("Saving best model.")
-        model_path = MODEL_DIR / f"{user_attrs['model_type']}.pt"
-        torch.save(model.state_dict(), model_path)
-
-    return val_aprc
+    return _train(trial, param_dict, dataset, model, optimiser, save_best=True)
 
 
 def main():
