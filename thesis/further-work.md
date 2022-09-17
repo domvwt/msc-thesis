@@ -5,6 +5,7 @@
   - [Graph Neural Networks: A Review of Methods and Applications](https://arxiv.org/abs/1812.08434)
   - Important for the application of GNNs in industry
 - Skip connections and pooling operators
+- Additional linear layers post message passing
 - Stacking / Ensemble of GNNs and other models
 - Dynamic graphs (e.g. temporal graphs)
   - Capturing changes in company ownership structure over time

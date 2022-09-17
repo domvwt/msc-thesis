@@ -76,12 +76,12 @@ edges_post_df.is_anomalous.value_counts(normalize=True)
 
 # %%
 # Get component sizes
-component_sizes_pre = edges_pre_df.groupby("component").agg({
-    "src": "count"
-})
+component_sizes_pre = edges_pre_df.groupby("component").agg({"src": "count"})
 # Select 99% of components
-component_sizes_pre = component_sizes_pre.sort_values("src", ascending=True).query("src > 9")
-component_sizes_pre = component_sizes_pre.iloc[:int(len(component_sizes_pre) * 0.99)]
+component_sizes_pre = component_sizes_pre.sort_values("src", ascending=True).query(
+    "src > 9"
+)
+component_sizes_pre = component_sizes_pre.iloc[: int(len(component_sizes_pre) * 0.99)]
 component_sizes_pre["src"].plot.hist(bins=20, label="Normal")
 
 # %%
@@ -97,13 +97,14 @@ graph_post = nx.from_pandas_edgelist(edges_post_df, "src", "dst")
 
 # %%
 # Get component sizes
-component_sizes_post = edges_post_df.groupby("component").agg({
-    "is_anomalous": "sum",
-    "src": "count"
-})
+component_sizes_post = edges_post_df.groupby("component").agg(
+    {"is_anomalous": "sum", "src": "count"}
+)
 # Select 99% of components
 component_sizes_post = component_sizes_post.sort_values("src", ascending=True)
-component_sizes_post = component_sizes_post.iloc[:int(len(component_sizes_post) * 0.99)]
+component_sizes_post = component_sizes_post.iloc[
+    : int(len(component_sizes_post) * 0.99)
+]
 component_sizes_post["src"].plot.hist(bins=20, label="Normal")
 
 # %%
@@ -112,14 +113,15 @@ component_sizes_post["src"].plot.hist(bins=20, label="Normal")
 
 # %%
 # Get component sizes
-component_sizes_post = edges_post_df.groupby(["component"]).agg({
-    "is_anomalous": "sum",
-    "src": "count"
-})
+component_sizes_post = edges_post_df.groupby(["component"]).agg(
+    {"is_anomalous": "sum", "src": "count"}
+)
 component_sizes_post["has_anomaly"] = component_sizes_post["is_anomalous"] > 0
 # Select 99% of components
 component_sizes_post = component_sizes_post.sort_values("src", ascending=True)
-component_sizes_post = component_sizes_post.iloc[:int(len(component_sizes_post) * 0.99)]
+component_sizes_post = component_sizes_post.iloc[
+    : int(len(component_sizes_post) * 0.99)
+]
 anomaly_dist = component_sizes_post.groupby(["src", "has_anomaly"]).count().unstack()
 # normalise
 anomaly_dist = anomaly_dist / anomaly_dist.sum()
@@ -151,7 +153,9 @@ edges_pre_df.query("src == '2258222399048453312'")
 graph_edges_pre = edges_pre_df.query("component == 77309426934").sort_values("src")
 
 # %%
-edges_in_pre_not_in_post = graph_edges_pre.query("src not in @graph_edges_post.src.values")
+edges_in_pre_not_in_post = graph_edges_pre.query(
+    "src not in @graph_edges_post.src.values"
+)
 edges_in_pre_not_in_post
 
 # %%
@@ -192,18 +196,14 @@ NODE_SIZE = 100
 
 # %%
 anomaly_id = "2258222399048453312"
-pos[anomaly_id] = [-0.40 ,  0.21]
+pos[anomaly_id] = [-0.40, 0.21]
 
 
 # %%
 def plot_pre(ax):
 
-    edge_colours = [
-        edge_c for u, v in graph_pre.edges
-    ]
-    node_colours = [
-        node_c for n in graph_pre.nodes
-    ]
+    edge_colours = [edge_c for u, v in graph_pre.edges]
+    node_colours = [node_c for n in graph_pre.nodes]
 
     # pos = nx.drawing.spring_layout(graph_intermediate, iterations=1000, seed=i)
     nx.draw(
@@ -215,7 +215,7 @@ def plot_pre(ax):
         node_size=NODE_SIZE,
         # font_size=8,
         # font_color="black",
-        ax=ax
+        ax=ax,
     )
 
 
@@ -223,7 +223,8 @@ def plot_pre(ax):
 def plot_mid(ax):
     # Colour edges that are in the pre graph but not in the post graph
     edge_colours = [
-        dropped_edge_c if (u) == "2258222399048453312" else edge_c for u, v in graph_pre.edges
+        dropped_edge_c if (u) == "2258222399048453312" else edge_c
+        for u, v in graph_pre.edges
     ]
     node_colours = [
         node_c if n in graph_post.nodes else dropped_node_c for n in graph_pre.nodes
@@ -243,7 +244,7 @@ def plot_mid(ax):
         node_size=NODE_SIZE,
         # font_size=8,
         # font_color="black",
-        ax=ax
+        ax=ax,
     )
 
 
@@ -253,7 +254,8 @@ def plot_post(ax):
 
     # Colour edges in the post graph that are not in the pre graph
     edge_colours = [
-        new_edge_c if u == "2258222399048453312" else edge_c for u, v in graph_post.edges
+        new_edge_c if u == "2258222399048453312" else edge_c
+        for u, v in graph_post.edges
     ]
     node_colours = [
         node_c if n in graph_pre.nodes else new_node_c for n in graph_post.nodes
@@ -273,7 +275,7 @@ def plot_post(ax):
         node_size=NODE_SIZE,
         # font_size=8,
         # font_color="black",
-        ax=ax
+        ax=ax,
     )
 
 

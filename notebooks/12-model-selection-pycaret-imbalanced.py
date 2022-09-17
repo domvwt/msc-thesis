@@ -40,48 +40,84 @@ turbo_mode = False
 # Read config.
 conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
 
-persons_df = pd.read_parquet(conf_dict["persons_nodes"])
-companies_df = pd.read_parquet(conf_dict["companies_nodes"])
-edges_df = pd.read_parquet(conf_dict["edges"])
-
-features_path = conf_dict["preprocessed_features_path"]
+features_path = conf_dict["features_path"]
 
 
 # %%
 # Load features for data split.
-def load_features(path_root, split):
-    features_dir = Path(path_root) / split
-    companies_df = pd.read_parquet(features_dir / "companies.parquet").dropna()
-    persons_df = pd.read_parquet(features_dir / "persons.parquet").dropna()
+def load_features(path_root):
+    companies_df = pd.read_parquet(conf_dict["companies_features"])
+    persons_df = pd.read_parquet(conf_dict["persons_features"])
     return companies_df, persons_df
 
 
 # %%
-companies_train_df, persons_train_df = load_features(features_path, "train")
+companies_df, persons_df = load_features(features_path)
 
 # %%
-select_cols = set(companies_train_df.columns) & set(persons_train_df.columns)
-processed_feature_cols = [x for x in select_cols if x.endswith("__processed")]
-raw_feature_cols = [x.split("__processed")[0] for x in processed_feature_cols]
+companies_df.columns
+
+# %%
+common_cols = set(companies_df.columns) & set(persons_df.columns)
+drop_cols = ["id", "name", "component"]
+select_cols = sorted(common_cols.difference(drop_cols))
+
 target = "is_anomalous"
 
-entities_df = pd.concat([companies_train_df, persons_train_df], axis=0)[select_cols]
-# Sample entities_df so that half of the entities are anomalous.
-def balanced_sample(entities_df) -> pd.DataFrame:
-    n_entities = len(entities_df)
-    n_anomalous = len(entities_df[entities_df[target] == True])
-    n_normal = n_entities - n_anomalous
-    n_sample = min(n_anomalous, n_normal)
-    anomalous_df = entities_df.query("is_anomalous == False").sample(n_sample)
-    normal_df = entities_df.query("is_anomalous == True").sample(n_sample)
-    return pd.concat([anomalous_df, normal_df], axis=0)
+entities_df = pd.concat([companies_df, persons_df], axis=0)[
+    list(common_cols)
+].reset_index(drop=True)
 
 
-drop_cols = ["id", "name", "component"]
+# %%
+entities_df[select_cols].info()
 
-entities_features_df = entities_df.drop(drop_cols, axis=1)
-balanced_sample_df = balanced_sample(entities_features_df)
+# %%
+entities_df["indegree"] = entities_df["indegree"].astype(float)
+entities_df["outdegree"] = entities_df["outdegree"].astype(float)
 
+
+# %%
+def get_data_split_masks(df: pd.DataFrame):
+    component_mod = df["component"].to_numpy() % 10
+    train_mask = component_mod <= 7
+    val_mask = component_mod == 8
+    test_mask = component_mod == 9
+    assert not np.any(train_mask & val_mask)
+    assert not np.any(train_mask & test_mask)
+    assert not np.any(val_mask & test_mask)
+    return train_mask, val_mask, test_mask
+
+
+# %%
+train_mask, val_mask, test_mask = get_data_split_masks(entities_df)
+
+# %%
+train_df = entities_df.loc[train_mask].drop(drop_cols, axis=1)
+val_df = entities_df.loc[val_mask].drop(drop_cols, axis=1)
+test_df = entities_df.loc[test_mask].drop(drop_cols, axis=1)
+
+print("Anomaly proportions")
+train_proportion = train_df["is_anomalous"].sum() / len(train_df)
+print(f"Train: {train_proportion:.3f}")
+val_proportion = val_df["is_anomalous"].sum() / len(val_df)
+print(f"Val: {val_proportion:.3f}")
+test_proportion = test_df["is_anomalous"].sum() / len(test_df)
+print(f"Test: {test_proportion:.3f}")
+
+# %%
+# Get indexes in both train and test.
+train_idx = train_df.index
+test_idx = test_df.index
+train_test_idx = train_idx.intersection(test_idx)
+assert len(train_test_idx) == 0
+
+# %%
+from imblearn.under_sampling import RandomUnderSampler
+
+# %%
+# Join val to train.
+train_df = pd.concat([train_df, val_df], axis=0)
 
 # %%
 # Perform model selection with PyCaret.
@@ -89,16 +125,74 @@ balanced_sample_df = balanced_sample(entities_features_df)
 categorical_features = ["isCompany"]
 
 s = clf.setup(
-    entities_features_df,
+    train_df,
+    test_data=test_df,
     target="is_anomalous",
     categorical_features=categorical_features,
     silent=True,
-    feature_selection=True,
-    feature_selection_method="boruta",
+    normalize=True,
+    # feature_selection=True,
+    # feature_selection_method="boruta",
+    fix_imbalance=True,  # Uses SMOTE.
+    fix_imbalance_method=RandomUnderSampler(sampling_strategy="auto"),
 )
 
-clf.add_metric("apc", "APC", average_precision_score, target="pred_proba")
+clf.add_metric("aprc", "Avg. Prec.", average_precision_score, target="pred_proba")
 
 
 # %%
-best_model_imbalanced = clf.compare_models(sort="APC", turbo=turbo_mode)
+exclude = [
+    "rbfsvm",
+    "mlp",
+    "gbc",
+    "gpc",
+]
+
+# %%
+best_model = clf.compare_models(sort="aprc", turbo=turbo_mode, fold=5, exclude=exclude)
+
+# %%
+Path("reports").mkdir(exist_ok=True)
+model_selection_grid = clf.pull()
+model_selection_grid.to_csv("reports/pycaret-model-selection.csv", index=False)
+
+
+# %%
+# Highlight highest value in each column
+def highlight_max(s):
+    is_max = s == s.max()
+    return ["font-weight: bold" if v else "" for v in is_max]
+
+
+model_selection_grid.style.apply(
+    highlight_max, axis=0, subset=model_selection_grid.columns[1:]
+).format("{:.3f}", subset=model_selection_grid.columns[1:]).to_html(
+    "reports/pycaret-model-selection.html"
+)
+
+# %%
+tuned_model = clf.tune_model(
+    best_model,
+    optimize="aprc",
+    fold=3,
+    search_library="optuna",
+    n_iter=20,
+    choose_better=True,
+)
+
+# %%
+predictions = clf.predict_model(tuned_model, data=test_df, raw_score=True)
+predictions["pred_proba"] = predictions["Score_True"]
+predictions["actual"] = predictions["is_anomalous"].astype(int)
+predictions
+
+# %%
+best_model_class = model_selection_grid.iloc[0]["Model"].replace(" ", "")
+best_model_class
+
+# %%
+output_path = Path(f"data/predictions/{best_model_class}.csv")
+output_path.parent.mkdir(exist_ok=True)
+predictions.to_csv(output_path, index=False)
+
+# %%

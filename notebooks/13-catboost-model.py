@@ -53,6 +53,9 @@ def load_features(path_root):
 companies_df, persons_df = load_features(features_path)
 
 # %%
+companies_df.describe().T
+
+# %%
 common_cols = set(companies_df.columns) & set(persons_df.columns)
 drop_cols = ["id", "name", "component"]
 select_cols = sorted(common_cols.difference(drop_cols))
@@ -69,6 +72,9 @@ masks = pgl.get_data_split_masks(entities_df)
 train_df = entities_df.loc[list(masks.train.numpy())].drop(drop_cols, axis=1)
 valid_df = entities_df.loc[list(masks.val.numpy())].drop(drop_cols, axis=1)
 test_df = entities_df.loc[list(masks.test.numpy())].drop(drop_cols, axis=1)
+
+# %%
+train_df
 
 # %%
 train_df.query("isCompany == False and indegree > 0")

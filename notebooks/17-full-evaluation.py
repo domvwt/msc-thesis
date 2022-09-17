@@ -146,7 +146,7 @@ ax.set_title("Precision-Recall Curve (Precision > 0.3)")
 ax.set_xlabel("Recall")
 ax.set_ylabel("Precision")
 ax.set_xlim(0.0, 0.5)
-ax.set_ylim(0.3, 1.01)
+ax.set_ylim(0.0, 1.01)
 ax.set_aspect("auto")
 
 major = 0.1
@@ -161,7 +161,6 @@ ax.yaxis.set_minor_locator(plt.MultipleLocator(minor))
 fig.savefig(
     "figures/precision-recall-curve-high-precision.png", dpi=300, bbox_inches="tight"
 )
-
 
 # %%
 fig, ax = plt.subplots(figsize=(6, 6))
