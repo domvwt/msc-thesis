@@ -3,6 +3,7 @@ import dataclasses as dc
 import functools as ft
 import math
 import time
+from pathlib import Path
 from typing import NamedTuple, Optional
 from pprint import pprint, pformat
 
@@ -20,6 +21,10 @@ import mscproject.models as mod
 from mscproject.datasets import CompanyBeneficialOwners
 from mscproject.metrics import EvalMetrics
 from mscproject.transforms import RemoveSelfLoops
+
+
+MODEL_DIR = Path("data/models/pyg")
+MODEL_DIR.mkdir(exist_ok=True)
 
 
 # Create parser for command line arguments.
@@ -409,7 +414,9 @@ def remove_prefix(text, prefix):
     return text
 
 
-def build_experiment_from_trial_params(model_params, user_attrs, dataset, verbose=False):
+def build_experiment_from_trial_params(
+    model_params, user_attrs, dataset, verbose=False
+):
     # Rename key from "n_layers" to "num_layers"
     model_params["in_channels"] = -1
     model_params["out_channels"] = 1
@@ -439,16 +446,22 @@ def optimise_hyperparameters(
     else:
         dataset = RemoveSelfLoops()(dataset)
 
-    model_params["weight_decay"] = trial.suggest_loguniform(
-        "weight_decay", 1e-6, 1e-2
-    )
+    model_params["weight_decay"] = trial.suggest_loguniform("weight_decay", 1e-6, 1e-2)
     model_params["dropout"] = trial.suggest_uniform("dropout", 0.0, 0.5)
 
     model, optimiser, param_dict = build_experiment_from_trial_params(
         model_params, user_attrs, dataset
     )
 
-    return _train(trial, param_dict, dataset, model, optimiser)
+    val_aprc = _train(trial, param_dict, dataset, model, optimiser)
+
+    # If this is the best trial so far, save the model.
+    if trial.number == 0 or val_aprc < trial.study.best_value:
+        print("Saving best model.")
+        model_path = MODEL_DIR / f"{user_attrs['model_type']}.pt"
+        torch.save(model.state_dict(), model_path)
+
+    return val_aprc
 
 
 def main():
@@ -496,7 +509,7 @@ def main():
                 study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
                 storage=args.db,
             )
-            user_attrs=design_study.best_trial.user_attrs
+            user_attrs = design_study.best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
             trial_function = ft.partial(
                 optimise_hyperparameters,
