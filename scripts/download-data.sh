@@ -14,7 +14,7 @@ if [ -z "$GCP_BUCKET_NAME" ]; then
   echo "GCP_BUCKET_NAME is not set"
 fi
 
-# Sync the data to Google Cloud Storage
+# Download data from Google Cloud Storage
 echo "Downloading data from Google Cloud Storage..."
 gsutil -m rsync -r gs://$GCP_BUCKET_NAME data
 echo "Complete."

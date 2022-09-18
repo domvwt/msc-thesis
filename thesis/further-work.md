@@ -20,6 +20,14 @@
 - Improve the anomaly simulation algorithm to generate more realistic anomalies and preserve the original distribution of the dataset.
 - Frequency of anomalies is a parameter of the simulation algorithm. However alternative values were not tested in this work.
 
+## Notes on alternative approaches
+
+- Could try graphlets but these are expensive to calculate at node level: <https://www.nature.com/articles/srep35098#Sec5>
+- Additional node feature definition difficult within confines of the project
+- Graphlets demonstrated some success in glass classification in this paper <https://link.springer.com/article/10.1007/s13278-021-00846-9> but difficult to find any large scale application of this technique or efficient implementations of the algorithm. (high complexity, not distributed or deployable on GPU)
+- [This paper](https://arxiv.org/abs/1812.05473) shows limited performance improvement on node classification when graphlet features are combined with [Diffusion-Convolutional Neural Networks](https://papers.nips.cc/paper/2016/hash/390e982518a50e280d8e2b535462ec1f-Abstract.html)
+- Limitation of DCNNs are that they capture local representation only, unlikely to prove successful on current dataset where broader context appears to be important given the depth of the best performing models (3 layers for GraphSAGE, 4 for GCN)
+
 ## Notes on performance
 
 - Possible that some form of target leakage occurs during the simulation of the anomalies. Difficult to know without being able to explain the predictions of the model and investigating the feature importances.
