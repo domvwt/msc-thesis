@@ -32,6 +32,7 @@ while not Path("data") in Path(".").iterdir():
 
 # %%
 PREDICTION_DIR = Path("data/predictions")
+SELECT_MODELS = ["kGNN", "GraphSAGE", "CatBoost"]
 
 # %%
 # Matplotlib Settings
@@ -62,8 +63,13 @@ plt.rcParams.update({"axes.titlesize": FONT_SIZE})
 prediction_dict = {
     preds_csv.stem: pd.read_csv(preds_csv, usecols=["pred_proba", "actual"])
     for preds_csv in PREDICTION_DIR.glob("*.csv")
+    if preds_csv.stem in SELECT_MODELS
 }
+# prediction_dict["kGNN"] = prediction_dict.pop("GCN")
 POSITIVE_PROPORTION = next(iter(prediction_dict.values()))["actual"].mean()
+
+# %%
+print(POSITIVE_PROPORTION)
 
 
 # %%
@@ -114,7 +120,7 @@ plot_kwargs = {"ls": "-", "alpha": 1}
 
 def plot_roc_pr_curves(preds_dict, xlim=(0, 1), ylim=(0, 1), **updated_plot_kwargs):
 
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 5))
 
     positive_proportion = next(iter(preds_dict.values()))["actual"].mean()
 
@@ -132,8 +138,8 @@ def plot_roc_pr_curves(preds_dict, xlim=(0, 1), ylim=(0, 1), **updated_plot_kwar
         label="No Skill",
     )
 
-    axes[0].legend(loc="upper left", bbox_to_anchor=(0, -0.1))
-    axes[1].legend(loc="upper left", bbox_to_anchor=(0, -0.1))
+    axes[0].legend(loc="upper left", bbox_to_anchor=(0, -0.2))
+    axes[1].legend(loc="upper left", bbox_to_anchor=(0, -0.2))
 
     return fig
 
@@ -365,8 +371,8 @@ def top_k_metrics(y_true, y_pred, k=10):
 
 
 # %%
-y_test = prediction_dict["GCN"]["actual"]
-y_pred = prediction_dict["GCN"]["pred_proba"]
+y_test = prediction_dict["kGNN"]["actual"]
+y_pred = prediction_dict["kGNN"]["pred_proba"]
 top_k_metrics(y_test, y_pred, k=1000)
 
 
@@ -517,8 +523,8 @@ df.style.apply(highlight_max, axis=1).format("{:.3f}")
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html#sklearn.metrics.confusion_matrix
 def get_model_performance_metrics(preds, threshold=0.5):
     return {
-        "ROC AUC": sklearn.metrics.roc_auc_score(preds["actual"], preds["pred_proba"]),
-        "PR AUC": sklearn.metrics.average_precision_score(
+        "AUC-ROC": sklearn.metrics.roc_auc_score(preds["actual"], preds["pred_proba"]),
+        "AUC-PR": sklearn.metrics.average_precision_score(
             preds["actual"], preds["pred_proba"]
         ),
         # "F1 Score": sklearn.metrics.f1_score(
@@ -556,8 +562,8 @@ styled
 # %%
 def get_model_performance_metrics_np(y_true, y_pred_proba, threshold=0.5):
     return {
-        "ROC AUC": sklearn.metrics.roc_auc_score(y_true, y_pred_proba),
-        "PR AUC": sklearn.metrics.average_precision_score(y_true, y_pred_proba),
+        "AUC-ROC": sklearn.metrics.roc_auc_score(y_true, y_pred_proba),
+        "AUC-PR": sklearn.metrics.average_precision_score(y_true, y_pred_proba),
         "F1 Score": sklearn.metrics.f1_score(y_true, y_pred_proba >= threshold),
     }
 
@@ -643,7 +649,9 @@ if not Path(bootstrap_trials_df_path).exists():
     bootstrap_trials_df.to_csv(bootstrap_trials_df_path, index=False)
 else:
     bootstrap_trials_df = pd.read_csv(bootstrap_trials_df_path)
-bootstrap_trials_df = bootstrap_trials_df.drop(columns=["F1 Score"])
+bootstrap_trials_df = bootstrap_trials_df.drop(columns=["F1 Score"]).query(
+    "Model in @SELECT_MODELS"
+)
 
 # %%
 plot_bootstrap_interval_hists(bootstrap_trials_df)
@@ -715,7 +723,7 @@ def get_bootstrap_intervals_df(bootstrap_trials_df):
 
 # %%
 bootstrap_intervals = get_bootstrap_intervals_df(bootstrap_trials_df)
-bootstrap_intervals.sort_values(by=("ROC AUC", "mean"), ascending=False)
+bootstrap_intervals.sort_values(by=("AUC-ROC", "mean"), ascending=False)
 
 
 # %%
@@ -748,8 +756,11 @@ def get_bootstrap_ci(bootstrap_trials_df, metric):
     return bootstrap_ci
 
 
-bootstrap_ci = get_bootstrap_ci(bootstrap_trials_df, "ROC AUC")
-bootstrap_ci.style.apply(highlight_max, subset="ROC AUC", axis=0)
+bootstrap_ci = get_bootstrap_ci(bootstrap_trials_df, "AUC-ROC")
+bootstrap_ci.style.apply(highlight_max, subset="AUC-ROC", axis=0)
+
+# %%
+print(bootstrap_ci.to_markdown())
 
 
 # %%
@@ -767,9 +778,12 @@ bootstrap_ci = get_all_bootstrap_ci(bootstrap_trials_df)
 # Hack to make the column names unique so styling works
 bootstrap_ci.to_csv("reports/model-performance-bootstrap-ci.csv")
 bootstrap_ci.columns.values[1] = bootstrap_ci.columns.values[1] + " "
-bootstrap_ci.style.apply(highlight_max, subset=["ROC AUC", "PR AUC"], axis=0).to_html(
+bootstrap_ci.style.apply(highlight_max, subset=["AUC-ROC", "AUC-PR"], axis=0).to_html(
     "reports/model-performance-bootstrap-ci.html"
 )
 
 # %%
-bootstrap_ci.style.apply(highlight_max, subset=["ROC AUC", "PR AUC"], axis=0)
+bootstrap_ci.style.apply(highlight_max, subset=["AUC-ROC", "AUC-PR"], axis=0)
+
+# %%
+print(bootstrap_ci.to_markdown())

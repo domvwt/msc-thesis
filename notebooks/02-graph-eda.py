@@ -53,86 +53,24 @@ sc.setLogLevel("ERROR")
 spark = SparkSession.builder.config("spark.driver.memory", "8g").getOrCreate()
 
 # %%
+conf_dict
+
+# %%
+companies_nodes_df = spark.read.parquet(conf_dict["companies_nodes"])
+persons_nodes_df = spark.read.parquet(conf_dict["persons_nodes"])
+
+# %%
+nodes_df = companies_nodes_df.unionByName(
+    persons_nodes_df, allowMissingColumns=True
+).select("id", "component", "isCompany")
+
+# %%
 companies_processed_df = spark.read.parquet(conf_dict["companies_interim_02"])
 relationships_processed_df = spark.read.parquet(conf_dict["relationships_interim_02"])
 persons_processed_df = spark.read.parquet(conf_dict["persons_interim_02"])
-nodes_df = spark.read.parquet(conf_dict["nodes"])
+# nodes_df = spark.read.parquet(conf_dict["nodes"])
 edges_df = spark.read.parquet(conf_dict["edges"])
 connected_components = spark.read.parquet(conf_dict["connected_components"])
-
-# %% [markdown]
-# ### Neo4j
-
-# %%
-next(Path.cwd().glob("data/processed/companies.parquet/part-00000*"))
-
-# %%
-import textwrap as tw
-from pyspark.sql import DataFrame
-
-
-def convert_to_csv(df: DataFrame, name: str) -> None:
-    csv_path = f"data/processed/{name}.csv"
-    parquet_csv_path = f"{csv_path}.parquet"
-    df.coalesce(1).write.csv(parquet_csv_path, header=True, mode="ignore")
-    csv_txt_path = next(Path.cwd().glob(f"{parquet_csv_path}/part-00000*.csv"))
-    Path(csv_txt_path).rename(csv_path)
-
-
-def make_neo4j_statement(df: DataFrame, name: str, entity_type: str) -> None:
-    acc = []
-
-    for col in df.columns:
-        acc.append(f"{col}: row.{col}")
-
-    statement = f"""\
-        :auto USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM "file:///{name}.csv" AS row
-        CREATE (:{entity_type.capitalize()} """
-    statement += "{" + ", ".join(acc) + "})"
-    statement = tw.dedent(statement)
-    print(statement)
-    print()
-
-
-# %%
-convert_to_csv(companies_processed_df, "companies")
-convert_to_csv(persons_processed_df, "persons")
-convert_to_csv(relationships_processed_df, "relationships")
-
-make_neo4j_statement(companies_processed_df, "companies", "company")
-make_neo4j_statement(persons_processed_df, "persons", "person")
-
-# %%
-relationships_processed_df.columns
-
-# %% [markdown]
-# ```cypher
-# :auto USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM "file:///relationships.csv" AS row
-# MATCH
-#   (a:Person),
-#   (b:Company)
-# WHERE a.statementID = row.interestedPartyStatementID AND b.statementID = row.subjectStatementID
-# CREATE (a)-[r:Ownership {minimumShare: row.minimumShare}]->(b)
-# ```
-
-# %% [markdown]
-# ```cypher
-# :auto USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM "file:///relationships.csv" AS row
-# MATCH
-#   (a:Company),
-#   (b:Company)
-# WHERE a.statementID = row.interestedPartyStatementID AND b.statementID = row.subjectStatementID
-# CREATE (a)-[r:Ownership {minimumShare: row.minimumShare}]->(b)
-# ```
-
-# %%
-companies_processed_df.coalesce(1).write.csv(
-    "data/processed/companies.csv", header=True
-)
-persons_processed_df.coalesce(1).write.csv("data/processed/persons.csv", header=True)
-relationships_processed_df.coalesce(1).write.csv(
-    "data/processed/relationships.csv", header=True
-)
 
 # %% [markdown]
 # ## Graph
@@ -148,6 +86,82 @@ component_sizes.count()
 
 # %%
 component_sizes.show(10)
+
+# %%
+component_size_counts = (
+    component_sizes.groupBy(F.col("count").alias("component_size"))
+    .count()
+    .orderBy("count")
+)
+
+# %%
+component_size_counts
+
+# %%
+component_sizes_df = component_size_counts.toPandas()
+# Bin component sizes into bins of size 10
+# component_sizes_df["component_size"] = (
+#     component_sizes_df["component_size"] // 10 * 10
+# )
+component_sizes_df = (
+    component_sizes_df.groupby("component_size")
+    .sum()
+    .reset_index()
+    .sort_values("component_size")
+)
+component_sizes_df = component_sizes_df.set_index("component_size")
+
+# %%
+plt.style.use("seaborn-whitegrid")
+plt.style.use("seaborn-paper")
+
+# %%
+FONT_SIZE = 12
+
+# Set plot font size
+plt.rcParams.update({"font.size": 8})
+
+# Set axis label font size
+plt.rcParams.update({"axes.labelsize": 10})
+
+# Set legend font size
+plt.rcParams.update({"legend.fontsize": 10})
+
+# Set tick label font size
+plt.rcParams.update({"xtick.labelsize": 9})
+
+# Set tick label font size
+plt.rcParams.update({"ytick.labelsize": 9})
+
+# Set figure title font size
+plt.rcParams.update({"axes.titlesize": FONT_SIZE})
+
+# %%
+fig, ax = plt.subplots(figsize=(8, 4))
+# Plot distribution of component sizes
+plot_data = component_sizes_df.query("component_size < 20000")
+
+ax.bar(
+    plot_data.index,
+    plot_data["count"],
+    width=10,
+    # color="steelblue",
+    # edgecolor="k",
+    linewidth=1,
+)
+ax.set_title("Distribution of Component Sizes")
+ax.set_xlabel("Component Size (Nodes)")
+ax.set_ylabel("Number of Components ($\log_{10}$)")
+ax.set_yscale("log")
+
+# Set x-axis tick interval
+ax.xaxis.set_major_locator(plt.MultipleLocator(100))
+
+fig.tight_layout()
+fig.savefig("figures/component-size-distribution-initial.png", dpi=300)
+
+# %%
+com
 
 # %%
 large_components = component_sizes.filter("count >= 10 AND count <= 100")

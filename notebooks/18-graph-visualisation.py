@@ -37,7 +37,7 @@ while not Path("data") in Path(".").iterdir():
 plt.style.use("seaborn-whitegrid")
 plt.style.use("seaborn-paper")
 
-FONT_SIZE = 12
+FONT_SIZE = 10
 
 # Set plot font size
 plt.rcParams.update({"font.size": 8})
@@ -57,6 +57,11 @@ plt.rcParams.update({"ytick.labelsize": 9})
 # Set figure title font size
 plt.rcParams.update({"axes.titlesize": FONT_SIZE})
 
+# Set legend face and edge color
+plt.rcParams.update({"legend.facecolor": "white"})
+plt.rcParams.update({"legend.edgecolor": "white"})
+plt.rcParams.update({"legend.framealpha": 1})
+
 # %%
 conf_dict = yaml.safe_load(Path("config/conf.yaml").read_text())
 
@@ -66,13 +71,49 @@ edges_pre_df = pd.read_parquet(conf_dict["edges"])
 # %%
 edges_post_df = pd.read_parquet(conf_dict["edges_anomalies"])
 
+
 # %%
 
 # %% [markdown]
-# ## Graph Statistics
+# ## Initial Graph Statistics
+
+# %% [markdown]
+# ### Degree Distribution
 
 # %%
-edges_post_df.is_anomalous.value_counts(normalize=True)
+# Plot degree distribution
+def plot_degree_distribution(edge_df, ax1, ax2, bins=50, log=True, **kwargs):
+    degrees = edge_df["dst"].value_counts()
+    ax1.hist(degrees, log=log, bins=bins, **kwargs)
+    ax1.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+
+    degrees = edge_df["src"].value_counts()
+    ax2.hist(degrees, log=log, bins=bins, **kwargs)
+    # ax2.set_ylabel("Frequency ($\log_{10}$)")
+    ax2.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+
+    return ax2, ax1
+
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 4), sharey=True)
+
+ax1, ax2 = axes
+
+plot_degree_distribution(edges_post_df, ax1, ax2)
+
+ax1.set_title("In-Degree Distribution")
+ax1.set_xlabel("Degree")
+ax1.set_ylabel("Frequency ($\log_{10}$)")
+
+ax2.set_title("Out-Degree Distribution")
+ax2.set_xlabel("Degree")
+
+fig.tight_layout()
+
+fig.savefig("figures/degree-distribution-pre.png", dpi=300)
+
+# %% [markdown]
+# ### Component Sizes
 
 # %%
 # Get component sizes
@@ -82,18 +123,9 @@ component_sizes_pre = component_sizes_pre.sort_values("src", ascending=True).que
     "src > 9"
 )
 component_sizes_pre = component_sizes_pre.iloc[: int(len(component_sizes_pre) * 0.99)]
-component_sizes_pre["src"].plot.hist(bins=20, label="Normal")
 
 # %%
-graph_post = nx.from_pandas_edgelist(edges_post_df, "src", "dst")
-
-# %%
-# # Get connected components
-# components_post = list(nx.connected_components(graph_post))
-# # Assign components to edges
-# edges_post_df["component"] = edges_post_df["src"].apply(
-#     lambda x: [i for i, c in enumerate(components_post) if x in c][0]
-# )
+# graph_post = nx.from_pandas_edgelist(edges_post_df, "src", "dst")
 
 # %%
 # Get component sizes
@@ -105,58 +137,127 @@ component_sizes_post = component_sizes_post.sort_values("src", ascending=True)
 component_sizes_post = component_sizes_post.iloc[
     : int(len(component_sizes_post) * 0.99)
 ]
-component_sizes_post["src"].plot.hist(bins=20, label="Normal")
 
 # %%
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True, sharey=True)
+# fig2, ax2 = plt.subplots(figsize=(8, 4))
+
+kwargs = dict(bins=40, density=True, logy=False)
+
+component_sizes_pre["src"].plot.hist(**kwargs, ax=ax1)
+ax1.set_title("Pre-Simulation Component Size Distribution")
+ax1.set_xlabel("Component Size (Nodes)")
+ax1.set_ylabel("Density")
+# ax1.set_xlim(7, 80)
+# ax1.set_ylim(0, 0.2)
+
+component_sizes_post["src"].plot.hist(**kwargs, color="C1", ax=ax2)
+ax2.set_title("Post-Simulation Component Size Distribution")
+ax2.set_xlabel("Component Size (Nodes)")
+ax2.set_ylabel("Density")
+# ax2.set_xlim(7, 80)
+# ax2.set_ylim(0, 0.2)
+
+fig.tight_layout()
+
+fig.savefig("figures/component-sizes.png", dpi=300)
+
 
 # %%
+def plot_loghist(x, bins):
+    hist, bins = np.histogram(x, bins=bins)
+    logbins = np.logspace(np.log10(bins[0]), np.log10(bins[-1]), len(bins))
+    plt.hist(x, bins=logbins)
+    plt.xscale("log")
+
+
+# %% [markdown]
+# ### Anomaly Distribution
 
 # %%
 # Get component sizes
-component_sizes_post = edges_post_df.groupby(["component"]).agg(
-    {"is_anomalous": "sum", "src": "count"}
+anomaly_dist_df = edges_post_df.groupby(["component", "is_anomalous"]).size()
+anomaly_dist_df = anomaly_dist_df.unstack().fillna(0)
+anomaly_dist_df["Total"] = anomaly_dist_df.sum(axis=1).astype(int)
+anomaly_dist_df = anomaly_dist_df.sort_values("Total", ascending=True)
+anomaly_dist_df = anomaly_dist_df.reset_index().rename(
+    columns={False: "Normal", True: "Anomalous"}
 )
-component_sizes_post["has_anomaly"] = component_sizes_post["is_anomalous"] > 0
 # Select 99% of components
-component_sizes_post = component_sizes_post.sort_values("src", ascending=True)
-component_sizes_post = component_sizes_post.iloc[
-    : int(len(component_sizes_post) * 0.99)
+plot_data = anomaly_dist_df.sort_values("Total").iloc[
+    : int(len(anomaly_dist_df) * 0.99)
 ]
-anomaly_dist = component_sizes_post.groupby(["src", "has_anomaly"]).count().unstack()
-# normalise
-anomaly_dist = anomaly_dist / anomaly_dist.sum()
-anomaly_dist.plot.hist(bins=20, alpha=0.5, label="Normal")
+plot_data = plot_data.groupby("Total")[["Normal", "Anomalous"]].sum()
+# plot_data = plot_data.query("Total < 2000")
+# Normalize plot_data columns
+plot_data = plot_data / plot_data.sum()
+ax = plt.gca()
+ax.set_xticks(np.arange(0, plot_data.index.max(), 10))
+ax.bar(plot_data.index, plot_data["Normal"], label="Normal", alpha=0.6)
+ax.bar(plot_data.index, plot_data["Anomalous"], label="Anomalous", alpha=0.6)
+
+ax.set_title("Post-Simulation Node Distribution by Component Size")
+ax.set_xlabel("Component Size (Nodes)")
+ax.set_ylabel("Density")
+ax.legend()
+
+fig = plt.gcf()
+fig.tight_layout()
+
+fig.savefig("figures/anomaly-distribution-component-size.png", dpi=300)
 
 # %%
-component_sizes_post
+edges_post_df
 
 # %%
-component_sizes_pre.groupby("src").size().sort_index()[:20]
+fig, axes = plt.subplots(2, 2, figsize=(8, 6), sharex=False, sharey=True)
+
+(ax1, ax2, ax3, ax4) = np.ravel(axes)
+
+plot_data = edges_post_df
+
+plot_degree_distribution(plot_data.query("not is_anomalous"), ax1, ax2, bins=50)
+plot_degree_distribution(plot_data.query("is_anomalous"), ax3, ax4, bins=50, color="C1")
+
+ax1.set_title("In-Degree Distribution - Normal")
+ax2.set_title("Out-Degree Distribution - Normal")
+
+ax1.set_ylabel("Frequency ($\log_{10}$)")
+ax3.set_ylabel("Frequency ($\log_{10}$)")
+
+ax3.set_title("In-Degree Distribution - Anomalous")
+ax4.set_title("Out-Degree Distribution - Anomalous")
+
+# Set ax3 to use same xticks as ax1
+ax1.set_xlim(0, 20)
+ax3.set_xlim(0, 20)
+
+ax2.set_xlim(0, 500)
+ax4.set_xlim(0, 500)
+
+ax3.set_xlabel("Degree")
+ax4.set_xlabel("Degree")
+
+# Set bar width on ax3
+for series in ax3.patches:
+    series.set_width(0.3)
+
+fig.tight_layout()
+
+fig.savefig("figures/degree-distributions-post.png", dpi=300)
 
 # %%
-component_sizes_post.groupby("src").size().sort_index()[:20]
-
-# %%
-component_sizes_post.groupby("src").agg(["sum", "count"])
+plot_data
 
 # %% [markdown]
-# ## Anomaly Simulation
+# ## Simulation
 
 # %%
 graph_edges_post = edges_post_df.query("component == 23")
-graph_edges_post
-
-# %%
-edges_pre_df.query("src == '2258222399048453312'")
-
-# %%
 graph_edges_pre = edges_pre_df.query("component == 77309426934").sort_values("src")
-
-# %%
 edges_in_pre_not_in_post = graph_edges_pre.query(
     "src not in @graph_edges_post.src.values"
 )
-edges_in_pre_not_in_post
 
 # %%
 graph_pre = nx.DiGraph()
@@ -180,26 +281,17 @@ edge_c = "lightgrey"
 new_edge_c = "green"
 dropped_edge_c = "red"
 
-# new_edge_c = edge_c
-# dropped_edge_c = edge_c
-
-
-# %%
-graph_pre.nodes
 
 # %%
 i = 168
 print(i)
 pos = nx.drawing.spring_layout(graph_pre, seed=i, iterations=100, k=0.8)
 
-NODE_SIZE = 100
-
-# %%
+NODE_SIZE = 50
 anomaly_id = "2258222399048453312"
 pos[anomaly_id] = [-0.40, 0.21]
 
 
-# %%
 def plot_pre(ax):
 
     edge_colours = [edge_c for u, v in graph_pre.edges]
@@ -280,16 +372,17 @@ def plot_post(ax):
 
 
 # %%
-fig, axes = plt.subplots(3, 1, figsize=(4, 12))
-axes[0].set_title("Pre-Shuffle")
-axes[1].set_title("Anomaly Assignment")
-axes[2].set_title("Post-Shuffle")
+fig, axes = plt.subplots(1, 3, figsize=(8, 2.2))
+# fig, axes = plt.subplots(3, 1, figsize=(3, 8))
+axes[0].set_title("1. Initial Graph", y=-0.2)
+axes[1].set_title("2. Anomaly Assignment", y=-0.2)
+axes[2].set_title("3. Edge Shuffle", y=-0.2)
 
 plot_pre(axes[0])
 plot_mid(axes[1])
 plot_post(axes[2])
 
-fig.savefig("figures/anomaly-simulation.png", dpi=300, bbox_inches="tight")
+fig.savefig("figures/anomaly-simulation-process.png", dpi=300, bbox_inches="tight")
 
 
 # %%

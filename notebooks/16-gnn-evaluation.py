@@ -55,6 +55,12 @@ def get_best_trial(model_name):
 
 
 # %%
+get_best_trial("GraphSAGE")
+
+# %%
+get_best_trial("GCN")
+
+# %%
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 model_metrics = {}
@@ -93,6 +99,9 @@ for model_name in model_names:
 
     model_metrics[model_name] = eval_metrics.test
     print(model_name, eval_metrics.test)
+
+    print("Model structure:")
+    print(model)
 
     print("Making predictions...")
     prediction_dict = model(dataset.x_dict, dataset.edge_index_dict)
