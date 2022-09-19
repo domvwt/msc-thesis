@@ -423,7 +423,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
     model, optimiser = get_model_and_optimiser(
         param_dict, dataset, learning_rate=learning_rate
     )
-    model_path = MODEL_DIR / "unregularised" / "f{model_type_name}.pt"
+    model_path = MODEL_DIR / "unregularised" / f"{model_type_name}.pt"
     return _train(
         trial,
         param_dict,
