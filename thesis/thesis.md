@@ -84,7 +84,7 @@ The Free Company Data Product is a monthly snapshot of data for all live compani
 
 [@CompaniesHouseData]
 
-This data serves as an additional source of node features for company entities in the generated dataset. It is the ability to learn from these heterogeneous sets of features, as well as the relationships between them, that distinguishes Hetereogeneous Graph Neural Networks from other implementations.
+This data serves as an additional source of node features for company entities in the generated dataset.
 
 ## Initial Data Preparation
 

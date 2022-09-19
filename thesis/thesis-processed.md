@@ -28,6 +28,9 @@ title: Detecting Anomalous Business Ownership Structures with Graph
 `\setlength{\LTleft}{1em}`{=tex}
 
 ```{=html}
+<!-- * NOTE: Export bibliography from Zotero in Better BibLaTeX format. -->
+```
+```{=html}
 <!--
 Configuration by Panhan - config handler for Pandoc
 https://github.com/domvwt/panhan
@@ -256,6 +259,18 @@ features are extracted for each node:
 -   PageRank: A measure of node importance, based on the importance of
     neighbouring nodes [@pagePageRankCitationRanking1998].
 
+To capture information about the node's position in the graph, aggregate
+statistics are calculated for the aforementioned topological features
+for the node's neighbours and added as features:
+
+-   Minimum
+-   Maximum
+-   Sum
+-   Mean
+-   Standard Deviation
+
+The count of immediate neighvours is also included as a feature.
+
 # Methods
 
 ## Traditional Machine Learning Approaches
@@ -269,8 +284,6 @@ features are extracted for each node:
 # Results
 
 # Discussion
-
-Discussion goes here
 
 # References
 
