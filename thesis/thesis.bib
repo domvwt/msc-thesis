@@ -89,10 +89,10 @@
   file = {/home/domvwt/Zotero/storage/C2GN2SPK/Berger-Wolf and Chawla - 2019 - Proceedings of the 2019 SIAM International Confere.pdf}
 }
 
-@book{bondyGraphTheory2009,
+@book{bondyGraphTheory1982,
   title = {Graph {{Theory}}},
   author = {Bondy, Adrian and Murty, U. S. R.},
-  date = {2009-10-12},
+  date = {1982},
   eprint = {5Z71jwEACAAJ},
   eprinttype = {googlebooks},
   publisher = {{Springer London}},
@@ -129,7 +129,7 @@
   archiveprefix = {arXiv},
   issue = {arXiv:1505.01658},
   keywords = {Computer Science - Machine Learning,I.2.6},
-  file = {/home/domvwt/Zotero/storage/GN2QBGNQ/1505.html}
+  file = {/home/domvwt/Zotero/storage/JMU7Y7UK/Branco et al. - 2015 - A Survey of Predictive Modelling under Imbalanced .pdf;/home/domvwt/Zotero/storage/GN2QBGNQ/1505.html}
 }
 
 @online{brownleeROCCurvesPrecisionRecall2020,
@@ -413,6 +413,26 @@
   urldate = {2022-06-05}
 }
 
+@article{fawcettIntroductionROCAnalysis2006,
+  title = {An Introduction to {{ROC}} Analysis},
+  author = {Fawcett, Tom},
+  date = {2006-06-01},
+  journaltitle = {Pattern Recognition Letters},
+  shortjournal = {Pattern Recognition Letters},
+  series = {{{ROC Analysis}} in {{Pattern Recognition}}},
+  volume = {27},
+  number = {8},
+  pages = {861--874},
+  issn = {0167-8655},
+  doi = {10.1016/j.patrec.2005.10.010},
+  url = {https://www.sciencedirect.com/science/article/pii/S016786550500303X},
+  urldate = {2022-09-19},
+  abstract = {Receiver operating characteristics (ROC) graphs are useful for organizing classifiers and visualizing their performance. ROC graphs are commonly used in medical decision making, and in recent years have been used increasingly in machine learning and data mining research. Although ROC graphs are apparently simple, there are some common misconceptions and pitfalls when using them in practice. The purpose of this article is to serve as an introduction to ROC graphs and as a guide for using them in research.},
+  langid = {english},
+  keywords = {Classifier evaluation,Evaluation metrics,ROC analysis},
+  file = {/home/domvwt/Zotero/storage/IQ4AVIRM/Fawcett - 2006 - An introduction to ROC analysis.pdf;/home/domvwt/Zotero/storage/DBJZM53M/S016786550500303X.html}
+}
+
 @misc{ferludinTFGNNGraphNeural2022,
   title = {{{TF-GNN}}: {{Graph Neural Networks}} in {{TensorFlow}}},
   shorttitle = {{{TF-GNN}}},
@@ -444,6 +464,35 @@
   isbn = {978-3-319-98073-7},
   langid = {english},
   pagetotal = {396}
+}
+
+@misc{feyFastGraphRepresentation2019,
+  title = {Fast {{Graph Representation Learning}} with {{PyTorch Geometric}}},
+  author = {Fey, Matthias and Lenssen, Jan Eric},
+  date = {2019-04-25},
+  number = {arXiv:1903.02428},
+  eprint = {1903.02428},
+  eprinttype = {arxiv},
+  primaryclass = {cs, stat},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.1903.02428},
+  url = {http://arxiv.org/abs/1903.02428},
+  urldate = {2022-09-19},
+  abstract = {We introduce PyTorch Geometric, a library for deep learning on irregularly structured input data such as graphs, point clouds and manifolds, built upon PyTorch. In addition to general graph data structures and processing methods, it contains a variety of recently published methods from the domains of relational learning and 3D data processing. PyTorch Geometric achieves high data throughput by leveraging sparse GPU acceleration, by providing dedicated CUDA kernels and by introducing efficient mini-batch handling for input examples of different size. In this work, we present the library in detail and perform a comprehensive comparative study of the implemented methods in homogeneous evaluation scenarios.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/domvwt/Zotero/storage/BZIEWFPU/Fey and Lenssen - 2019 - Fast Graph Representation Learning with PyTorch Ge.pdf;/home/domvwt/Zotero/storage/U66CNXBX/1903.html}
+}
+
+@article{friedmanGreedyFunctionApproximation2001,
+  title = {Greedy Function Approximation: A Gradient Boosting Machine},
+  shorttitle = {Greedy Function Approximation},
+  author = {Friedman, Jerome H.},
+  date = {2001},
+  journaltitle = {Annals of statistics},
+  pages = {1189--1232},
+  publisher = {{JSTOR}},
+  file = {/home/domvwt/Zotero/storage/2UIA354H/Friedman - 2001 - Greedy function approximation a gradient boosting.pdf;/home/domvwt/Zotero/storage/GJILTNCB/2699986.html}
 }
 
 @article{fronzetticolladonUsingSocialNetwork2017,
@@ -538,6 +587,47 @@
   file = {/home/domvwt/Zotero/storage/7E4VA7T4/00401706.1969.html}
 }
 
+@misc{hamiltonInductiveRepresentationLearning2018,
+  title = {Inductive {{Representation Learning}} on {{Large Graphs}}},
+  author = {Hamilton, William L. and Ying, Rex and Leskovec, Jure},
+  date = {2018-09-10},
+  number = {arXiv:1706.02216},
+  eprint = {1706.02216},
+  eprinttype = {arxiv},
+  primaryclass = {cs, stat},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.1706.02216},
+  url = {http://arxiv.org/abs/1706.02216},
+  urldate = {2022-09-19},
+  abstract = {Low-dimensional embeddings of nodes in large graphs have proved extremely useful in a variety of prediction tasks, from content recommendation to identifying protein functions. However, most existing approaches require that all nodes in the graph are present during training of the embeddings; these previous approaches are inherently transductive and do not naturally generalize to unseen nodes. Here we present GraphSAGE, a general, inductive framework that leverages node feature information (e.g., text attributes) to efficiently generate node embeddings for previously unseen data. Instead of training individual embeddings for each node, we learn a function that generates embeddings by sampling and aggregating features from a node's local neighborhood. Our algorithm outperforms strong baselines on three inductive node-classification benchmarks: we classify the category of unseen nodes in evolving information graphs based on citation and Reddit post data, and we show that our algorithm generalizes to completely unseen graphs using a multi-graph dataset of protein-protein interactions.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Machine Learning,Computer Science - Social and Information Networks,Statistics - Machine Learning},
+  file = {/home/domvwt/Zotero/storage/M826LBVQ/Hamilton et al. - 2018 - Inductive Representation Learning on Large Graphs.pdf;/home/domvwt/Zotero/storage/E7JFSKVD/1706.html}
+}
+
+@article{heLearningImbalancedData2009,
+  title = {Learning from {{Imbalanced Data}}},
+  author = {He, Haibo and Garcia, Edwardo A.},
+  date = {2009-09},
+  journaltitle = {IEEE Transactions on Knowledge and Data Engineering},
+  volume = {21},
+  number = {9},
+  pages = {1263--1284},
+  issn = {1558-2191},
+  doi = {10.1109/TKDE.2008.239},
+  abstract = {With the continuous expansion of data availability in many large-scale, complex, and networked systems, such as surveillance, security, Internet, and finance, it becomes critical to advance the fundamental understanding of knowledge discovery and analysis from raw data to support decision-making processes. Although existing knowledge discovery and data engineering techniques have shown great success in many real-world applications, the problem of learning from imbalanced data (the imbalanced learning problem) is a relatively new challenge that has attracted growing attention from both academia and industry. The imbalanced learning problem is concerned with the performance of learning algorithms in the presence of underrepresented data and severe class distribution skews. Due to the inherent complex characteristics of imbalanced data sets, learning from such data requires new understandings, principles, algorithms, and tools to transform vast amounts of raw data efficiently into information and knowledge representation. In this paper, we provide a comprehensive review of the development of research in learning from imbalanced data. Our focus is to provide a critical review of the nature of the problem, the state-of-the-art technologies, and the current assessment metrics used to evaluate learning performance under the imbalanced learning scenario. Furthermore, in order to stimulate future research in this field, we also highlight the major opportunities and challenges, as well as potential important research directions for learning from imbalanced data.},
+  eventtitle = {{{IEEE Transactions}} on {{Knowledge}} and {{Data Engineering}}},
+  keywords = {active learning,assessment metrics.,Availability,classification,cost-sensitive learning,Data analysis,Data engineering,Data security,Decision making,Finance,Imbalanced learning,IP networks,kernel-based learning,Knowledge representation,Large-scale systems,sampling methods,Surveillance},
+  file = {/home/domvwt/Zotero/storage/RYEA4D22/5128907.html}
+}
+
+@online{HeterogeneousGraphLearning,
+  title = {Heterogeneous {{Graph Learning}} — Pytorch\_geometric Documentation},
+  url = {https://pytorch-geometric.readthedocs.io/en/latest/notes/heterogeneous.html},
+  urldate = {2022-09-19},
+  file = {/home/domvwt/Zotero/storage/RX5WVP9W/heterogeneous.html}
+}
+
 @misc{huStrategiesPretrainingGraph2020,
   title = {Strategies for {{Pre-training Graph Neural Networks}}},
   author = {Hu, Weihua and Liu, Bowen and Gomes, Joseph and Zitnik, Marinka and Liang, Percy and Pande, Vijay and Leskovec, Jure},
@@ -604,6 +694,13 @@
   issue = {arXiv:1609.02907},
   keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
   file = {/home/domvwt/Zotero/storage/4LD3AZPR/Kipf and Welling - 2017 - Semi-Supervised Classification with Graph Convolut.pdf;/home/domvwt/Zotero/storage/LLXCFDNU/1609.html}
+}
+
+@online{LearningImbalancedData,
+  title = {Learning from {{Imbalanced Data Sets}}: {{Amazon}}.Co.Uk: {{Fernández}}, {{Alberto}}, {{García}}, {{Salvador}}, {{Galar}}, {{Mikel}}, {{Prati}}, {{Ronaldo C}}., {{Krawczyk}}, {{Bartosz}}, {{Herrera}}, {{Francisco}}: 9783319980737: {{Books}}},
+  url = {https://www.amazon.co.uk/Learning-Imbalanced-Data-Alberto-Fern%C3%A1ndez/dp/3319980734},
+  urldate = {2022-09-19},
+  file = {/home/domvwt/Zotero/storage/W8U5ATRU/3319980734.html}
 }
 
 @article{legorrecLearningNetworkEmbeddings2021,
@@ -718,12 +815,44 @@
   file = {/home/domvwt/Zotero/storage/R9D9L5EC/Ma et al. - 2021 - A Comprehensive Survey on Graph Anomaly Detection .pdf;/home/domvwt/Zotero/storage/MTIZ4LQI/2106.html}
 }
 
+@book{maImbalancedLearningFoundations2013,
+  title = {Imbalanced {{Learning}}: {{Foundations}}, {{Algorithms}}, and {{Applications}}},
+  shorttitle = {Imbalanced {{Learning}}},
+  editor = {Ma, Yunqian and He, Haibo},
+  date = {2013-07-01},
+  edition = {1st edition},
+  publisher = {{Wiley-IEEE Press}},
+  location = {{Hoboken, New Jersey}},
+  isbn = {978-1-118-07462-6},
+  langid = {english},
+  pagetotal = {216}
+}
+
 @inproceedings{molloyGraphAnalyticsRealtime2016,
   title = {Graph {{Analytics}} for {{Real-time Scoring}} of {{Cross-channel Transactional Fraud}}},
   author = {Molloy, Ian and Chari, Suresh and Finkler, Ulrich and Wiggerman, Mark and Jonker, Coen and Habeck, Ted and Park, Youngja and Jordens, Frank and Schaik, Ron},
   date = {2016-02-22},
   abstract = {We present a new approach to cross channel fraud detection: build graphs representing transactions from all channels and use analyt-ics on features extracted from these graphs. Our underlying hypothesis is community based fraud detection: an account (holder) performs normal or trusted transactions within a community that is " local " to the account. We explore several notions of community based on graph properties. Our results show that properties such as shortest distance between transaction endpoints, whether they are in the same strongly connected component, whether the destination has high page rank, etc., provide excellent discriminators of fraudulent and normal transactions whereas traditional social network analysis yields poor results. Evaluation on a large dataset from a European bank shows that such methods can substantially reduce false positives in traditional fraud scoring. We show that classifiers built purely out of graph properties are very promising, with high AUC, and can complement existing fraud detection approaches.},
   file = {/home/domvwt/Zotero/storage/6LFQRF6R/Molloy et al. - 2016 - Graph Analytics for Real-time Scoring of Cross-cha.pdf}
+}
+
+@misc{morrisWeisfeilerLemanGo2021,
+  title = {Weisfeiler and {{Leman Go Neural}}: {{Higher-order Graph Neural Networks}}},
+  shorttitle = {Weisfeiler and {{Leman Go Neural}}},
+  author = {Morris, Christopher and Ritzert, Martin and Fey, Matthias and Hamilton, William L. and Lenssen, Jan Eric and Rattan, Gaurav and Grohe, Martin},
+  date = {2021-11-30},
+  number = {arXiv:1810.02244},
+  eprint = {1810.02244},
+  eprinttype = {arxiv},
+  primaryclass = {cs, stat},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.1810.02244},
+  url = {http://arxiv.org/abs/1810.02244},
+  urldate = {2022-09-19},
+  abstract = {In recent years, graph neural networks (GNNs) have emerged as a powerful neural architecture to learn vector representations of nodes and graphs in a supervised, end-to-end fashion. Up to now, GNNs have only been evaluated empirically -- showing promising results. The following work investigates GNNs from a theoretical point of view and relates them to the \$1\$-dimensional Weisfeiler-Leman graph isomorphism heuristic (\$1\$-WL). We show that GNNs have the same expressiveness as the \$1\$-WL in terms of distinguishing non-isomorphic (sub-)graphs. Hence, both algorithms also have the same shortcomings. Based on this, we propose a generalization of GNNs, so-called \$k\$-dimensional GNNs (\$k\$-GNNs), which can take higher-order graph structures at multiple scales into account. These higher-order structures play an essential role in the characterization of social networks and molecule graphs. Our experimental evaluation confirms our theoretical findings as well as confirms that higher-order information is useful in the task of graph classification and regression.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Computer Vision and Pattern Recognition,Computer Science - Machine Learning,Computer Science - Neural and Evolutionary Computing,Statistics - Machine Learning},
+  file = {/home/domvwt/Zotero/storage/TSALZHM8/Morris et al. - 2021 - Weisfeiler and Leman Go Neural Higher-order Graph.pdf;/home/domvwt/Zotero/storage/2G6SC4MX/1810.html}
 }
 
 @online{OpenCorporatesOpenDatabase2022,
@@ -903,6 +1032,26 @@
   file = {/home/domvwt/Zotero/storage/9J55ACSQ/post5.html}
 }
 
+@article{saitoPrecisionRecallPlotMore2015,
+  title = {The {{Precision-Recall Plot Is More Informative}} than the {{ROC Plot When Evaluating Binary Classifiers}} on {{Imbalanced Datasets}}},
+  author = {Saito, Takaya and Rehmsmeier, Marc},
+  date = {2015-03-04},
+  journaltitle = {PLOS ONE},
+  shortjournal = {PLOS ONE},
+  volume = {10},
+  number = {3},
+  pages = {e0118432},
+  publisher = {{Public Library of Science}},
+  issn = {1932-6203},
+  doi = {10.1371/journal.pone.0118432},
+  url = {https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432},
+  urldate = {2022-09-19},
+  abstract = {Binary classifiers are routinely evaluated with performance measures such as sensitivity and specificity, and performance is frequently illustrated with Receiver Operating Characteristics (ROC) plots. Alternative measures such as positive predictive value (PPV) and the associated Precision/Recall (PRC) plots are used less frequently. Many bioinformatics studies develop and evaluate classifiers that are to be applied to strongly imbalanced datasets in which the number of negatives outweighs the number of positives significantly. While ROC plots are visually appealing and provide an overview of a classifier's performance across a wide range of specificities, one can ask whether ROC plots could be misleading when applied in imbalanced classification scenarios. We show here that the visual interpretability of ROC plots in the context of imbalanced datasets can be deceptive with respect to conclusions about the reliability of classification performance, owing to an intuitive but wrong interpretation of specificity. PRC plots, on the other hand, can provide the viewer with an accurate prediction of future classification performance due to the fact that they evaluate the fraction of true positives among positive predictions. Our findings have potential implications for the interpretation of a large number of studies that use ROC plots on imbalanced datasets.},
+  langid = {english},
+  keywords = {Bioinformatics,Caenorhabditis elegans,Exponential functions,Genome-wide association studies,Interpolation,Measurement,MicroRNAs,Support vector machines},
+  file = {/home/domvwt/Zotero/storage/HDY78SJW/Saito and Rehmsmeier - 2015 - The Precision-Recall Plot Is More Informative than.pdf;/home/domvwt/Zotero/storage/2N52H3DY/article.html}
+}
+
 @article{sanchez-lengelingGentleIntroductionGraph2021,
   title = {A {{Gentle Introduction}} to {{Graph Neural Networks}}},
   author = {Sanchez-Lengeling, Benjamin and Reif, Emily and Pearce, Adam and Wiltschko, Alexander B.},
@@ -958,6 +1107,24 @@
   issue = {1},
   keywords = {Biological system modeling,Biology,Chemistry,Computer vision,Data engineering,Data mining,graph neural networks (GNNs),graph processing,Graphical domains,Neural networks,Parameter estimation,Pattern recognition,recursive neural networks,Supervised learning},
   file = {/home/domvwt/Zotero/storage/B3ZVKKUW/Scarselli et al. - 2009 - The Graph Neural Network Model.pdf;/home/domvwt/Zotero/storage/ZJFP664P/4700287.html}
+}
+
+@misc{schlichtkrullModelingRelationalData2017,
+  title = {Modeling {{Relational Data}} with {{Graph Convolutional Networks}}},
+  author = {Schlichtkrull, Michael and Kipf, Thomas N. and Bloem, Peter and van den Berg, Rianne and Titov, Ivan and Welling, Max},
+  date = {2017-10-26},
+  number = {arXiv:1703.06103},
+  eprint = {1703.06103},
+  eprinttype = {arxiv},
+  primaryclass = {cs, stat},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.1703.06103},
+  url = {http://arxiv.org/abs/1703.06103},
+  urldate = {2022-09-19},
+  abstract = {Knowledge graphs enable a wide variety of applications, including question answering and information retrieval. Despite the great effort invested in their creation and maintenance, even the largest (e.g., Yago, DBPedia or Wikidata) remain incomplete. We introduce Relational Graph Convolutional Networks (R-GCNs) and apply them to two standard knowledge base completion tasks: Link prediction (recovery of missing facts, i.e. subject-predicate-object triples) and entity classification (recovery of missing entity attributes). R-GCNs are related to a recent class of neural networks operating on graphs, and are developed specifically to deal with the highly multi-relational data characteristic of realistic knowledge bases. We demonstrate the effectiveness of R-GCNs as a stand-alone model for entity classification. We further show that factorization models for link prediction such as DistMult can be significantly improved by enriching them with an encoder model to accumulate evidence over multiple inference steps in the relational graph, demonstrating a large improvement of 29.8\% on FB15k-237 over a decoder-only baseline.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Artificial Intelligence,Computer Science - Databases,Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/home/domvwt/Zotero/storage/4CQL57AK/Schlichtkrull et al. - 2017 - Modeling Relational Data with Graph Convolutional .pdf;/home/domvwt/Zotero/storage/9D58EGIS/1703.html}
 }
 
 @online{SpendNetworkGlobal2022,
@@ -1029,6 +1196,24 @@
   archiveprefix = {arXiv},
   keywords = {Computer Science - Machine Learning},
   file = {/home/domvwt/Zotero/storage/MSC6KJS5/Tang et al. - 2015 - LINE Large-scale Information Network Embedding.pdf;/home/domvwt/Zotero/storage/7B29CY67/1503.html}
+}
+
+@misc{togninalliWassersteinWeisfeilerLehmanGraph2019,
+  title = {Wasserstein {{Weisfeiler-Lehman Graph Kernels}}},
+  author = {Togninalli, Matteo and Ghisu, Elisabetta and Llinares-López, Felipe and Rieck, Bastian and Borgwardt, Karsten},
+  date = {2019-10-30},
+  number = {arXiv:1906.01277},
+  eprint = {1906.01277},
+  eprinttype = {arxiv},
+  primaryclass = {cs, q-bio, stat},
+  publisher = {{arXiv}},
+  doi = {10.48550/arXiv.1906.01277},
+  url = {http://arxiv.org/abs/1906.01277},
+  urldate = {2022-09-19},
+  abstract = {Most graph kernels are an instance of the class of \$\textbackslash mathcal\{R\}\$-Convolution kernels, which measure the similarity of objects by comparing their substructures. Despite their empirical success, most graph kernels use a naive aggregation of the final set of substructures, usually a sum or average, thereby potentially discarding valuable information about the distribution of individual components. Furthermore, only a limited instance of these approaches can be extended to continuously attributed graphs. We propose a novel method that relies on the Wasserstein distance between the node feature vector distributions of two graphs, which allows to find subtler differences in data sets by considering graphs as high-dimensional objects, rather than simple means. We further propose a Weisfeiler-Lehman inspired embedding scheme for graphs with continuous node attributes and weighted edges, enhance it with the computed Wasserstein distance, and thus improve the state-of-the-art prediction performance on several graph classification tasks.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Machine Learning,Quantitative Biology - Molecular Networks,Statistics - Machine Learning},
+  file = {/home/domvwt/Zotero/storage/Z4RCZLJT/Togninalli et al. - 2019 - Wasserstein Weisfeiler-Lehman Graph Kernels.pdf;/home/domvwt/Zotero/storage/I43ZM9MX/1906.html}
 }
 
 @unpublished{treinishRetworkxHighPerformanceGraph2022,
