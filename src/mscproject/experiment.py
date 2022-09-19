@@ -356,10 +356,10 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         dataset: HeteroData = RemoveSelfLoops()(dataset)
 
     if model_type.__name__ == "GCN":
-        param_dict["aggr"] = trial.suggest_categorical("gcn_aggr", aggr_choices)
+        param_dict["aggr"] = trial.suggest_categorical("gnn_aggr", aggr_choices)
         param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
     elif model_type.__name__ == "GraphSAGE":
-        pass
+        param_dict["aggr"] = trial.suggest_categorical("gnn_aggr", aggr_choices)
     elif model_type.__name__ == "GAT":
         param_dict["v2"] = trial.suggest_categorical("v2", [True])
         param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
