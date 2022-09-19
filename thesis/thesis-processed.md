@@ -32,6 +32,10 @@ https://pandoc.org/
 ```
 # Introduction
 
+## Contributions
+
+-   Insights into training on a relatively large, novel dataset.
+
 # Prior and Related Work
 
 # Dataset
@@ -243,11 +247,11 @@ oversampling the minority class [@chawlaSMOTESyntheticMinority2002] or
 undersampling the majority class [@fernandezLearningImbalancedData2018,
 p.82].
 
-It is assumed that the data originally provided by Open Ownership is
-accurate and that if any anomalies are present they will have a
-negligible impact on experimental results. Where anomalies are present,
-they should have an equal effect on all models, and so should not bias
-the results.
+When labelling the unaltered nodes as normal, it is assumed that the
+data originally provided by Open Ownership is accurate and that if any
+anomalies are present they will have a negligible impact on experimental
+results. Nevertheless, anomalies in the initial dataset will be seen by
+all candidate models, and so should not bias the results.
 
 ## Node Features
 
@@ -309,7 +313,7 @@ learning on our heterogeneous dataset. A homogeneous model is adapted
 for heterogeneous learning by duplicating message passing functions to
 operate on each edge type individually. Node representations are learned
 for each node type and aggregated using a user provided function that we
-choose via neural architecture search. This is technique is described by
+choose via neural architecture search. This technique is described by
 @schlichtkrullModelingRelationalData2017 and illustrated in figure
 {@fig:to-hetero}.
 
@@ -318,29 +322,15 @@ choose via neural architecture search. This is technique is described by
 short-caption="Converting homogeneous GNN architectures for heterogeneous learning"
 width="5in"}
 
-### Neural Architecture Search and Hyperparameter Tuning
-
-For each type of GNNs (GraphSAGE and GCN), we learn an optimal neural
-architecture for the anomalous node classification task. We use the
-Optuna library [@akibaOptunaNextgenerationHyperparameter2019] to explore
-the relevant search space and select the best architecture by evaluating
-performance on the validation dataset. The search spaces used for each
-model are provided in the appendix tables {@tbl:graphsage-search-space}
-and {@tbl:graph-conv-search-space}.
-
-Regularisation hyperparameters are tuned separately, with the best
-performing values for dropout and weight decay also selected by
-evaluating performance on the validation dataset.
-
 ### GraphSAGE
 
 The GraphSAGE model proposed by
-@hamiltonInductiveRepresentationLearning2018 is an inductive node
-embedding framework that uses both node features and information from
-the local neighbourhood to generate node representations. During
-training, the model learns how to effectively aggregate information from
-the neighbourhood of each node and combine this with the node's own
-features to produce a learned representation.
+@hamiltonInductiveRepresentationLearning2018 is a node embedding
+framework that uses both node attributes and the attributes of
+neighbouring nodes to generate node representations. During training,
+the model learns how to effectively aggregate information from the
+neighbourhood of each node and combine this with the node's own features
+to produce a learned representation.
 
 The aggregation architecture can be any symmetric function, such as the
 mean or sum, or a more complex function such as a neural network that
@@ -355,9 +345,9 @@ ignored during training.
 [@hamiltonInductiveRepresentationLearning2018]](figures/graphSAGE.png){#fig:graphsage
 short-caption="GraphSAGE architecture" width="5in"}
 
-### k-GNN
+### Higher Order GNN (kGNN)
 
-The Higher-Order GNN (or k-GNN) proposed by @morrisWeisfeilerLemanGo2021
+The Higher-Order GNN (or kGNN) proposed by @morrisWeisfeilerLemanGo2021
 is an extension of the prototypical GNN described by
 @kipfSemiSupervisedClassificationGraph2017 to higher order graph
 representations. These higher order representations are learned by
@@ -369,10 +359,10 @@ into account its local neighbourhood and higher order topological
 features. This is illustrated in figure {@fig:higher-order-gnn}.
 
 As with the GraphSAGE model, an aggregation architecture is used to
-generate the node tuple representations. The weights for each layer are
-also learned via backpropagation for supervised learning tasks. Unlike
-the GraphSAGE model, the k-GNN model does incorporate edge weights in
-its learning process.
+learn the node tuple representations. The weights for each layer are
+also trained via backpropagation for supervised learning tasks. Unlike
+the GraphSAGE model, the kGNN model does incorporate edge weights in its
+learning process.
 
 ![Hierarchical 1-2-3 GNN network architecture
 [@morrisWeisfeilerLemanGo2021]](figures/learning-higher-order-graph-properties.png){#fig:higher-order-gnn
@@ -395,9 +385,9 @@ Class imbalance in the dataset is addressed by assigning a weight to
 each class during model training. A weight of 10 is applied to anomalous
 nodes and a weight of 1 for normal nodes. These weights are used as
 multipliers for the errors of their respective classes, leading to
-increased penalty and greater weight updates for anomalous nodes. This
-is a cost sensitive approach to class imbalance that does not require
-the use of oversampling or undersampling
+increased penalty and greater emphasis for anomalous nodes. This is a
+cost sensitive approach to class imbalance that conveniently does not
+require the use of oversampling or undersampling
 [@heLearningImbalancedData2009].
 
 ### Evaluation Metrics
@@ -405,9 +395,9 @@ the use of oversampling or undersampling
 We use two threshold-free metrics to evaluate model performance: the
 area under the precision-recall curve (AUC-PR) and the area under the
 receiver operating characteristic curve (AUC-ROC). These metrics are
-chosen as they are insensitive to the choice of threshold, and are
-therefore more robust to class imbalance than metrics such as accuracy.
-[@maImbalancedLearningFoundations2013, p.72]
+chosen as they are insensitive to the choice of threshold, and are more
+robust to class imbalance than threshold dependent metrics such as
+accuracy. [@maImbalancedLearningFoundations2013, p.72]
 
 #### Area under the Receiver Operating Characteristic Curve (AUC-ROC)
 
@@ -437,68 +427,88 @@ the proportion of positive cases in the dataset. The PR curve can
 provide a more accurate view of model peformance on imbalanced datasets.
 [@saitoPrecisionRecallPlotMore2015]
 
-### GNNs
+### Graph Neural Network Training
 
 #### Optimiser
 
+The Adam optimiser [@kingmaAdamMethodStochastic2017] is used to train
+the GNNs with an initial learning rate of 0.01.
+
+### Neural Architecture Search
+
+For each of the GNN models (GraphSAGE and kGNN), we learn an optimal
+neural architecture for the anomalous node classification task. We use
+the Optuna library [@akibaOptunaNextgenerationHyperparameter2019] to
+explore the search space, training candidate models on the training
+dataset and selecting the architecture that achieves the highest AUC-PR
+on the validation data.
+
+Each model is trained for a maximum of 2000 epochs, with an early
+stopping callback used to terminate trials that do not improve for 200
+consecutive epochs. Thirty trials are performed for each model. The
+search spaces used for each model are provided in the appendix tables
+{@tbl:graphsage-search-space} and {@tbl:graph-conv-search-space}.
+
+### Hyperparameter Tuning
+
+Parameters for dropout and weight decay are also tuned using Optuna.
+These trials take place after the architecture search, in order to limit
+the dimensionality of the search space in each experiment. A total of 20
+trials are performed for each pair of candidate values, with the best
+hyperparameters selected based on the AUC-PR score on the validation
+set.
+
+### CatBoost Training
+
+The CatBoost classifier is trained in a similar manner to the GNNs. Each
+candidate model is trained and evaluated on the same training and
+validation sets as the GNN models, and evaluated using the AUC-PR
+metric. The hyperparameter search space is provided in the appendix
+table {@tbl:catboost-search-space}.
+
+# Results
+
+## Neural Architecture Search and Hyperparameter Tuning
+
+### GraphSAGE
+
 ```{=html}
-<!-- ! REWRITE THIS -->
+<!-- ! TODO -->
 ```
-The Adam optimiser [@kingmaAdamMethodStochastic2014] is used to train
-the GNNs. The Adam optimiser is a variant of stochastic gradient descent
-that uses adaptive learning rates for each parameter. This allows the
-learning rate to be tuned independently for each parameter, and is
-useful for GNNs as it allows the learning rate to be tuned for each
-layer independently.
+### kGNN
 
-#### Neural Architecture Search
-
-```{=html}
-<!-- ! REWRITE THIS -->
-```
-Neural architecture search (NAS) is used to find the optimal
-architecture for the GNNs. The search is performed using the Optuna
-framework [@toshihikoOptunaAHyperparameter2019]. The search is performed
-using the validation set, and the best architecture is selected based on
-the AUC-PR score on the validation set.
-
-#### Hyperparameter Tuning
-
-```{=html}
-<!-- ! REWRITE THIS -->
-```
-Hyperparameter tuning is performed using the Optuna framework
-[@toshihikoOptunaAHyperparameter2019]. The search is performed using the
-validation set, and the best hyperparameters are selected based on the
-AUC-PR score on the validation set.
-
--   Dropout
--   Regularisation
+The optimal architecture for the kGNN model was found to be a 4-layer
+model with 128 hidden channels and an additional linear layer after the
+final message passing layer. Neither dropout nor weight decay were found
+to be beneficial to model performance. A minimum pooling aggregation
+function was selected for both the message passing layers and for the
+aggregation of heterogeneous node representations. A gelu activation
+function was selcted for all layers.
 
 ### CatBoost
 
-#### Addressing Class Imbalance
+The most successful CatBoost model was found to have the following
+parameters:
 
-Random majority class undersampling is used to generate a balanced
-training set. The training set is undersampled to match the size of the
-minority class, and the undersampled training set is used to train the
-model. This is an effective and straightforward method for addressing
-class imbalance [@brancoSurveyPredictiveModelling2015].
+-   learning rate: 0.09
+-   depth: 9
+-   boosting_type: Plain
+-   bootstrap_type: MVS
+-   colsample_bylevel: 0.08
 
-#### Hyperparameter Tuning
+## Model Performance
 
-```{=html}
-<!-- ! REWRITE THIS -->
-```
-Hyperparameter tuning is performed using the PyCaret framework
-[@pycaretPyCaretAutomatedMachine2021]. The search is performed using the
-validation set, and the best hyperparameters are selected based on the
-AUC-PR score on the validation set.
+![ROC and PR curves on the test
+set.](figures/roc-pr-curve.png){#fig:roc-pr-curve
+short-caption="ROC and PR curves on the test set."}
 
--   Search space
--   How many rounds
+  Model         ROC AUC 95% CI               PR AUC 95% CI
+  ----------- --------- ------------------ -------- ------------------
+  CatBoost        0.639 \[0.619, 0.659\]      0.104 \[0.092, 0.116\]
+  GraphSAGE       0.953 \[0.939, 0.967\]      0.767 \[0.723, 0.811\]
+  kGNN            0.982 \[0.974, 0.990\]      0.904 \[0.876, 0.932\]
 
-# Results and Discussion
+  : Model performance on the test set.
 
 # Conclusion
 

@@ -240,11 +240,37 @@ The CatBoost classifier is trained in a similar manner to the GNNs. Each candida
 
 # Results
 
-## Graph Neural Network Models
+## Neural Architecture Search and Hyperparameter Tuning
 
 ### GraphSAGE
 
-The optimal architecture for the GraphSAGE model was
+<!-- ! TODO -->
+
+### kGNN
+
+The optimal architecture for the kGNN model was found to be a 4-layer model with 128 hidden channels and an additional linear layer after the final message passing layer. Neither dropout nor weight decay were found to be beneficial to model performance. A minimum pooling aggregation function was selected for both the message passing layers and for the aggregation of heterogeneous node representations. A gelu activation function was selcted for all layers.
+
+### CatBoost
+
+The most successful CatBoost model was found to have the following parameters:
+
+- learning rate: 0.09
+- depth: 9
+- boosting_type: Plain
+- bootstrap_type: MVS
+- colsample_bylevel: 0.08
+
+## Model Performance
+
+![ROC and PR curves on the test set.](figures/roc-pr-curve.png){#fig:roc-pr-curve short-caption="ROC and PR curves on the test set."}
+
+| Model     |   ROC AUC | 95% CI         |   PR AUC | 95% CI         |
+|:----------|----------:|:---------------|---------:|:---------------|
+| CatBoost  |     0.639 | [0.619, 0.659] |    0.104 | [0.092, 0.116] |
+| GraphSAGE |     0.953 | [0.939, 0.967] |    0.767 | [0.723, 0.811] |
+| kGNN      |     0.982 | [0.974, 0.990] |    0.904 | [0.876, 0.932] |
+
+: Model performance on the test set.
 
 # Conclusion
 
