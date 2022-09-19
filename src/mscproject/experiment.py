@@ -1,13 +1,11 @@
 import argparse
 import dataclasses as dc
 import functools as ft
-import math
 import time
 from pathlib import Path
-from pprint import pformat, pprint
-from typing import NamedTuple, Optional
+from pprint import pformat
+from typing import Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 import optuna
 import pandas as pd

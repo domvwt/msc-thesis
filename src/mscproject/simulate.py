@@ -3,14 +3,18 @@ import pandas as pd
 
 
 def all_shuffled(a1, a2):
+    """Check none of the elements in a1 are in the same position as in a2."""
     return np.all(a1 != a2)
 
 
 def get_unshuffled_indexes(a1, a2):
+    """Return the indexes of elements in a1 that are in the same position as in a2."""
     return np.argwhere(a1 == a2)
 
 
 def efficient_shuffle(a1):
+    """Efficiently shuffle a1 so that no element is in the same position as it started."""
+
     def inner(a1, _i):
         print(_i, end="\r")
         a2 = a1.copy()
@@ -28,6 +32,8 @@ def efficient_shuffle(a1):
 
 
 def simulate_anomalies(companies_df, persons_df, edges_df):
+    """Simulate anomalies in the data."""
+
     # Select 10% of the person nodes as anomalies.
     anomalous_persons_df = persons_df.sample(frac=0.1, random_state=42)
 

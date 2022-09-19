@@ -8,6 +8,8 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 class ColumnSelector(BaseEstimator, TransformerMixin):
+    """Select columns from a dataframe."""
+
     def __init__(self, columns):
         self.columns = columns
 
@@ -22,6 +24,8 @@ class ColumnSelector(BaseEstimator, TransformerMixin):
 
 
 class DateConverter(BaseEstimator, TransformerMixin):
+    """Convert date columns to integers."""
+
     def __init__(self, date_cols):
         self.date_cols = date_cols
 
@@ -40,6 +44,8 @@ class DateConverter(BaseEstimator, TransformerMixin):
 
 
 class Downcaster(BaseEstimator, TransformerMixin):
+    """Downcast columns to the smallest possible type."""
+
     def __init__(self, numpy_dtypes_only: bool = True):
         self.numpy_dtypes_only = numpy_dtypes_only
 
@@ -59,6 +65,7 @@ def build_pipeline(
     one_hot_encoder_kwargs: dict,
     numpy_dtypes_only: bool = True,
 ) -> Pipeline:
+    """Build a pipeline to process a dataframe."""
     return make_pipeline(
         ColumnSelector(keep_cols),
         DateConverter(date_cols),
@@ -78,6 +85,7 @@ def apply_pipeline(df: pd.DataFrame, pipeline: Pipeline) -> pd.DataFrame:
     df_out = pd.DataFrame(
         pipeline.transform(df), columns=pipeline.get_feature_names_out()
     )
+    """Apply a pipeline to a dataframe."""
     # Remove leading 'remainder__' from column names
     df_out.columns = [
         col.split("remainder__")[-1] + "__processed" for col in df_out.columns
@@ -86,7 +94,7 @@ def apply_pipeline(df: pd.DataFrame, pipeline: Pipeline) -> pd.DataFrame:
 
 
 def process_companies(companies_df):
-
+    """Process the companies dataframe."""
     feature_cols = [
         # "id",
         # "component",
@@ -132,6 +140,7 @@ def process_companies(companies_df):
 
 
 def process_persons(persons_df):
+    """Process the persons dataframe."""
 
     feature_cols = [
         # "id",
@@ -170,6 +179,7 @@ def process_persons(persons_df):
 
 
 def process_edges(edges_df):
+    """Process the edges dataframe."""
 
     keep_cols = [
         # "component",

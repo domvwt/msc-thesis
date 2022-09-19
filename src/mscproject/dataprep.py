@@ -9,6 +9,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 
 def write_if_missing_spark(outputs_map: dict[DataFrame, str]) -> None:
+    """Write Spark DataFrames to Parquet if they don't exist."""
     for dataframe, path in outputs_map.items():
         if not Path(path).exists():
             dataframe.write.parquet(path)
@@ -17,6 +18,7 @@ def write_if_missing_spark(outputs_map: dict[DataFrame, str]) -> None:
 def write_output_path_map(
     outputs_map: Iterable[Tuple[pd.DataFrame, str]], overwrite: bool = False
 ) -> None:
+    """Write Pandas DataFrames to Parquet if they don't exist."""
     for df, path in outputs_map:
         path_object = Path(path)
         if not Path(path).exists() or overwrite:
@@ -27,18 +29,13 @@ def write_output_path_map(
 def strip_chars_from_statement_id(
     df: DataFrame, id_col: str = "statementID"
 ) -> DataFrame:
+    """Strip characters from statementID column."""
     return df.withColumn(id_col, F.col(id_col).substr(F.lit(24), F.length(id_col)))
 
 
 def extract_relationships(ownership_df: DataFrame) -> DataFrame:
-    """Extract all ownership statements pertaining to GB companies.
+    """Extract all ownership statements pertaining to GB companies."""
 
-    Args:
-        ownership_df (DataFrame): Raw open ownership data.
-
-    Returns:
-        DataFrame: Ownership relationships to GB companies.
-    """
     relationships_df = ownership_df.filter(
         F.col("statementType") == "ownershipOrControlStatement"
     )
@@ -59,7 +56,8 @@ def extract_relationships(ownership_df: DataFrame) -> DataFrame:
 
 
 def extract_companies(ownership_df: DataFrame) -> DataFrame:
-    # Restricted to GB companies due to resource constraints
+    """Extract all UK companies from the ownership dataset."""
+
     companies_filter = (F.col("statementType") == "entityStatement") & (
         F.col("incorporatedInJurisdiction.code") == "GB"
     )
@@ -69,6 +67,8 @@ def extract_companies(ownership_df: DataFrame) -> DataFrame:
 
 
 def extract_persons(ownership_df: DataFrame, relationships_df: DataFrame) -> DataFrame:
+    """Extract all persons from the ownership dataset that own a UK company."""
+
     persons_df = ownership_df.filter(F.col("statementType") == "personStatement")
     join_expr = F.col("person.statementID") == F.col(
         "relationship.interestedParty.describedByPersonStatement"
@@ -81,6 +81,7 @@ def extract_persons(ownership_df: DataFrame, relationships_df: DataFrame) -> Dat
 
 
 def extract_companies_house_info(spark: SparkSession, csv_path: str) -> DataFrame:
+    """Extract Companies House information from CSV file."""
     # Remove invalid characters (<space>, ',') from column names
     with Path(csv_path).open() as f:
         column_names = f.readline().split(",")
@@ -107,15 +108,7 @@ def extract_companies_house_info(spark: SparkSession, csv_path: str) -> DataFram
 def process_companies(
     companies_df: DataFrame, companies_house_df: DataFrame
 ) -> DataFrame:
-    """Select and flatten relevant company information.
-
-    Args:
-        companies_df (DataFrame): Unprocessed company records.
-        companies_house_df (DataFrame): Companies House records.
-
-    Returns:
-        DataFrame: Processed company records.
-    """
+    """Select and flatten relevant company information."""
     # Extract relevant scheme IDs from company records.
     scheme_dict = {
         "OpenOwnership Register": "openOwnershipRegisterID",
@@ -153,14 +146,7 @@ def process_companies(
 
 
 def process_relationships(relationships_df: DataFrame) -> DataFrame:
-    """Select and flatten relevant information from ownership statements.
-
-    Args:
-        relationships_df (DataFrame): Unprocessed ownership statements.
-
-    Returns:
-        DataFrame: Flattened and processed ownership statements.
-    """
+    """Select and flatten relevant information from ownership statements."""
     return (
         relationships_df.withColumn(
             "interestedPartyStatementID",
@@ -191,14 +177,7 @@ def process_relationships(relationships_df: DataFrame) -> DataFrame:
 
 
 def process_persons(persons_df: DataFrame) -> DataFrame:
-    """Select and flatten relevant person information.
-
-    Args:
-        persons_df (DataFrame): Unprocessed person records.
-
-    Returns:
-        DataFrame: Processed person records.
-    """
+    """Select and flatten relevant person information."""
     return persons_df.select(
         "statementID",
         "birthDate",
@@ -208,15 +187,7 @@ def process_persons(persons_df: DataFrame) -> DataFrame:
 
 
 def process_addresses(companies_df: DataFrame, persons_df: DataFrame) -> DataFrame:
-    """Select and flatten relevant address information.
-
-    Args:
-        companies_df (DataFrame): Unprocessed company records.
-        persons_df (DataFrame): Unprocessed person records.
-
-    Returns:
-        DataFrame: Addresses mapped to person and company entities.
-    """
+    """Select and flatten relevant address information."""
     entities_df = companies_df.unionByName(persons_df)
     entity_address_edge_df = entities_df.select(
         "statementID", F.col("addresses").getItem(0).alias("address")
@@ -225,6 +196,7 @@ def process_addresses(companies_df: DataFrame, persons_df: DataFrame) -> DataFra
 
 
 def write_csv(df: DataFrame, output_dir: str, output_filename: str) -> None:
+    """Write DataFrame to CSV file."""
     csv_path = Path(output_dir) / f"{output_filename}"
     parquet_csv_path = f"{csv_path}.parquet"
 

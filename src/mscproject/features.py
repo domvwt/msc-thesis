@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 
 def make_graph(edges: pd.DataFrame) -> nx.DiGraph:
+    """Create a NetworkX graph from the edges dataframe."""
     edge_gen = ((row.src, row.dst) for row in edges.itertuples())
     graph = nx.DiGraph()
     graph.add_edges_from(edge_gen)
@@ -17,6 +18,7 @@ def make_graph(edges: pd.DataFrame) -> nx.DiGraph:
 
 # Get structural properties of nodes in the graph.
 def generate_node_features(graph: nx.DiGraph) -> pd.DataFrame:
+    """Generate node features from the graph."""
     feature_dict = dict()
     feature_dict["indegree"] = graph.in_degree()
     feature_dict["outdegree"] = graph.out_degree()
@@ -33,6 +35,8 @@ def generate_node_features(graph: nx.DiGraph) -> pd.DataFrame:
 
 
 def get_node_to_cc_graph_map(graph: nx.DiGraph) -> dict:
+    """Get a mapping from node to connected component graph."""
+
     @ft.lru_cache(maxsize=None)
     def get_subgraph(cc_nodes):
         return graph.subgraph(cc_nodes)
@@ -45,6 +49,7 @@ def get_node_to_cc_graph_map(graph: nx.DiGraph) -> dict:
 
 
 def get_node_id_to_cc_id_map(graph: nx.DiGraph) -> dict:
+    """Get a mapping from node id to connected component id."""
     return {
         node_id: cc_id
         for cc_id, cc_nodes in enumerate(nx.weakly_connected_components(graph))
@@ -58,7 +63,7 @@ def get_local_neighbourhood_features(
     radius: int,
     n_jobs: int = 8,
 ) -> pd.DataFrame:
-
+    """Get local neighbourhood features for each node."""
     id_to_index_map = {node: i for i, node in enumerate(graph.nodes())}
     # node_features["neighbour_count"] = 1
     node_features_np = node_features.to_numpy(dtype=np.float32)
@@ -162,9 +167,7 @@ def get_local_neighbourhood_features(
 def drop_components_with_less_than_n_edges(
     edges_df: pd.DataFrame, n: int
 ) -> Tuple[pd.DataFrame, set[int]]:
-    """
-    Drop components with < n edges.
-    """
+    """Drop components with < n edges."""
     component_sizes = edges_df.groupby("component").size()
     components_to_drop = component_sizes[component_sizes < n].index
     edges_df = edges_df[~edges_df["component"].isin(components_to_drop)]

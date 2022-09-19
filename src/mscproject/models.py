@@ -1,6 +1,5 @@
 from collections import defaultdict
-from enum import Enum
-from typing import Any, Dict, List, TypeVar
+from typing import Dict, List, TypeVar
 
 import torch
 import torch.nn.functional as F
@@ -8,19 +7,14 @@ from torch import Tensor, sigmoid
 from torch.nn import ModuleDict
 from torch_geometric.nn import Linear
 from torch_geometric.nn import models as pygmodels
-from torch_geometric.nn.conv import (
-    GraphConv,
-    HANConv,
-    HEATConv,
-    HGTConv,
-    MessagePassing,
-)
+from torch_geometric.nn.conv import GraphConv, HANConv, HGTConv, MessagePassing
 from torch_geometric.nn.models.basic_gnn import BasicGNN
-from torch_geometric.nn.models.jumping_knowledge import JumpingKnowledge
-from torch_geometric.typing import Adj, EdgeType, Metadata, NodeType, OptTensor
+from torch_geometric.typing import Adj, Metadata, OptTensor
 
 
 class SigmoidMixin(BasicGNN):
+    """Mixin to add sigmoid activation to the output of a GNN."""
+
     def forward(
         self,
         x: Tensor,

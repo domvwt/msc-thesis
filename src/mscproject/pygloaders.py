@@ -16,6 +16,7 @@ from torch_geometric.data import HeteroData
 def node_df_to_pyg(
     df: pd.DataFrame, id_col, mapping_start, encoders, label_col, **kwargs
 ):
+    """Convert a node dataframe to PyTorch Geometric format."""
     mapping = {
         str(node_id): idx + mapping_start
         for idx, node_id in enumerate(df[id_col].unique())
@@ -36,6 +37,7 @@ def node_df_to_pyg(
 def edge_df_to_pyg(
     df: pd.DataFrame, src_col, dst_col, id_idx_mapping, encoders=None, **kwargs
 ):
+    """Convert an edge dataframe to PyTorch Geometric format."""
     if df.empty:
         return torch.tensor([]), torch.tensor([])
 
@@ -56,8 +58,8 @@ def edge_df_to_pyg(
 
 
 class IdentityEncoder(object):
-    # The 'IdentityEncoder' takes the raw column values and converts them to
-    # PyTorch tensors.
+    """Take raw column values and convert them to PyTorch tensors."""
+
     def __init__(self, dtype=None):
         self.dtype = dtype
 
@@ -87,6 +89,7 @@ Masks = namedtuple("Masks", ["train", "val", "test"])
 
 
 def get_data_split_masks(df: pd.DataFrame) -> Masks:
+    """Get the masks for the train, val and test splits."""
     component_mod = df["component"].to_numpy() % 10
     train_mask = torch.tensor(component_mod <= 7)
     val_mask = torch.tensor(component_mod == 8)
@@ -95,6 +98,7 @@ def get_data_split_masks(df: pd.DataFrame) -> Masks:
 
 
 def masks_unique(masks: Masks) -> bool:
+    """Check that the masks are mutually exclusive."""
     combined = masks.train.int() + masks.val.int() + masks.test.int()
     return combined.sum() == len(combined)
 
@@ -102,6 +106,7 @@ def masks_unique(masks: Masks) -> bool:
 def graph_elements_to_heterodata(
     companies_df: pd.DataFrame, persons_df: pd.DataFrame, edges_df: pd.DataFrame
 ) -> HeteroData:
+    """Convert all graph elements to PyTorch Geometric format."""
 
     all_edge_ids = pd.concat(  # noqa: F841
         (edges_df["src"], (edges_df["dst"])), axis=0

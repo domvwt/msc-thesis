@@ -9,6 +9,7 @@ from torch_geometric.transforms.to_undirected import ToUndirected
 
 class CompanyBeneficialOwners(InMemoryDataset):
     """
+    A PyTorch Geometric dataset for UK companies and their Beneficial Owners.
     https://pytorch-geometric.readthedocs.io/en/latest/notes/create_dataset.html?highlight=inmemorydataset#creating-in-memory-datasets
     """
 

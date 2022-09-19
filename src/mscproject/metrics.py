@@ -16,6 +16,8 @@ from torchmetrics.functional import (
 
 @dc.dataclass
 class EvalMetrics:
+    """Container for evaluation metrics."""
+
     loss: float
     accuracy: float
     precision: float
@@ -31,6 +33,7 @@ class EvalMetrics:
         y_true: torch.Tensor,
         pos_weight_multiplier: float = 1.0,
     ):
+        """Compute metrics from tensors."""
         weights = torch.ones_like(y_true)
         weights[y_true == 1] = pos_weight_multiplier
         return EvalMetrics(
@@ -51,6 +54,7 @@ class EvalMetrics:
     def from_numpy(
         cls, y_pred: np.ndarray, y_true: np.ndarray, pos_weight_multiplier: float = 1.0
     ):
+        """Convert from numpy arrays to tensors and call from_tensors."""
         y_pred_tensor = torch.from_numpy(y_pred)
         y_true_tensor = torch.from_numpy(y_true)
         return cls.from_tensors(y_pred_tensor, y_true_tensor, pos_weight_multiplier)
@@ -69,6 +73,8 @@ class EvalMetrics:
 
 @dc.dataclass(frozen=True)
 class EvalMetricsTuple:
+    """Container for evaluation metrics."""
+
     train: Optional[EvalMetrics] = None
     test: Optional[EvalMetrics] = None
 
