@@ -435,6 +435,8 @@ It is surprising to see that the GNN performance on the anomaly detection task i
 
 The random assignment of anomalous edges makes it difficult to reason about the models' performance, and it would be interesting to investigate the performance of the models on a dataset where the anomalies are generated in a more controlled manner. Trying alternative simulation strategies could help to understand under what conditions the GNN models are capable of detecting anomalies and where they struggle. It could also be worth performing the same anomaly simulation and identification exercise on a established benchmark datasets, such as the Cora citation network [@mccallumAutomatingConstructionInternet2000], to see if the results are consistent.
 
+The ICIJ dataset is another potential source of data for training a business ownership anomaly classifier. There are several difficulties that would need to be overcome, not least of which is linking this data to another source of legitimate company relationships to serve as negative fraud examples. This is a significant challenge in itself, due to the companies listed by ICIJ being registered in various legal jurisdictions. On the other hand, having a known set of positive fraud examples would help build the external validity of any subsequent study and offer valuable insight into the nature of business ownership fraud.
+
 \newpage
 
 # References
