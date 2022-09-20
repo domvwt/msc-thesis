@@ -294,7 +294,7 @@ The computational resources required to run the main experiments in this study a
 
 : {#tbl:compute-resources} Computational resources used for the experiments.
 
-This machine is specifically used for the intensive for training the GNN models and is not strictly required for processing the dataset or training the baseline model. The baseline model and dataset can be produced in a reasonable amount of time on a consumer grade machine with 16GB of RAM and no GPU.
+This machine is specifically used for training the GNN models and is not strictly required for processing the dataset or training the baseline model. The baseline model and dataset can be produced in a reasonable amount of time on a consumer grade machine with 16GB of RAM and no GPU.
 
 We recommend making use of spot instances in order to benefit from the significantly reduced cost of preemptible hardware. The framework presented by this study is specifically designed to be fault tolerant to help address some of the challenges encountered when conducting our experiments.
 
@@ -508,3 +508,5 @@ The ICIJ dataset is another potential source of data for training a business own
 | bootstrap type | Bayesian, Bernoulli, MVS |
 
 : Catboost hyperparameter search space - categorical. {#tbl:catboost-search-space-cat}
+
+**Word Count: 7,045**
