@@ -179,7 +179,7 @@ model can learn. However, considering the sensitive nature of fraud investigatio
 it is not surprising to find that no such data is available in the public
 domain.
 
-In the following section we detail the public data sources used in this study and the steps necessary for processing them. We further propose a method for simulating anomalous business ownership structures using this publically available data.
+In the following section we detail the public data sources used in this study and the steps necessary for processing them. We further propose a method for simulating anomalous business ownership structures using this publicly available data.
 
 ## External Sources
 
@@ -221,7 +221,7 @@ This data serves as an additional source of node features for company entities i
 
 ## Initial Data Preparation
 
-The Open Ownership data file consists of over 20 million records stored as nested JSON objects. This includes data for businesses and relevant persons registered outside of the UK. The Apache Spark framework [@ApacheSparkUnified2022] is used for bulk data preparation due to its parallel and out-of-core processing capabilties, as well as its support for nested data structures.
+The Open Ownership data file consists of over 20 million records stored as nested JSON objects. This includes data for businesses and relevant persons registered outside of the UK. The Apache Spark framework [@ApacheSparkUnified2022] is used for bulk data preparation due to its parallel and out-of-core processing capabilities, as well as its support for nested data structures.
 
 As the scope of this study covers only UK registered companies and their shareholders, records for entities that do not have a shareholding interest in a UK company are discarded. Non-UK companies that are registered as a shareholder of a UK company are also discarded, as we are unable to obtain information for these entities via Companies House. Computational resource constraints also prevent handling of a larger dataset. To further limit dataset size, and in the interests of only considering accurate and up to date information, we also filter out companies that are listed as dissolved.
 
@@ -233,7 +233,7 @@ The Companies House data is joined to the company entity table via the UK compan
 
 ### Nodes and Edges
 
-The company, person, and ownership relationship tables prepared in the previous steps are used to create a graph data structure. Companies and persons are represented as nodes in the graph, and the ownership relationships represented as directed edges (from owner to owned entity) between them. The resulting graph is attributed with node features and edge weights. Since the graph consists of two types of nodes with disitinct feature sets, it can be described as an attributed heterogeneous graph [@maComprehensiveSurveyGraph2021].
+The company, person, and ownership relationship tables prepared in the previous steps are used to create a graph data structure. Companies and persons are represented as nodes in the graph, and the ownership relationships represented as directed edges (from owner to owned entity) between them. The resulting graph is attributed with node features and edge weights. Since the graph consists of two types of nodes with distinct feature sets, it can be described as an attributed heterogeneous graph [@maComprehensiveSurveyGraph2021].
 
 ### Connected Components
 
@@ -257,7 +257,7 @@ The final step of the simulation is to discard any small components ($n$ < 9) th
 
 ![Process for simulating structural anomalies. The initial graph is shown in (1). A node is selected for anomalisation (orange circle) in (2). The outgoing edge (red arrow) is swapped for that of another anomalised node (green arrow), resulting in the exchange of pink nodes for green (3).](figures/anomaly-simulation-process.png){#fig:anomaly-sim-process short-caption="Anomaly Simulation Process"}
 
-The anomaly simulation process introduces unusual ownership relationships into the graph. The true freuqency of these occurrences is unknown, but is is expected to be far lower than 7.3% of nodes. This anomaly rate is chosen to ensure that model training is not impossible due to extreme class imbalance, and the same effect can be achieved by oversampling the minority class [@chawlaSMOTESyntheticMinority2002] or undersampling the majority class [@fernandezLearningImbalancedData2018, p.82].
+The anomaly simulation process introduces unusual ownership relationships into the graph. The true frequency of these occurrences is unknown, but is is expected to be far lower than 7.3% of nodes. This anomaly rate is chosen to ensure that model training is not impossible due to extreme class imbalance, and the same effect can be achieved by oversampling the minority class [@chawlaSMOTESyntheticMinority2002] or undersampling the majority class [@fernandezLearningImbalancedData2018, p.82].
 
 When labelling the unaltered nodes as normal, it is assumed that the data originally provided by Open Ownership is accurate and that if any anomalies are present they will have a negligible impact on experimental results. Nevertheless, anomalies in the initial dataset will be seen by all candidate models, and so should not bias the results.
 
@@ -271,7 +271,9 @@ In order to train a baseline model for comparison, a set of node level features 
 - Clustering Coefficient: Connectedness of neighbouring nodes.
 - PageRank: A measure of node importance, based on the importance of neighbouring nodes [@pagePageRankCitationRanking1998].
 
-To capture information about the node's position in the graph, aggregate statistics are calculated for the aforementioned topological features for the node's neighbours and added as features. We consider the minimum, maximum, sum, mean, and standard deviation of all the aforementioned features for the node's immediate neighbours. We also include the count of immediate neighbours as a feature.
+To capture information about the node's position in the graph, aggregate statistics are calculated for the aforementioned topological features for the node's neighbours and added as features. We consider the minimum, maximum, sum, mean, and standard deviation of all the aforementioned features for the node's immediate neighbours. We also include the count of immediate neighbours as a feature. These aggregate features are generated only for the training of the benchmark model and not for the GNN models.
+
+All numerical features are normalised to the range $[0, 1]$ using the StandardScaler from the Scikit-Learn library [@pedregosaScikitlearnMachineLearning2011]. Categorical features are one-hot encoded using the OneHotEncoder transformer.
 
 ## Dataset Properties
 
@@ -296,7 +298,7 @@ The PyTorch Geometric library offers a comprehensive set of methods for deep lea
 
 We select two architectures, GraphSAGE [@hamiltonInductiveRepresentationLearning2018] and kGNN [@morrisWeisfeilerLemanGo2021], for our experiment. These models are chosen for their demonstrated performance at node classification tasks and ability to handle heterogeneous graph data with slight modification (detailed below) [@hamiltonInductiveRepresentationLearning2018, @morrisWeisfeilerLemanGo2021]. A further consideration in this choice of models is the size of our dataset and the available computational resources. Both architectures are relatively lightweight compared to other models, such as Graph Attention Networks [@velivckovicGraphAttentionNetworks2018], and can be trained on a single GPU in a reasonable amount of time.
 
-Since both GNN architectures selected for this study were originally implemented for learning on homogeneous graphs, we use a method provided by PyTorch Geometric for adapting these homogeneous architectures for learning on our heterogeneous dataset. A homogeneous model is adapted for heterogeneous learning by duplicating message passing functions to operate on each edge type individually. Node representations are learned for each node type and aggregated using a user provided function that we choose via neural architecture search. This technique is described by @schlichtkrullModelingRelationalData2017 and illustrated in figure {@fig:to-hetero}.
+Since both GNN architectures selected for this study were originally implemented for learning on homogeneous graphs, we use a method provided by PyTorch Geometric for adapting these homogeneous architectures for learning on our heterogeneous dataset. A homogeneous model is adapted for heterogeneous learning by duplicating message passing functions to operate on each edge type individually. Node representations are learned for each node type and aggregated using a user provided function that we choose via neural architecture search. This technique is described by @schlichtkrullModellingRelationalData2017 and illustrated in figure {@fig:to-hetero}.
 
 ![Converting homogeneous GNN architectures for heterogeneous learning [@HeterogeneousGraphLearning]](figures/to_hetero.svg){#fig:to-hetero short-caption="Converting homogeneous GNN architectures for heterogeneous learning" width=5in}
 
@@ -338,7 +340,7 @@ The Receiver Operating Characteristic Curve (ROC) is a plot of the true positive
 
 #### Area under the Precision-Recall Curve (AUC-PR)
 
-The Precision-Recall Curve (PR) is a plot of precision against recall along the range of recall values. A perfect model will achieve a 100% precision and 100% recall, while a zero-skill classifier will achieve a rate of precision equal to the proportion of positive cases in the dataset along for all recall values. The area under the PR curve (AUC-PR) provides a way to summarise model performance over the range of recall values. A perfect model will have an AUC-PR of 1, while the zero-skill model will have an AUC-PR equal to the proportion of positive cases in the dataset. The PR curve can provide a more accurate view of model peformance on imbalanced datasets. [@saitoPrecisionRecallPlotMore2015]
+The Precision-Recall Curve (PR) is a plot of precision against recall along the range of recall values. A perfect model will achieve a 100% precision and 100% recall, while a zero-skill classifier will achieve a rate of precision equal to the proportion of positive cases in the dataset along for all recall values. The area under the PR curve (AUC-PR) provides a way to summarise model performance over the range of recall values. A perfect model will have an AUC-PR of 1, while the zero-skill model will have an AUC-PR equal to the proportion of positive cases in the dataset. The PR curve can provide a more accurate view of model performance on imbalanced datasets. [@saitoPrecisionRecallPlotMore2015]
 
 ### Graph Neural Network Training
 
@@ -361,7 +363,7 @@ Parameters for dropout and weight decay are also tuned using Optuna. These trial
 
 The CatBoost classifier is trained in a similar manner to the GNNs. Each candidate model is trained and evaluated on the same training and validation sets as the GNN models, and evaluated using the AUC-PR metric. The hyperparameter search space is provided in the appendix table {@tbl:catboost-search-space}.
 
-# Results and Discusson
+# Results and Discussion
 
 ## Model Performance
 
@@ -379,7 +381,7 @@ Both of the GNN models achieved significantly higher AUC-ROC and AUC-PR scores t
 
 : Model performance on the test set. {#tbl:results}
 
-We note that the CatBoost model's performance is little better than an unskilled classifier in terms of its AUC-PR score, suggesting that it is of little value for fraud dection in this scenario. In answer to our first research question (Q1), we conclude that the GNN models are superior to the CatBoost model for the anomalous node classification task. Further, the increase in performance on this task more than justifies the additional cost in terms of complexity and computational resource required to train the GNN models. To answer our second research question (Q2), our best performing kGNN model achieves an uplift of 53.7% in AUC-ROC score over the CatBoost model, and an uplift of 769.2% in AUC-PR score over the CatBoost model.
+We note that the CatBoost model's performance is little better than an unskilled classifier in terms of its AUC-PR score, suggesting that it is of little value for fraud detection in this scenario. In answer to our first research question (Q1), we conclude that the GNN models are superior to the CatBoost model for the anomalous node classification task. Further, the increase in performance on this task more than justifies the additional cost in terms of complexity and computational resource required to train the GNN models. To answer our second research question (Q2), our best performing kGNN model achieves an uplift of 53.7% in AUC-ROC score over the CatBoost model, and an uplift of 769.2% in AUC-PR score over the CatBoost model.
 
 The stand out performance of the kGNN model may be explained by its capacity to learn and combine higher order features of the graph. A potential avenue for further study would be to investigate what features the model is learning and how they influence the model's performance. Work by @yingGNNExplainerGeneratingExplanations2019 on the GNNExplainer tool is likely worth exploring.
 
@@ -389,11 +391,11 @@ It should also be noted that the kGNN model has two additional message passing l
 
 ### GraphSAGE
 
-The best performing architecture for the GraphSAGE models was found to be a 2-layer model with 256 hidden channels, a bias term, and an additional linear layer after the final message passing layer. A sum aggregation function was selected for both the message passing layers and for the aggregation of heterogeneous node representations. A leaky relu activation function was selcted for all layers. Neither dropout nor weight decay were found to be beneficial to model performance.
+The best performing architecture for the GraphSAGE models was found to be a 2-layer model with 256 hidden channels, a bias term, and an additional linear layer after the final message passing layer. A sum aggregation function was selected for both the message passing layers and for the aggregation of heterogeneous node representations. A leaky relu activation function was selected for all layers. Neither dropout nor weight decay were found to be beneficial to model performance.
 
 ### kGNN
 
-The best performing architecture for the kGNN model was a deeper 4-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message passing layer. A minimum pooling aggregation function was selected for both the message passing layers and for the aggregation of heterogeneous node representations. A gelu activation function was selcted for all layers. Again, neither dropout nor weight decay were found to be beneficial to model performance.
+The best performing architecture for the kGNN model was a deeper 4-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message passing layer. A minimum pooling aggregation function was selected for both the message passing layers and for the aggregation of heterogeneous node representations. A gelu activation function was selected for all layers. Again, neither dropout nor weight decay were found to be beneficial to model performance.
 
 ### CatBoost
 
@@ -421,11 +423,11 @@ In addition to the aforementioned avenues for further study, namely around the n
 
 ### Graph Attention Networks
 
-During initial planning of this study, it was our intention to include a Graph Attention Network (GAT) model [@velickovicGraphAttentionNetworks2018] in the model comparison. However, it was found during the model tuning process that models using attention mechanisms used significantly more memory than the other models, and were unable to be trained on the full dataset. This was likely due to the large number of nodes in the dataset, and the fact that the GAT model is a more computationally expensive model than the other models considered. Further studies may wish to investigate the application of attention mechanisms to the fraud detection task, with a proposed solution being to split the dataset into smaller subgraphs and train the model over batches of nodes and edges. Further developments iterating on the transfomer architecture include models that learn natively on heterogeneous graphs, such as the Heterogeneous Graph Transfromer [@huHeterogeneousGraphTransformer2020] and Heterogeneous Graph Attention Network [@wangHeterogeneousGraphAttention2021].
+During initial planning of this study, it was our intention to include a Graph Attention Network (GAT) model [@velickovicGraphAttentionNetworks2018] in the model comparison. However, it was found during the model tuning process that models using attention mechanisms used significantly more memory than the other models, and were unable to be trained on the full dataset. This was likely due to the large number of nodes in the dataset, and the fact that the GAT model is a more computationally expensive model than the other models considered. Further studies may wish to investigate the application of attention mechanisms to the fraud detection task, with a proposed solution being to split the dataset into smaller subgraphs and train the model over batches of nodes and edges. Further developments iterating on the transformer architecture include models that learn natively on heterogeneous graphs, such as the Heterogeneous Graph Transformer [@huHeterogeneousGraphTransformer2020] and Heterogeneous Graph Attention Network [@wangHeterogeneousGraphAttention2021].
 
 ### Alternative Model Architectures
 
-The GNN architecture search spaces for this study are relatively simple compared to the realm of possible model architectures. Investigating developments such as Jumping Knowledge layers [@xuRepresentationLearningGraphs2018] and the prospect of using different aggregation functions for each edge type may reveal further improvements in model performance, or the possiblity of training equally performant models with fewer parameters.
+The GNN architecture search spaces for this study are relatively simple compared to the realm of possible model architectures. Investigating developments such as Jumping Knowledge layers [@xuRepresentationLearningGraphs2018] and the prospect of using different aggregation functions for each edge type may reveal further improvements in model performance, or the possibility of training equally performant models with fewer parameters.
 
 ### Alternative Datasets and Simulation Strategies
 
