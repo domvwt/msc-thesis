@@ -5,21 +5,17 @@
 Here is an overview of the key files within this project:
 
 ```
-├── data/models/pyg                       <---- Trained PyG models
+├── Dockerfile                            <---- Project container image
+├── config
+│   └── conf.yaml                         <---- Configuration file
+├── figures
+├── models/pyg                            <---- Trained PyG models
 │   ├── regularised
 │   │   ├── GCN.pt (kGNN)
 │   │   └── GraphSAGE.pt
 │   └── unregularised
 │       ├── GCN.pt (kGNN)
 │       └── GraphSAGE.pt
-├── Dockerfile                            <---- Project container image
-├── config
-│   └── conf.yaml                         <---- Configuration file
-├── figures
-├── models                                <---- Trained models
-│   └── pyg
-│       ├── GCN.pt  (this is the kGNN model)
-│       └── GraphSAGE.pt
 ├── notebooks                             <---- Notebooks for training and evaluating models
 │   ├── archive
 │   ├── 13-catboost-model.ipynb
