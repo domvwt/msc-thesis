@@ -1,4 +1,54 @@
-# UK Companies Graph Study
+# Detecting Anomalous Business Ownership Structures with Graph Neural Networks
+
+## Instructions
+
+### System Requirements
+
+- Linux based operating system, 16GB RAM for dataset generation.
+- For model training a 16GB+ GPU is strongly recommended.
+
+### Initial setup
+
+First, install the project with either **pip**:
+
+```bash
+pip install .
+```
+
+ or **poetry**:
+
+```bash
+poetry install
+```
+
+### Dataset Generation
+
+External data sources should be downloaded from the links provided below or requested from the author.
+
+The all data processing can be completed by executing the scripts in `src/mscproject/jobs` in the indicated order.
+
+You may need to install the Apache Spark framework with `bash scripts/spark-install.sh`.
+
+### GNN Model Training
+
+We recommend using a GPU with minimum 15GB of memory for training the GNN models.
+
+1. Create a virtual machine with GPU on Google Cloud Platform with `scripts/create-vm.sh`
+2. If data processing has been completed locally, upload to cloud storage with `scripts/upload-data.sh` (remember to set the GCP_BUCKET_NAME environment variable).
+3. SSH into the virtual machine and build the Docker image with `scripts/build-docker.sh`
+4. Download data to the virtual machine with `scripts/download-data.sh` (don't forget to set the GCP_BUCKET_NAME environment variable on the VM).
+5. Run `scripts/exec-docker-optuna.sh` to perform the neural architecture search. This script can be modifified to change the number of trials and other parameters.
+6. Run `scripts/exec-docker-gnn-evaluation.sh` to produce test set predictions for the best GNN model architectures.
+7. Run `scripts/upload-data.sh` to upload the test set predictions to cloud storage.
+8. Run `scripts/download-data.sh` on your local machine to retrieve the test set predictions for further analysis.
+
+### CatBoost Model Training
+
+The entire CatBoost training and tuning process can be completed by running `notebooks/13-catboost-model.ipynb`.
+
+### Evaluation
+
+Model performance is evaluated on the test set predictions in `notebooks/17-full-evaluation.ipynb`.
 
 ## Project Overview
 
@@ -30,7 +80,7 @@ Here is an overview of the key files within this project:
 ├── pyproject.toml
 ├── reports
 ├── requirements.txt
-├── **scripts**                         <---- Scripts for building and managing the project on cloud
+├── **scripts**                         <---- Scripts for building the project on cloud
 │   ├── create-vm.sh                    <---- Create VM on Google Cloud Platform with a GPU
 │   ├── build-docker.sh                 <---- Build the project docker image
 │   ├── download-data.sh                <---- Download `data/` from cloud storage
@@ -67,7 +117,7 @@ Here is an overview of the key files within this project:
 ## Data Sources
 
 Data used in this project can be found at these pages.
-Please email <dominic.thorn@gmail.com> if you require a copy of the original snapshots used in the study.
+Please email the study authors if you require a copy of the original snapshots used.
 
 |Data                           |Provider                         |Date Retrieved|
 |:------------------------------|:--------------------------------|:-------------|

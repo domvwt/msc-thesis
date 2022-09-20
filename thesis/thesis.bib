@@ -332,11 +332,19 @@
   file = {/home/domvwt/Zotero/storage/5NBMJETQ/what-does-the-uk-beneficial-ownership-data-show-us.html}
 }
 
-@online{DavisonBootstrapMethods,
-  title = {Davison: {{Bootstrap}} Methods and Their Application - {{Google Scholar}}},
-  url = {https://scholar.google.com/scholar_lookup?&title=Bootstrap%20methods%20and%20their%20application&publication_year=1997&author=Davison%2CAC&author=Hinkley%2CDV},
-  urldate = {2022-09-19},
-  file = {/home/domvwt/Zotero/storage/K4CSZTE2/scholar_lookup.html}
+@book{davisonBootstrapMethodsTheir1997,
+  title = {Bootstrap {{Methods}} and Their {{Application}}},
+  author = {Davison, A. C. and Hinkley, D. V.},
+  date = {1997},
+  series = {Cambridge {{Series}} in {{Statistical}} and {{Probabilistic Mathematics}}},
+  publisher = {{Cambridge University Press}},
+  location = {{Cambridge}},
+  doi = {10.1017/CBO9780511802843},
+  url = {https://www.cambridge.org/core/books/bootstrap-methods-and-their-application/ED2FD043579F27952363566DC09CBD6A},
+  urldate = {2022-09-20},
+  abstract = {Bootstrap methods are computer-intensive methods of statistical analysis, which use simulation to calculate standard errors, confidence intervals, and significance tests. The methods apply for any level of modelling, and so can be used for fully parametric, semiparametric, and completely nonparametric analysis. This 1997 book gives a broad and up-to-date coverage of bootstrap methods, with numerous applied examples, developed in a coherent way with the necessary theoretical basis. Applications include stratified data; finite populations; censored and missing data; linear, nonlinear, and smooth regression models; classification; time series and spatial problems. Special features of the book include: extensive discussion of significance tests and confidence intervals; material on various diagnostic methods; and methods for efficient computation, including improved Monte Carlo simulation. Each chapter includes both practical and theoretical exercises. S-Plus programs for implementing the methods described in the text are available from the supporting website.},
+  isbn = {978-0-521-57471-6},
+  file = {/home/domvwt/Zotero/storage/CHHRRBUU/ED2FD043579F27952363566DC09CBD6A.html}
 }
 
 @unpublished{defferrardConvolutionalNeuralNetworks2017,
@@ -366,6 +374,21 @@
   doi = {10.1137/1.9781611975673.67},
   isbn = {978-1-61197-567-3},
   file = {/home/domvwt/Zotero/storage/RCRB5A7S/Ding et al. - 2019 - Deep Anomaly Detection on Attributed Networks.pdf}
+}
+
+@inproceedings{duanAANEAnomalyAware2020,
+  title = {{{AANE}}: {{Anomaly Aware Network Embedding}} for {{Anomalous Link Detection}}},
+  shorttitle = {{{AANE}}},
+  booktitle = {2020 {{IEEE International Conference}} on {{Data Mining}} ({{ICDM}})},
+  author = {Duan, Dongsheng and Tong, Lingling and Li, Yangxi and Lu, Jie and Shi, Lei and Zhang, Cheng},
+  date = {2020-11},
+  pages = {1002--1007},
+  issn = {2374-8486},
+  doi = {10.1109/ICDM50108.2020.00116},
+  abstract = {Existing network embedding models regard all the links in a network as normal and model them without distinction. In real networks, there may be anomalous links like noise or adversarial links. We explicitly consider the existence of anomalous links in a network and propose anomaly aware network embedding (AANE) model. The key of AANE is the design of a new loss, which consists of anomaly aware loss and adjusted fitting loss. We adopt an anomaly indicator to iteratively select significant anomalous links from the network during model training, and removal loss and deviation loss are designed to model the reconstruction errors of selected anomalous and normal links respectively. To instantiate AANE, AAGAE and AAGCN are implemented on graph auto-encoder (GAE) and graph convolution based auto-encoder (GCNAE) respectively. For the purpose of evaluation, a heuristic anomalous link generation algorithm is proposed and by using the algorithm we generate anomalous links into six real world network datasets. Experimental results show that AANE outperforms both basic and competitive network embedding models in terms of anomalous link detection performance in most cases.},
+  eventtitle = {2020 {{IEEE International Conference}} on {{Data Mining}} ({{ICDM}})},
+  keywords = {Anomaly Detection,Conferences,Convolution,Design methodology,Fitting,Graph Auto-Encoder,Heterogeneous networks,Heuristic algorithms,Network Embedding,Training},
+  file = {/home/domvwt/Zotero/storage/NEL5ES3R/9338406.html}
 }
 
 @article{dumitrescuAnomalyDetectionGraphs2022,
@@ -804,10 +827,10 @@
   keywords = {Complex networks,Graph classification,Graph embeddings,Graphlets}
 }
 
-@unpublished{leskovecTraditionalMethodsMachine2021,
+@unpublished{leskovecTraditionalMethodsMachine2020,
   title = {Traditional {{Methods}} for {{Machine Learning}} in {{Graphs}}},
   author = {Leskovec, Jure},
-  date = {2021-01-14},
+  date = {2020},
   location = {{Stanford University}},
   url = {http://snap.stanford.edu/class/cs224w-2020/slides/02-tradition-ml.pdf},
   urldate = {2022-09-18},
@@ -1505,26 +1528,7 @@
   archiveprefix = {arXiv},
   issue = {arXiv:1903.03894},
   keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
-  file = {/home/domvwt/Zotero/storage/IWKKV9H7/1903.html}
-}
-
-@misc{yingGNNExplainerGeneratingExplanations2019a,
-  title = {{{GNNExplainer}}: {{Generating Explanations}} for {{Graph Neural Networks}}},
-  shorttitle = {{{GNNExplainer}}},
-  author = {Ying, Rex and Bourgeois, Dylan and You, Jiaxuan and Zitnik, Marinka and Leskovec, Jure},
-  date = {2019-11-13},
-  number = {arXiv:1903.03894},
-  eprint = {1903.03894},
-  eprinttype = {arxiv},
-  primaryclass = {cs, stat},
-  publisher = {{arXiv}},
-  doi = {10.48550/arXiv.1903.03894},
-  url = {http://arxiv.org/abs/1903.03894},
-  urldate = {2022-09-19},
-  abstract = {Graph Neural Networks (GNNs) are a powerful tool for machine learning on graphs.GNNs combine node feature information with the graph structure by recursively passing neural messages along edges of the input graph. However, incorporating both graph structure and feature information leads to complex models, and explaining predictions made by GNNs remains unsolved. Here we propose GNNExplainer, the first general, model-agnostic approach for providing interpretable explanations for predictions of any GNN-based model on any graph-based machine learning task. Given an instance, GNNExplainer identifies a compact subgraph structure and a small subset of node features that have a crucial role in GNN's prediction. Further, GNNExplainer can generate consistent and concise explanations for an entire class of instances. We formulate GNNExplainer as an optimization task that maximizes the mutual information between a GNN's prediction and distribution of possible subgraph structures. Experiments on synthetic and real-world graphs show that our approach can identify important graph structures as well as node features, and outperforms baselines by 17.1\% on average. GNNExplainer provides a variety of benefits, from the ability to visualize semantically relevant structures to interpretability, to giving insights into errors of faulty GNNs.},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
-  file = {/home/domvwt/Zotero/storage/S3T7ANI4/Ying et al. - 2019 - GNNExplainer Generating Explanations for Graph Ne.pdf;/home/domvwt/Zotero/storage/MQRUZBCF/1903.html}
+  file = {/home/domvwt/Zotero/storage/S3T7ANI4/Ying et al. - 2019 - GNNExplainer Generating Explanations for Graph Ne.pdf;/home/domvwt/Zotero/storage/IWKKV9H7/1903.html}
 }
 
 @inproceedings{youDesignSpaceGraph2020,

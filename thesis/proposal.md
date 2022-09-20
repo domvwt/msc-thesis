@@ -222,9 +222,9 @@ A variety of classification metrics will be used to assess model performance. Ma
 
 All data used in the course of this project has been made publicly available for the purposes of public scrutiny and academic research.
 
-In the interests of personal privacy, any sensitive personal information will be transformed and / or removed from the dataset as appropriate. Specifically, we will remove address information, individual dates of birth (to be transformed to an age range), and the names of individual persons and companies.
+In the interests of personal privacy, any sensitive personal information is transformed and / or removed from the dataset as prior to model training. Specifically, we remove address information, and the names of individual persons and companies.
 
-Further to this, the study will refrain from speculating on the nature of any particular business structure or entity, and any speculation with regards to the legitimacy or legality of a particular arrangement is deemed strictly out of scope and beyond the remit of the study.
+Further to this, the study refrains from speculating on the nature of any particular business structure or entity, and any speculation with regards to the legitimacy or legality of a particular arrangement is deemed strictly out of scope and beyond the remit of the project.
 
 To facilitate academic openness and collaboration, the instructions and code required to produce the datasets and experimental results will be made available where it is acceptable to do so.
 
