@@ -17,5 +17,6 @@ fi
 
 # Sync the data to Google Cloud Storage
 echo "Syncing data to Google Cloud Storage..."
-gsutil -m rsync -x 'raw.*|interim.*|graph.*' -r data gs://$GCP_BUCKET_NAME
+# gsutil -m rsync -x 'raw.*|interim.*|graph.*' -r data gs://$GCP_BUCKET_NAME
+gsutil -m rsync -x 'interim.*' -r data gs://$GCP_BUCKET_NAME
 echo "Complete."

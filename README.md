@@ -7,7 +7,7 @@ Here is an overview of the key files within this project:
 ```
 ├── Dockerfile                            <---- Project container image
 ├── config
-│   └── conf.yaml                         <---- Configuration file
+│   └── conf.yaml                         <---- Configuration file for data processing
 ├── figures
 ├── models/pyg                            <---- Trained PyG models
 │   ├── regularised
@@ -36,8 +36,8 @@ Here is an overview of the key files within this project:
 │   ├── download-data.sh                <---- Download `data/` from cloud storage
 │   ├── exec-docker-gnn-evaluation.sh   <---- GNN evaluation process in Docker container
 │   ├── exec-docker-optuna.sh           <---- NN search and optimisation process in Docker container
-│   ├── launch-gnn-evaluation.sh
-│   ├── launch-optuna.sh
+│   ├── launch-gnn-evaluation.sh        <---- Launch GNN evaluation process
+│   ├── launch-optuna.sh                <---- Configure and launch NN search and optimisation
 │   ├── spark-install.sh                <---- Install Spark (linux only)
 │   └── upload-data.sh                  <---- Upload `data/` to cloud storage
 ├── src
