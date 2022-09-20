@@ -1,1 +1,0 @@
-docker build . -t pyg:2.0.4
