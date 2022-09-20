@@ -249,6 +249,9 @@ and in attribute prediction. Baseline methods used for comparison
 included a XGBoost [@chenXGBoostScalableTree2016], GNN, GAT, and LINE
 [@tangLINELargescaleInformation2015].
 
+The GraphSAGE [@hamiltonInductiveRepresentationLearning2017] node
+embedding framework is among the most popular
+
 # Dataset
 
 Training a supervised classification model requires access to a dataset
@@ -516,7 +519,20 @@ deep learning on graph data structures
 [@feyFastGraphRepresentation2019]. We use the implementations provided
 in this library to train our Graph Neural Network models.
 
-Since the GNN architectures selected for this study were originally
+We select two architectures, GraphSAGE
+[@hamiltonInductiveRepresentationLearning2018] and kGNN
+[@morrisWeisfeilerLemanGo2021], for our experiment. These models are
+chosen for their demonstrated performance at node classification tasks
+and ability to handle heterogeneous graph data with slight modification
+(detailed below) [@hamiltonInductiveRepresentationLearning2018,
+@morrisWeisfeilerLemanGo2021]. A further consideration in this choice of
+models is the size of our dataset and the available computational
+resources. Both architectures are relatively lightweight compared to
+other models, such as Graph Attention Networks
+[@velivckovicGraphAttentionNetworks2018], and can be trained on a single
+GPU in a reasonable amount of time.
+
+Since both GNN architectures selected for this study were originally
 implemented for learning on homogeneous graphs, we use a method provided
 by PyTorch Geometric for adapting these homogeneous architectures for
 learning on our heterogeneous dataset. A homogeneous model is adapted
@@ -675,24 +691,55 @@ validation sets as the GNN models, and evaluated using the AUC-PR
 metric. The hyperparameter search space is provided in the appendix
 table {@tbl:catboost-search-space}.
 
-# Results
+# Results and Discusson
 
 ## Neural Architecture Search and Hyperparameter Tuning
 
+It was observed during the model tuning process that both GNN models
+displayed a great deal of variance in performance, even between trials
+when all hyperparameters were held constant. This suggests a high deal
+of sensitivity to the initialisation of the model weights, and that the
+model architecture is not the only factor in determining model
+performance.
+
+In order to ensure that the final model is among the best possible
+candidates, we perform several round of training with the best
+performing architecture, checking validation performance at each epoch
+and saving the weights whenever the validation AUC-PR improves beyond
+the previous best. This process is repeated for each of the GNN models,
+and the final model is selected based on the best validation AUC-PR
+score. This is in contrast to the commonly adopted strategy of training
+the final model for a predetermined number of epochs on both the
+training and validation datasets.
+
+Further, it was noted that both models exhibited a non-linear
+progression in performance over the course of training and showed no
+signs of overfitting. While this could suggest that the models have not
+converged, allowing the models to train over thousands of epochs showed
+that the validation AUC-PR continues to increase and decrease in a
+non-linear fashion. It may be worth studying this behaviour in future
+work to determine whether it is a result of the model architecture, the
+dataset, or some other factor in the experimental design.
+
 ### GraphSAGE
 
-```{=html}
-<!-- ! TODO -->
-```
+The best performing architecture for the GraphSAGE models was found to
+be a 2-layer model with 256 hidden channels, a bias term, and an
+additional linear layer after the final message passing layer. A sum
+aggregation function was selected for both the message passing layers
+and for the aggregation of heterogeneous node representations. A leaky
+relu activation function was selcted for all layers. Neither dropout nor
+weight decay were found to be beneficial to model performance.
+
 ### kGNN
 
-The optimal architecture for the kGNN model was found to be a 4-layer
-model with 128 hidden channels and an additional linear layer after the
-final message passing layer. Neither dropout nor weight decay were found
-to be beneficial to model performance. A minimum pooling aggregation
-function was selected for both the message passing layers and for the
-aggregation of heterogeneous node representations. A gelu activation
-function was selcted for all layers.
+The best performing architecture for the kGNN model was found to be a
+4-layer model with 128 hidden channels, no bias term, and an additional
+linear layer after the final message passing layer. A minimum pooling
+aggregation function was selected for both the message passing layers
+and for the aggregation of heterogeneous node representations. A gelu
+activation function was selcted for all layers. Neither dropout nor
+weight decay were found to be beneficial to model performance.
 
 ### CatBoost
 
@@ -714,7 +761,7 @@ AUC-ROC and AUC-PR scores, with an AUC-ROC of 0.982 and an AUC-PR of
 0.767. The CatBoost model achieved an AUC-ROC of 0.639 and an AUC-PR of
 0.104.
 
-95% confidence intervalsare provided for the AUC-ROC and AUC-PR scores.
+95% confidence intervals are provided for the AUC-ROC and AUC-PR scores.
 These are calculated using the bootstrap method
 [@DavisonBootstrapMethods] for 10,000 iterations.
 
@@ -728,8 +775,8 @@ short-caption="ROC and PR curves on the test set."}
   CatBoost             0.639 \[0.619,                0.104 \[0.092,
                              0.659\]                       0.116\]
 
-  GraphSAGE            0.953 \[0.939,                0.767 \[0.723,
-                             0.967\]                       0.811\]
+  GraphSAGE            0.943 \[0.929,                0.735 \[0.695,
+                             0.957\]                       0.775\]
 
   kGNN             **0.982** \[0.974,            **0.904** \[0.876,
                              0.990\]                       0.932\]
@@ -737,12 +784,18 @@ short-caption="ROC and PR curves on the test set."}
 
   : Model performance on the test set. {#tbl:results}
 
-# Conclusion
+The stand out performance of the kGNN model may be explained by its
+capacity to learn and combine higher order features of the graph. A
+potential avenue for further study would be to investigate what features
+the model is learning and how they influence the model's performance.
+Work by @yingGNNExplainerGeneratingExplanations2019 on the GNNExplainer
+tool is likely worth exploring.
 
-We have presented a novel dataset of ownership relationships between
-companies and persons in the UK. The dataset is made available for use
-in future research, and is accompanied by a set of baseline models for
-comparison.
+It should also be noted that the kGNN model has two additional message
+passing layers compared to the GraphSAGE model. This may be a
+contributing factor to the model's superior performance, however the
+kGNN consists of half as many hidden channels. This model depth may be
+another contributing factor to the model's superior performance.
 
 ```{=tex}
 \newpage

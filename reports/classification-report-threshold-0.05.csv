@@ -1,13 +1,13 @@
 Class,Metric,GraphSAGE,CatBoost,kGNN
-0,precision,0.995,0.994,0.998
-0,recall,0.889,0.101,0.935
-0,f1-score,0.939,0.183,0.966
-1,precision,0.402,0.08,0.545
-1,recall,0.94,0.993,0.977
-1,f1-score,0.563,0.149,0.7
-macro avg,precision,0.698,0.537,0.772
-macro avg,recall,0.914,0.547,0.956
-macro avg,f1-score,0.751,0.166,0.833
-weighted avg,precision,0.951,0.927,0.965
-weighted avg,recall,0.893,0.166,0.939
-weighted avg,f1-score,0.911,0.18,0.946
+0,precision,0.994,0.994,0.998
+0,recall,0.765,0.101,0.935
+0,f1-score,0.865,0.183,0.966
+1,precision,0.24,0.08,0.545
+1,recall,0.938,0.993,0.977
+1,f1-score,0.383,0.149,0.7
+macro avg,precision,0.617,0.537,0.772
+macro avg,recall,0.852,0.547,0.956
+macro avg,f1-score,0.624,0.166,0.833
+weighted avg,precision,0.938,0.927,0.965
+weighted avg,recall,0.778,0.166,0.939
+weighted avg,f1-score,0.829,0.18,0.946

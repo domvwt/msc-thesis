@@ -101,9 +101,9 @@ for graph learning.
 ### Objectives
 
 - Compose a business ownership graph from open data sources.
-- Train and evaluate GNN models for anomaly detection.
 - Perform the anomaly detection task with traditional machine learning methods.
-- Compare approaches in terms of effectiveness and applicability.
+- Train and evaluate GNN models for anomaly detection.
+- Compare approaches in terms of effectiveness.
 
 ### Research Questions
 
@@ -111,11 +111,11 @@ for graph learning.
 
 The questions driving the research are as follows:
 
-- What is the most effective strategy for detecting anomalous entities in
+- Q1: What is the most effective strategy for detecting anomalous entities in
     business ownership networks?
-- How do GNN models compare to traditional approaches in terms of
+- Q2: How do GNN models compare to traditional approaches in terms of
     classification performance?
-- What are the challenges that arise in building and training a GNN
+- Q3: What are the challenges that arise in building and training a GNN
     model and what recommendations can be made to mitigate these?
 
 ## Prior and Related Work
@@ -148,7 +148,7 @@ Recent work by @dumitrescuAnomalyDetectionGraphs2022 demonstrates how local neig
 
 A thorough description of graph anomaly detection tasks and approaches is offered by @maComprehensiveSurveyGraph2021. Their taxonomy categorises tasks based on the graph component being targeted: nodes, edges, sub-graphs, or full graphs. The authors state their belief that "because the copious types of graph anomalies cannot be directly represented in Euclidean feature space, it is not feasible to directly apply traditional anomaly detection techniques to graph anomaly detection".
 
-### Anomalous Node Detection with GNNs
+### Graph Neural Networks
 
 @kipfSemiSupervisedClassificationGraph2017 propose a scalable GNN architecture for classifying nodes in a partially labelled dataset. Early attempts to apply deep learning to graph structures utilised RNN architectures which prove difficult to scale [@goriNewModelEarning2005; @liGatedGraphSequence2017; @scarselliGraphNeuralNetwork2009]. Kipf et al. extend prior work on spectral GNNs [@brunaSpectralNetworksLocally2014; @defferrardConvolutionalNeuralNetworks2017] to produce a flexible model that scales in linear time with respect to the number of graph edges.
 
@@ -156,13 +156,17 @@ A thorough description of graph anomaly detection tasks and approaches is offere
 
 An alternative method is offered by @liSpecAESpectralAutoEncoder2019, in which a spectral convolution and deconvolution framework is used to identify anomalous nodes in conjunction with a density estimation model. The approach continues to demonstrate the importance of combining multiple perspectives of the network data, with the innovation being the use of a Gaussian Mixture Model to combine representations in a single view.
 
-### Recent Developments
+### Graph Attention Networks
 
 @velickovicGraphAttentionNetworks2018 demonstrate the use of self-attention layers to address shortcomings in the representations captured by GNN architectures. However, a comparison of Relational Graph Attention (GAT) models to GNNs showed that relative performance was task dependent and that current GAT models could not be shown to consistently outperform GNNs on benchmark exercises [@busbridgeRelationalGraphAttention2019].
 
 In an application of graph attention based models to financial fraud detection, @wangSemisupervisedGraphAttentive2019 show that their SemiGNN model outperforms established approaches when predicting risk of default and in attribute prediction. Baseline methods used for comparison included a XGBoost [@chenXGBoostScalableTree2016], GNN, GAT, and LINE [@tangLINELargescaleInformation2015].
 
-The GraphSAGE [@hamiltonInductiveRepresentationLearning2017] node embedding framework is among the most popular
+### Heterogeneous Graph Neural Networks
+
+The studies reviewed above have focused on the detection of anomalous nodes in homogeneous graphs. However, the structure of a business ownership graph is necessarily heterogeneous, if we wish to capture the specific attributes of people and companies. The field of heterogeneous graph learning is somewhat less developed than its homogeneous counterpart, and so we determine that the most promising approach is to adapt existing methods to the heterogeneous setting.
+
+Fortunately, implementations of many state of the art GNN architectures are available in the PyTorch Geometric library [@feyPyTorchGeometric2021], as well as methods to adapt homogeneous models to heterogeneous graph learning tasks.
 
 # Dataset
 
@@ -221,13 +225,9 @@ The Open Ownership data file consists of over 20 million records stored as neste
 
 As the scope of this study covers only UK registered companies and their shareholders, records for entities that do not have a shareholding interest in a UK company are discarded. Non-UK companies that are registered as a shareholder of a UK company are also discarded, as we are unable to obtain information for these entities via Companies House. Computational resource constraints also prevent handling of a larger dataset. To further limit dataset size, and in the interests of only considering accurate and up to date information, we also filter out companies that are listed as dissolved.
 
-<!-- TODO: INSERT NUMBER OF RECORDS HERE, PERSONS, COMPANIES, RELATIONSHIPS -->
-
 While the initial nested data schema is desirable for clean representation and compact storage, we require a flat relational table structure for analytical and model training purposes. Relevant data items are extracted into a flat table for each entity type. This results in three tables of interim output: company information, person information, and statements of control that link entities to their ownership interests.
 
 The Companies House data is joined to the company entity table via the UK company registration number.
-
-<!-- TODO: INSERT FINAL TABLE SCHEMA -->
 
 ## Graph Generation
 
@@ -271,15 +271,13 @@ In order to train a baseline model for comparison, a set of node level features 
 - Clustering Coefficient: Connectedness of neighbouring nodes.
 - PageRank: A measure of node importance, based on the importance of neighbouring nodes [@pagePageRankCitationRanking1998].
 
-To capture information about the node's position in the graph, aggregate statistics are calculated for the aforementioned topological features for the node's neighbours and added as features:
+To capture information about the node's position in the graph, aggregate statistics are calculated for the aforementioned topological features for the node's neighbours and added as features. We consider the minimum, maximum, sum, mean, and standard deviation of all the aforementioned features for the node's immediate neighbours. We also include the count of immediate neighbours as a feature.
 
-- Minimum
-- Maximum
-- Sum
-- Mean
-- Standard Deviation
+## Dataset Properties
 
-The count of immediate neighbours is also included as a feature.
+We convert the dataset to an undirected graph by adding a reverse edge for each edge in the original graph. This is done to allow GNN message passing algorithms to work effectively on the graph rather than being able to communicate attributes in only one direction.
+
+The final dataset, after all processing, simulation, and feature engineering, consists of 124,934 nodes and 131,892 edges. This breaks down into 94,054 company entities and 30,880 natural persons. The number of edges indicating a persons ownership of a company is 77,971, while the number of company to company edges is 53,921.
 
 # Methods
 
@@ -365,13 +363,29 @@ The CatBoost classifier is trained in a similar manner to the GNNs. Each candida
 
 # Results and Discusson
 
+## Model Performance
+
+Both of the GNN models achieved significantly higher AUC-ROC and AUC-PR scores than the CatBoost model. The kGNN model achieved the highest AUC-ROC and AUC-PR scores, with an AUC-ROC of 0.982 and an AUC-PR of 0.904. The GraphSAGE model achieved an AUC-ROC of 0.943 and an AUC-PR of 0.735. The CatBoost model achieved an AUC-ROC of 0.639 and an AUC-PR of 0.104.
+
+95% confidence intervals are provided for the AUC-ROC and AUC-PR scores. These are calculated using the bootstrap method [@DavisonBootstrapMethods] for 10,000 iterations.
+
+![ROC and PR curves on the test set.](figures/roc-pr-curve.png){#fig:roc-pr-curve short-caption="ROC and PR curves on the test set."}
+
+| Model     | AUC-ROC       | 95% CI         |       AUC-PR | 95% CI         |
+|:----------|--------------:|:---------------|-------------:|:---------------|
+| CatBoost  |         0.639 | [0.619, 0.659] |        0.104 | [0.092, 0.116] |
+| GraphSAGE |         0.943 | [0.929, 0.957] |        0.735 | [0.695, 0.775] |
+| kGNN      |     **0.982** | [0.974, 0.990] |    **0.904** | [0.876, 0.932] |
+
+: Model performance on the test set. {#tbl:results}
+
+We note that the CatBoost model's performance is little better than an unskilled classifier in terms of its AUC-PR score, suggesting that it is of little value for fraud dection in this scenario. In answer to our first research question (Q1), we conclude that the GNN models are superior to the CatBoost model for the anomalous node classification task. Further, the increase in performance on this task more than justifies the additional cost in terms of complexity and computational resource required to train the GNN models. To answer our second research question (Q2), our best performing kGNN model achieves an uplift of 53.7% in AUC-ROC score over the CatBoost model, and an uplift of 769.2% in AUC-PR score over the CatBoost model.
+
+The stand out performance of the kGNN model may be explained by its capacity to learn and combine higher order features of the graph. A potential avenue for further study would be to investigate what features the model is learning and how they influence the model's performance. Work by @yingGNNExplainerGeneratingExplanations2019 on the GNNExplainer tool is likely worth exploring.
+
+It should also be noted that the kGNN model has two additional message passing layers compared to the GraphSAGE model. This may be a contributing factor to the model's superior performance, however the kGNN consists of half as many hidden channels. This model depth may be another contributing factor to the kGNN model's superior performance.
+
 ## Neural Architecture Search and Hyperparameter Tuning
-
-It was observed during the model tuning process that both GNN models displayed a great deal of variance in performance, even between trials when all hyperparameters were held constant. This suggests a high deal of sensitivity to the initialisation of the model weights, and that the model architecture is not the only factor in determining model performance.
-
-In order to ensure that the final model is among the best possible candidates, we perform several round of training with the best performing architecture, checking validation performance at each epoch and saving the weights whenever the validation AUC-PR improves beyond the previous best. This process is repeated for each of the GNN models, and the final model is selected based on the best validation AUC-PR score. This is in contrast to the commonly adopted strategy of training the final model for a predetermined number of epochs on both the training and validation datasets.
-
-Further, it was noted that both models exhibited a non-linear progression in performance over the course of training and showed no signs of overfitting. While this could suggest that the models have not converged, allowing the models to train over thousands of epochs showed that the validation AUC-PR continues to increase and decrease in a non-linear fashion. It may be worth studying this behaviour in future work to determine whether it is a result of the model architecture, the dataset, or some other factor in the experimental design.
 
 ### GraphSAGE
 
@@ -379,7 +393,7 @@ The best performing architecture for the GraphSAGE models was found to be a 2-la
 
 ### kGNN
 
-The best performing architecture for the kGNN model was found to be a 4-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message passing layer. A minimum pooling aggregation function was selected for both the message passing layers and for the aggregation of heterogeneous node representations. A gelu activation function was selcted for all layers. Neither dropout nor weight decay were found to be beneficial to model performance.
+The best performing architecture for the kGNN model was a deeper 4-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message passing layer. A minimum pooling aggregation function was selected for both the message passing layers and for the aggregation of heterogeneous node representations. A gelu activation function was selcted for all layers. Again, neither dropout nor weight decay were found to be beneficial to model performance.
 
 ### CatBoost
 
@@ -391,25 +405,33 @@ The most successful CatBoost model was found to have the following parameters:
 - bootstrap_type: MVS
 - colsample_bylevel: 0.08
 
-## Model Performance
+### Notes and Recommendations
 
-Both of the GNN models achieved significantly higher AUC-ROC and AUC-PR scores than the CatBoost model. The kGNN model achieved the highest AUC-ROC and AUC-PR scores, with an AUC-ROC of 0.982 and an AUC-PR of 0.904. The GraphSAGE model achieved an AUC-ROC of 0.953 and an AUC-PR of 0.767. The CatBoost model achieved an AUC-ROC of 0.639 and an AUC-PR of 0.104.
+It was observed during the model tuning process that both GNN models displayed a great deal of variance in performance, even between trials when all hyperparameters were held constant. This suggests a high deal of sensitivity to the initialisation of the model weights, and that the model architecture is far from the only factor in determining model performance.
 
-95% confidence intervalsare provided for the AUC-ROC and AUC-PR scores. These are calculated using the bootstrap method [@DavisonBootstrapMethods] for 10,000 iterations.
+In order to ensure that the final model is among the best possible candidates, we perform several rounds of training with the best performing architecture, checking validation performance at each epoch and saving the weights whenever the validation AUC-PR improves beyond the previous best value. This process is repeated for each of the GNN models, and the final models are selected based on the best validation AUC-PR score. This is in contrast to the commonly adopted strategy of training the final model for a predetermined number of epochs on both the training and validation datasets.
 
-![ROC and PR curves on the test set.](figures/roc-pr-curve.png){#fig:roc-pr-curve short-caption="ROC and PR curves on the test set."}
+Further, it was noted that both models exhibited a non-linear progression in performance over the course of training and showed no signs of overfitting. While this could suggest that the models have not converged, allowing the models to train over thousands of epochs showed that the validation AUC-PR continues to increase and decrease in a non-linear fashion. It may be worth studying this behaviour in future work to determine whether it is a result of the model architecture, the dataset, or some other factor in the experimental design.
 
-| Model     | AUC-ROC       | 95% CI         |       AUC-PR | 95% CI         |
-|:----------|--------------:|:---------------|-------------:|:---------------|
-| CatBoost  |         0.639 | [0.619, 0.659] |        0.104 | [0.092, 0.116] |
-| GraphSAGE |         0.953 | [0.939, 0.967] |        0.767 | [0.723, 0.811] |
-| kGNN      |     **0.982** | [0.974, 0.990] |    **0.904** | [0.876, 0.932] |
+These observations should be noted as potential pitfalls in the model tuning process, and in answer to our third research question (Q3), we would advise caution when training GNN models for industrial applications, especially in critical areas such as fraud detection. Our recommendation is to follow a similar process to that detailed in this study, of staged model training and hyperparameter tuning, with regular checkpointing in order to ensure that the final model is optimal for the task.
 
-: Model performance on the test set. {#tbl:results}
+## Further Work
 
-# Conclusion
+In addition to the aforementioned avenues for further study, namely around the non-linear training performance of the GNN models and the features they learn, there are several other opportunities for work that we would like to highlight.
 
-We have presented a novel dataset of ownership relationships between companies and persons in the UK. The dataset is made available for use in future research, and is accompanied by a set of baseline models for comparison.
+### Graph Attention Networks
+
+During initial planning of this study, it was our intention to include a Graph Attention Network (GAT) model [@velickovicGraphAttentionNetworks2018] in the model comparison. However, it was found during the model tuning process that models using attention mechanisms used significantly more memory than the other models, and were unable to be trained on the full dataset. This was likely due to the large number of nodes in the dataset, and the fact that the GAT model is a more computationally expensive model than the other models considered. Further studies may wish to investigate the application of attention mechanisms to the fraud detection task, with a proposed solution being to split the dataset into smaller subgraphs and train the model over batches of nodes and edges. Further developments iterating on the transfomer architecture include models that learn natively on heterogeneous graphs, such as the Heterogeneous Graph Transfromer [@huHeterogeneousGraphTransformer2020] and Heterogeneous Graph Attention Network [@wangHeterogeneousGraphAttention2021].
+
+### Alternative Model Architectures
+
+The GNN architecture search spaces for this study are relatively simple compared to the realm of possible model architectures. Investigating developments such as Jumping Knowledge layers [@xuRepresentationLearningGraphs2018] and the prospect of using different aggregation functions for each edge type may reveal further improvements in model performance, or the possiblity of training equally performant models with fewer parameters.
+
+### Alternative Datasets and Simulation Strategies
+
+It is surprising to see that the GNN performance on the anomaly detection task is so strong, given that the anomaly generation process did not follow any particular pattern or established logic. Indeed, it was expected that more of the anomalies would have appeared very similar to the genuine relationships of the majority class, and that the model would have struggled to distinguish between the two.
+
+The random assignment of anomalous edges makes it difficult to reason about the models' performance, and it would be interesting to investigate the performance of the models on a dataset where the anomalies are generated in a more controlled manner. Trying alternative simulation strategies could help to understand under what conditions the GNN models are capable of detecting anomalies and where they struggle. It could also be worth performing the same anomaly simulation and identification exercise on a established benchmark datasets, such as the Cora citation network [@mccallumAutomatingConstructionInternet2000], to see if the results are consistent.
 
 \newpage
 
