@@ -1,31 +1,18 @@
 ---
-
 title: Detecting Anomalous Business Ownership Structures with Graph Neural Networks
-
 subtitle: Final Project
-
 bibliography: ./thesis/thesis.bib
-
 reference-section-title: References
-
 abstract: |
-
-    **Abstract** --
-    Government and financial institutions are at risk of tax evasion and financial fraud due to obfuscation and fraudulent declaration of business ownership. This study investigates the use of graph neural networks (GNNs) for detecting anomalous business relationships in a data set of company ownership information. We use a public data set of UK businesses and shareholders, with anomalies simulated by semi-random edge shuffling, and compare the performance of supervised machine learning algorithms in identifying anomalous nodes. Both GraphSAGE [@hamiltonInductiveRepresentationLearning2018] and kGNN [@morrisWeisfeilerLemanGo2021] models outperformed the benchmark gradient-boosted tree ensemble, with kGNN outperforming GraphSAGE on this task. Our results suggest GNNs are a promising approach for detecting anomalous business relationships. We propose a set of recommendations for practitioners interested in applying GNNs to fraud detection tasks and discuss avenues for further work.
-    \newpage
-
+    **Abstract** -- 
+    Governments and financial institutions are at risk of tax evasion and financial fraud due to obfuscation and fraudulent declaration of business ownership. This study investigates the use of graph neural networks (GNNs) for detecting anomalous business relationships in a data set of company ownership information. We use a public data set of UK businesses and shareholders, with anomalies simulated by semi-random edge shuffling, and compare the performance of supervised machine learning algorithms in identifying anomalous nodes. Both GraphSAGE [@hamiltonInductiveRepresentationLearning2018] and kGNN [@morrisWeisfeilerLemanGo2021] models outperformed the benchmark gradient-boosted tree ensemble, with kGNN outperforming GraphSAGE on this task. Our results suggest GNNs are a promising approach for detecting anomalous business relationships. We propose a set of recommendations for practitioners interested in applying GNNs to fraud detection tasks and discuss avenues for further work.
+    \newpage
 header-includes:
-
-    - \usepackage{longtable}\setlength{\LTleft}{1em}
-
+    - \usepackage{longtable}\setlength{\LTleft}{1em}
 panhan:
-
 -
-
-    use_preset: journal
-
-    output_file: ./thesis/thesis.pdf
-
+    use_preset: journal
+    output_file: ./thesis/thesis.pdf
 ---
 
 <!-- * NOTE: Export bibliography from Zotero in Better BibLaTeX format. -->
