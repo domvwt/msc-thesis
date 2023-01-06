@@ -4,8 +4,8 @@ subtitle: Final Project
 bibliography: ./thesis/thesis.bib
 reference-section-title: References
 abstract: |
-    **Abstract** -- 
-    Governments and financial institutions are at risk of tax evasion and financial fraud due to obfuscation and fraudulent declaration of business ownership. This study investigates the use of graph neural networks (GNNs) for detecting anomalous business relationships in a data set of company ownership information. We use a public data set of UK businesses and shareholders, with anomalies simulated by semi-random edge shuffling, and compare the performance of supervised machine learning algorithms in identifying anomalous nodes. Both GraphSAGE [@hamiltonInductiveRepresentationLearning2018] and kGNN [@morrisWeisfeilerLemanGo2021] models outperformed the benchmark gradient-boosted tree ensemble, with kGNN outperforming GraphSAGE on this task. Our results suggest GNNs are a promising approach for detecting anomalous business relationships. We propose a set of recommendations for practitioners interested in applying GNNs to fraud detection tasks and discuss avenues for further work.
+    **Abstract** --
+    Illegitimate and erroneous declaration of business ownership is a problem for governments and financial institutions worldwide, resulting in tax evasion, fraud, and the general facilitation of criminal activity. We compare the performance of Graph Neural Networks and a gradient-boosted tree ensemble in identifying simulated anomalous owners in a public dataset of UK businesses and shareholders. Both GraphSAGE [@hamiltonInductiveRepresentationLearning2018] and kGNN [@morrisWeisfeilerLemanGo2021] models outperform the gradient-boosted tree ensemble, with kGNN outperforming GraphSAGE on this task. We propose a set of recommendations for practitioners interested in applying GNNs to fraud detection tasks and discuss avenues for further work.
     \newpage
 header-includes:
     - \usepackage{longtable}\setlength{\LTleft}{1em}
@@ -27,13 +27,13 @@ In October 2021, The International Consortium of Investigative Journalists (ICIJ
 
 To put these numbers in perspective, a 2019 study by the European Commission estimated that a total USD 7.8 trillion was held offshore as of 2016. The share of this attributed to the European Union (EU) was USD 1.6 trillion, which corresponds to an estimated tax revenue loss to the EU of EUR 46 billion [@europeancommission.directorategeneralfortaxationandcustomsunion.EstimatingInternationalTax2019].
 
-The ease with which information can be concealed or not declared makes it difficult to identify the beneficiaries of a company. Further complication is introduced by the interconnected nature of businesses and individuals, as well as the ingenuity of criminals in masking illicit activities. These difficulties place significant strain on the resources of law enforcement agencies and financial institutions [@stevenm.CombatingIllicitFinancing2019].
+The ease with which information can be concealed or not declared makes it difficult to identify the beneficiaries of a company. Further complications are introduced by the interconnected nature of businesses and individuals, as well as the ingenuity of criminals in masking illicit activities. These difficulties place significant strain on the resources of law enforcement agencies and financial institutions [@stevenm.CombatingIllicitFinancing2019].
 
-In April 2016, the United Kingdom made it mandatory for businesses to keep a register of People with Significant Control. This includes people owning over 25% of the company's shares [@KeepingYourPeople2016]. Ownership data is curated and processed by the Open Ownership organisation for public scrutiny and research [@OpenOwnership2022]. It is the data provided by Open Ownership that forms the basis of this study. Details of suspicious or illegitimate business owners are not available because of the sensitive nature of such records. As part of our experimental methods, we propose a method for the simulation of anomalous ownership structures.
+In April 2016, the United Kingdom made it mandatory for businesses to keep a register of People with Significant Control. This includes people owning over 25% of the company’s shares [@KeepingYourPeople2016]. Ownership data is curated and processed by the Open Ownership organisation for public scrutiny and research [@OpenOwnership2022]. It is the data provided by Open Ownership that forms the basis of this study. Details of suspicious or illegitimate business owners are not available because of the sensitive nature of such records. As part of our experimental methods, we propose a method for the simulation of anomalous ownership structures.
 
-To model the complex network of global business ownership, it is necessary to represent companies, people, and their relationships in a graph structure. With data in this format, it is possible to consider the features of an entity's local neighbourhood, as well as the entity's own characteristics, when investigating potential fraud. Anomaly detection algorithms that operate on graph structures remain at the frontier of machine learning research.
+To model the complex network of global business ownership, it is necessary to represent companies, people, and their relationships in a graph structure. With data in this format, it is possible to consider the features of an entity’s local neighbourhood, as well as the entity’s characteristics, when investigating potential fraud. Anomaly detection algorithms that operate on graph structures remain at the frontier of machine learning research.
 
-To the best of the author's knowledge, there is no published research studying the effectiveness of graph anomaly detection techniques on business ownership networks. The following proposal is a study of state-of-the-art anomaly detection techniques as applied to business ownership graphs.
+To the best of the author’s knowledge, there is no published research studying the effectiveness of graph anomaly detection techniques on business ownership networks. The following proposal is a study of state-of-the-art anomaly detection techniques as applied to business ownership graphs.
 
 ## Aims, Objectives, and Research Questions
 
@@ -44,11 +44,8 @@ The primary aim of this project is to develop an effective approach for detectin
 ### Objectives
 
 - Compose a business ownership graph from open data sources.
-
 - Perform the anomaly detection task with traditional machine learning methods.
-
 - Train and evaluate GNN models for anomaly detection.
-
 - Compare approaches in terms of effectiveness.
 
 ### Research Questions
@@ -56,16 +53,14 @@ The primary aim of this project is to develop an effective approach for detectin
 The questions driving the research are:
 
 - Q1: What is the most effective strategy for detecting anomalous entities in business ownership networks?
-
 - Q2: How do GNN models compare to traditional approaches in terms of classification performance?
-
 - Q3: What are the challenges that arise in building and training a GNN model and what recommendations can be made for practitioners?
 
 ### Ethical Considerations
 
 All data used in this project has been made available for public scrutiny and academic research.
 
-In the interests of personal privacy, any sensitive personal information is transformed and/or removed from the dataset prior to analysis and modelling. We remove address information and the names of individual persons and companies.
+In the interests of personal privacy, any sensitive personal information is transformed and/or removed from the dataset before analysis and modelling. We remove address information and the names of individual persons and companies.
 
 Further, the study refrains from speculating on any business structure or entity, and any speculation on the legitimacy or legality of a particular arrangement is deemed out of the project scope.
 
@@ -73,7 +68,7 @@ To facilitate academic openness and collaboration, the instructions and code req
 
 ## Prior and Related Work
 
-There are few published studies focusing on the detection of anomalous business ownership structures. We review the most relevant literature below.
+Few published studies focus on the detection of anomalous business ownership structures. We review the most relevant literature below.
 
 ### Detecting Financial Fraud
 
@@ -81,7 +76,7 @@ There are few published studies focusing on the detection of anomalous business 
 
 Recent work by @dumitrescuAnomalyDetectionGraphs2022 demonstrates how local neighbourhood features and statistical scores can be used in Anti-Money Laundering (AML) models. Relevant features included unsupervised anomalous node detection techniques [@akogluOddballSpottingAnomalies2010] and local neighbourhood connectivity features [@molloyGraphAnalyticsRealtime2016] calculated on *reduced egonets*. A strength of the study is that it was conducted on genuine labelled transactional data with positive results. The authors did not implement any GNN or other deep learning approaches for comparison.
 
-@fronzetticolladonUsingSocialNetwork2017 explore a range of social network analysis techniques for identifying money laundering using data kept by an Italian factoring company. The authors found that constructing many networks from different projections of the graph entities improved the power of individual risk metrics. Degree centrality was determined to be a significant predictor of risk in all cases, while in certain scenarios network constraint proved to be informative. We note that the results obtained are for clients of a single business and that additional work is required to demonstrate wider validity.
+@fronzetticolladonUsingSocialNetwork2017 explore a range of social network analysis techniques for identifying money laundering using data kept by an Italian factoring company. The authors found that constructing numerous networks from different projections of the graph entities improved the power of individual risk metrics. Degree centrality was determined to be a significant predictor of risk in all cases, while in certain scenarios network constraint proved to be informative. We note these results are for clients of a single business and that additional work is required to demonstrate wider validity.
 
 ### Anomaly Detection for Graphs
 
@@ -89,17 +84,17 @@ Recent work by @dumitrescuAnomalyDetectionGraphs2022 demonstrates how local neig
 
 @akogluGraphbasedAnomalyDetection2014 highlights four main reasons for the suitability of graph structures in anomaly detection:
 
-**Inter-dependent nature of the data** -- "Data objects are often related to each other and share dependencies." This can be observed in business ownership data through the relationships that connect individuals and companies in legal hierarchies and communities.
+**Inter-dependent nature of the data** -- “Data objects are often related to each other and share dependencies.” This can be observed in business ownership data through the relationships that connect individuals and companies in legal hierarchies and communities.
 
 **Powerful representation** -- Graphs offer a powerful way of representing inter-dependencies and long-range correlations between related entities. By using different node and edge types, as well as additional attributes, it is possible to represent rich datasets. These properties are valuable in capturing the different entity types present in a business ownership graph. A business, for example, will have attributes not shared by individuals, such as an industry classification code.
 
-**Relational nature of problem domains** -- "The nature of anomalies could exhibit themselves as relational". In the context of detecting anomalous business ownership, individuals and businesses may be anomalous through their unusual relationships with other entities.
+**Relational nature of problem domains** -- “The nature of anomalies could exhibit themselves as relational”. In the context of detecting anomalous business ownership, individuals and businesses may be anomalous through their unusual relationships with other entities.
 
-**Robust machinery** -- "Graphs serve as more adversarially robust tools." It is suggested that graph-based systems are well suited for fraud detection, as bad actors will find it difficult to alter or fake their position in the global structure.
+**Robust machinery** -- “Graphs serve as more adversarially robust tools.” It is suggested that graph-based systems are well suited for fraud detection, as bad actors will find it difficult to alter or fake their position in the global structure.
 
 <!-- A Comprehensive Survey on Graph Anomaly Detection with Deep Learning (2021) -->
 
-A thorough description of graph anomaly detection tasks and approaches is offered by @maComprehensiveSurveyGraph2021. Their taxonomy categorises tasks based on the graph component being targeted: nodes, edges, sub-graphs, or full graphs. The authors state their belief that "because the copious types of graph anomalies cannot be directly represented in Euclidean feature space, it is not feasible to directly apply traditional anomaly detection techniques to graph anomaly detection".
+A thorough description of graph anomaly detection tasks and approaches is offered by @maComprehensiveSurveyGraph2021. Their taxonomy categorises tasks based on the graph component being targeted: nodes, edges, sub-graphs, or full graphs. The authors state their belief that “because the copious types of graph anomalies cannot be directly represented in Euclidean feature space, it is not feasible to directly apply traditional anomaly detection techniques to graph anomaly detection”.
 
 ### Graph Neural Networks
 
@@ -107,7 +102,7 @@ A thorough description of graph anomaly detection tasks and approaches is offere
 
 @dingDeepAnomalyDetection2019 combines a GNN architecture with an auto-encoder in a method that identifies anomalous nodes by reconstruction error. The proposed method, DOMINANT, uses a GNN to generate node embeddings and separately reconstructs both the graph topology and the node attributes. This strategy is further developed and applied to multi-view data by combining multiple graph encoders [@pengDeepMultiViewFramework2022].
 
-An alternative method is offered by @liSpecAESpectralAutoEncoder2019, in which a spectral convolution and deconvolution framework are used to identify anomalous nodes in conjunction with a density estimation model. The approach continues to show the importance of combining multiple perspectives of the network data, with the innovation being the use of a Gaussian Mixture Model to combine representations in a single view.
+An alternative method is offered by @liSpecAESpectralAutoEncoder2019, in which a spectral convolution and deconvolution framework are used to identify anomalous nodes in conjunction with a density estimation model. The approach continues to indicate the importance of combining multiple perspectives of the network data, with the innovation being the use of a Gaussian Mixture Model to combine representations in a single view.
 
 ### Graph Attention Networks
 
@@ -150,15 +145,10 @@ The Open Ownership Register is used as a canonical source of company, person, an
 The Free Company Data Product is a monthly snapshot of data for all live companies on the UK public register. Taken from the Companies House data products website, this data includes:
 
 - basic information including company type and registered office address
-
 - the nature of business or standard industrial classification (SIC)
-
 - company status, such as “live” or “dissolved”
-
 - date of last accounts or confirmation statement filed
-
 - date of next accounts or confirmation statement due
-
 - previous company names
 
 [@CompaniesHouseData]
@@ -209,19 +199,15 @@ When labelling the unaltered nodes as normal, it is assumed that the data provid
 
 ## Node Features
 
-In order to train a baseline model for comparison, a set of node-level features is generated to represent each node in a tabular format [@leskovecTraditionalMethodsMachine2020]. The following topological features are extracted for each node:
+To train a baseline model for comparison, a set of node-level features is generated to represent each node in a tabular format [@leskovecTraditionalMethodsMachine2020]. The following topological features are extracted for each node:
 
 - In-degree: The number of incoming edges to the node.
-
 - Out-degree: The number of outgoing edges from the node.
-
 - Closeness Centrality: Inverse of the sum of shortest path distances to all other nodes.
-
 - Clustering Coefficient: Connectedness of neighbouring nodes.
-
 - PageRank: A measure of node importance, based on the importance of neighbouring nodes [@pagePageRankCitationRanking1998].
 
-To capture information about the node's position in the graph, aggregate statistics are calculated for the aforementioned topological features for the node's neighbours and added as features. We consider the minimum, maximum, sum, mean, and standard deviation of all the aforementioned features for the node's immediate neighbours. We also include the count of immediate neighbours as a feature. These aggregate features are generated only for the training of the benchmark model.
+To capture information about the node’s position in the graph, aggregate statistics are calculated for the aforementioned topological features for the node’s neighbours and added as features. We consider the minimum, maximum, sum, mean, and standard deviation of all the aforementioned features for the node’s immediate neighbours. We also include the count of immediate neighbours as a feature. These aggregate features are generated only for the training of the benchmark model.
 
 All numerical features are normalised to the range $[0, 1]$ using the StandardScaler from the Scikit-Learn library [@pedregosaScikitlearnMachineLearning2011]. Categorical features are one-hot encoded using the OneHotEncoder transformer.
 
@@ -229,7 +215,7 @@ All numerical features are normalised to the range $[0, 1]$ using the StandardSc
 
 We convert the dataset to an undirected graph by adding a reverse edge for each edge in the original graph. This is done to allow GNN message-passing algorithms to work across the graph rather than being able to communicate attributes in only one direction.
 
-The final dataset, after all processing, simulation, and feature engineering, comprises 124,934 nodes and 131,892 edges. This breaks down into 94,054 company entities and 30,880 natural persons. The number of edges pertaining to a person’s ownership of a company is 77,971, while the number of company-to-company edges is 53,921.
+The final dataset comprises 124,934 nodes, made up of 94,054 company entities and 30,880 natural persons. There are 131,892 edges, of which 77,971 indicate person-to-company ownership, while the number of company-to-company ownership edges is 53,921.
 
 # Computational Resources
 
@@ -237,16 +223,16 @@ The computational resources required to run the main experiments in this study a
 
 | Resource | Specification |
 |----------|---------------|
-| CPU      | 4 vCPUs       |
-| GPU      | 1 x T4 (16GB) |
-| RAM      | 15GB          |
-| Disk     | 100GB         |
+| CPU      | 4 vCPUs       |
+| GPU      | 1 x T4 (16GB) |
+| RAM      | 15GB          |
+| Disk     | 100GB         |
 
 : {#tbl:compute-resources} Computational resources used for the experiments.
 
 This machine is used for training the GNN models and is not required for processing the dataset or training the baseline model. The baseline model and dataset can be produced in a reasonable amount of time on a consumer-grade machine with 16GB of RAM and no GPU.
 
-We recommend making use of spot instances in order to benefit from the reduced cost of preemptible hardware. The framework presented by this study is designed to be fault tolerant to help address some challenges encountered when conducting our experiments.
+We recommend making use of spot instances to benefit from the reduced cost of preemptible hardware. The framework presented by this study is designed to be fault tolerant to help address some challenges encountered when conducting our experiments.
 
 Scripts and commands for repeating the experiments in this study are provided in the accompanying code repository, as well as a Dockerfile, for recreating the container image.
 
@@ -254,7 +240,7 @@ Scripts and commands for repeating the experiments in this study are provided in
 
 ## Traditional Machine Learning Approaches to Binary Classification
 
-In order to assess the relative improvement that can be achieved by using Graph Neural Networks, we compare their performance to a baseline model trained on a set of node-level features.
+To assess the relative improvement that can be achieved by using Graph Neural Networks, we compare their performance to a baseline model trained on a set of node-level features.
 
 ### Gradient Boosted Trees
 
@@ -274,9 +260,9 @@ Since both GNN architectures selected for this study were designed for learning 
 
 ### GraphSAGE
 
-The GraphSAGE model proposed by @hamiltonInductiveRepresentationLearning2018 is a node embedding framework that uses both node attributes and the attributes of neighbouring nodes to generate node representations. During training, the model learns how to aggregate information from the neighbourhood of each node and combines this with the node's own features to produce a learned representation.
+The GraphSAGE framework proposed by @hamiltonInductiveRepresentationLearning2018 is a node embedding technique that aggregates node attributes and the attributes of neighbouring nodes to generate node representations. The embedding function is learned through the efficient sampling of each node’s local neighbourhood, resulting in a low-dimensional vector embedding that can generalise to unseen data.
 
-The aggregation architecture can be any symmetric function, such as the mean or sum, or a more complex function, such as a neural network, that can operate on an ordered set of node features. For supervised learning tasks, the parameters of the aggregation function are learned via backpropagation.
+The aggregation function can be any symmetric function, such as the mean or sum, or an arbitrarily complex function, such as a neural network, that can operate on an ordered set of node features. For supervised learning tasks, the parameters of the aggregation function are learned via backpropagation.
 
 Edge attributes are not used in the GraphSAGE model and are therefore ignored during training.
 
@@ -294,11 +280,11 @@ As with the GraphSAGE model, an aggregation architecture is used to learn the no
 
 ### Data Splitting
 
-The dataset is split into training, validation, and test sets. The training set is used to train the model, the validation set is used to tune hyperparameters, and the test set is used to evaluate the model's performance. A random 80/10/10 split is used to produce the three data sets, with random selection applied to each component in the graph to ensure that nodes in the same component are not split across multiple sets.
+The dataset is split into training, validation, and test sets. The training set is used to train the model, the validation set is used to tune hyperparameters, and the test set is used to evaluate the model’s performance. A random 80/10/10 split is used to produce the three data sets, with random selection applied to each component in the graph to ensure that nodes in the same component are not split across multiple sets.
 
 ### Class Weighting
 
-Class imbalance in the dataset is addressed by assigning a weight to each class during model training. A weight of 10 is applied to anomalous nodes and a weight of 1 for normal nodes. These weights are used as multipliers for the errors of their respective classes, leading to an increased penalty and greater emphasis for anomalous nodes. This is a cost-sensitive approach to class imbalance that does not require the use of over-sampling or under-sampling [@heLearningImbalancedData2009].
+Class imbalance in the dataset is addressed by assigning a weight to each class during model training. A weight of 10 is applied to anomalous nodes and a weight of 1 for normal nodes. These weights are used as multipliers for the errors of their respective classes, leading to an increased penalty and greater emphasis on anomalous nodes. This is a cost-sensitive approach to class imbalance that does not require the use of over-sampling or under-sampling [@heLearningImbalancedData2009].
 
 ### Evaluation Metrics
 
@@ -328,7 +314,7 @@ Each model is trained for a maximum of 2000 epochs, with an early stopping callb
 
 #### Hyperparameter Tuning
 
-Parameters for dropout and weight decay are also tuned using Optuna. These trials take place after the architecture search, in order to limit the dimensionality of the search space in each experiment. 20 trials are performed for each pair of candidate values, with the best hyperparameters selected based on the AUC-PR score on the validation set.
+Parameters for dropout and weight decay are also tuned using Optuna. These trials occur after the architecture search, to limit the dimensionality of the search space in each experiment. 20 trials are performed for each pair of candidate values, with the best hyperparameters selected based on the AUC-PR score on the validation set.
 
 ### CatBoost Training
 
@@ -344,42 +330,38 @@ Both of the GNN models achieved higher AUC-ROC and AUC-PR scores than the CatBoo
 
 ![ROC and PR curves on the test set.](figures/roc-pr-curve.png){#fig:roc-pr-curve short-caption="ROC and PR curves on the test set."}
 
-| Model     | AUC-ROC       | 95% CI         |       AUC-PR | 95% CI         |
-|:----------|--------------:|:---------------|-------------:|:---------------|
-| CatBoost  |         0.639 | [0.619, 0.659] |        0.104 | [0.092, 0.116] |
-| GraphSAGE |         0.943 | [0.929, 0.957] |        0.735 | [0.695, 0.775] |
-| kGNN      |     **0.982** | [0.974, 0.990] |    **0.904** | [0.876, 0.932] |
+| Model     | AUC-ROC      | 95% CI         |      AUC-PR  | 95% CI         |
+|:----------|-------------:|:---------------|-------------:|:---------------|
+| CatBoost  |        0.639 | [0.619, 0.659] |        0.104 | [0.092, 0.116] |
+| GraphSAGE |        0.943 | [0.929, 0.957] |        0.735 | [0.695, 0.775] |
+| kGNN      |    **0.982** | [0.974, 0.990] |    **0.904** | [0.876, 0.932] |
 
 : Model performance on the test set. {#tbl:results}
 
-We note the CatBoost model's performance is little better than an unskilled classifier in terms of its AUC-PR score, suggesting that it is of little value for fraud detection in this scenario. In answer to our first research question (Q1), we conclude the GNN models are superior to the CatBoost model for the anomalous node classification task. Further, the increase in performance on this task more than justifies the additional cost in terms of complexity and computational resource required to train the GNN models. To answer our second research question (Q2), our best performing kGNN model achieves an uplift of 53.7% in the AUC-ROC score over the CatBoost model, and an uplift of 769.2% in AUC-PR score over the CatBoost model.
+We note the CatBoost model’s performance is little better than an unskilled classifier in terms of its AUC-PR score, suggesting that it is of little value for fraud detection in this scenario. In answer to our first research question (Q1), we conclude the GNN models are superior to the CatBoost model for the anomalous node classification task. Further, the increase in performance on this task more than justifies the additional cost in terms of complexity and computational resource required to train the GNN models. To answer our second research question (Q2), our best performing kGNN model achieves an uplift of 53.7% in the AUC-ROC score over the CatBoost model, and an uplift of 769.2% in AUC-PR score over the CatBoost model.
 
-The stand out performance of the kGNN model may be explained by its capacity to learn and combine higher-order features of the graph. A potential avenue for further study would be to investigate what features the model is learning and how they influence the model's performance. Work by @yingGNNExplainerGeneratingExplanations2019 on the GNNExplainer tool is likely worth exploring.
+The outstanding performance of the kGNN model may be explained by its capacity to learn and combine higher-order features of the graph. A potential avenue for further study would be to investigate what features the model is learning and how they influence the model’s performance. Work by @yingGNNExplainerGeneratingExplanations2019 on the GNNExplainer tool is likely worth exploring.
 
-It should also be noted that the kGNN model has two additional message-passing layers compared to the GraphSAGE model. This may be a contributing factor to the model's superior performance, however, the kGNN comprises half as many hidden channels. This model depth may be another contributing factor to the kGNN model's superior performance.
+It should also be noted that the kGNN model has two additional message-passing layers compared to the GraphSAGE model. This may be a contributing factor to the model’s superior performance, however, the kGNN comprises half as many hidden channels. This model depth may be another contributing factor to the kGNN model’s superior performance.
 
 ## Neural Architecture Search and Hyperparameter Tuning
 
 ### GraphSAGE
 
-The best performing architecture for the GraphSAGE models was found to be a 2-layer model with 256 hidden channels, a bias term, and an additional linear layer after the final message-passing layer. A sum aggregation function was selected for both the message-passing layers and for the aggregation of heterogeneous node representations. A leaky ReLU activation function was selected for all layers. Neither dropout nor weight decay were beneficial to model performance.
+The best performing architecture for the GraphSAGE models was found to be a 2-layer model with 256 hidden channels, a bias term, and an additional linear layer after the final message-passing layer. A sum aggregation function was selected for both the message-passing layers and the aggregation of heterogeneous node representations. A leaky ReLU activation function was selected for all layers. Neither dropout nor weight decay were beneficial to model performance.
 
 ### kGNN
 
-The best performing architecture for the kGNN model was a deeper 4-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message-passing layer. A minimum pooling aggregation function was selected for both the message-passing layers and for the aggregation of heterogeneous node representations. A GELU activation function was selected for all layers. Again, neither dropout nor weight decay were beneficial to model performance.
+The best performing architecture for the kGNN model was a deeper 4-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message-passing layer. A minimum pooling aggregation function was selected for both the message-passing layers and the aggregation of heterogeneous node representations. A GELU activation function was selected for all layers. Again, neither dropout nor weight decay were beneficial to model performance.
 
 ### CatBoost
 
 The most successful CatBoost was trained with the following hyperparameters:
 
 - learning rate: 0.09
-
 - depth: 9
-
 - boosting type: Plain
-
 - bootstrap type: MVS
-
 - colsample by level: 0.08
 
 ### Notes and Recommendations
@@ -388,7 +370,7 @@ It was observed during the model tuning process that both GNN models displayed a
 
 To ensure that the final model is among the best possible candidates, we perform several rounds of training with the best performing architecture, checking validation performance at each epoch and saving the weights whenever the validation AUC-PR improves beyond the previous best value. This process is repeated for each of the GNN models, and the final models are selected based on the best validation AUC-PR score. This is in contrast to the common strategy of training the final model for a predetermined number of epochs on both the training and validation datasets.
 
-Further, both models exhibited a non-linear progression in performance during training and showed no signs of over-fitting. While this could suggest that the models have not converged, allowing the models to train over thousands of epochs showed that the validation AUC-PR continues to increase and decrease in a non-linear fashion. It may be worth studying this behaviour in future work to determine whether the training instability results from the model architecture, the dataset, or some other factor in the experimental design.
+Further, both models exhibited a non-linear progression in performance during training and demonstrated no signs of over-fitting. While this could suggest that the models have not converged, allowing the models to train over thousands of epochs showed that the validation AUC-PR continues to increase and decrease in a non-linear fashion. It may be worth studying this behaviour in future work to determine whether the training instability results from the model architecture, the dataset, or some other factor in the experimental design.
 
 These observations should be noted as potential pitfalls in the model tuning process, and in answer to our third research question (Q3), we would advise caution when training GNN models for industrial applications, especially in critical areas such as fraud detection. Our recommendation is to follow a similar process to that detailed in this study, of staged model training and hyperparameter tuning, with regular check-pointing to ensure that the final model is optimal for the task.
 
@@ -410,7 +392,7 @@ It is also possible to restate the task in this study as one of edge classificat
 
 It is surprising to see that the GNN performance on the anomaly detection task is so strong, given that the anomaly generation process did not follow any pattern or established logic. Indeed, it was expected that more of the anomalies would have appeared very similar to the genuine relationships of the majority class and that the model would have struggled to distinguish between the two.
 
-The random assignment of anomalous edges makes it difficult to reason about the models' performance, and it would be interesting to investigate the performance of the models on a dataset where the anomalies are generated in a more controlled manner. Trying alternative simulation strategies could help to understand under what conditions the GNN models can detect anomalies and where they struggle. It could also be worth performing the same anomaly simulation and identification exercise on established benchmark datasets, such as the Cora citation network [@mccallumAutomatingConstructionInternet2000], to see if the results are consistent.
+The random assignment of anomalous edges makes it difficult to reason about the models’ performance, and it would be interesting to investigate the performance of the models on a dataset where the anomalies are generated in a more controlled manner. Trying alternative simulation strategies could help to understand under what conditions the GNN models can detect anomalies and where they struggle. It could also be worth performing the same anomaly simulation and identification exercise on established benchmark datasets, such as the Cora citation network [@mccallumAutomatingConstructionInternet2000], to see if the results are consistent.
 
 The ICIJ dataset is another potential source of data for training a business ownership anomaly classifier. Several difficulties would need to be overcome, not least of which is linking this data to another source of legitimate company relationships to serve as negative fraud examples. This is a significant challenge because the companies listed by ICIJ are registered in various legal jurisdictions. However, having a known set of positive fraud examples would help build the external validity of any subsequent study and offer valuable insight into business ownership fraud.
 
@@ -430,37 +412,37 @@ The ICIJ dataset is another potential source of data for training a business own
 
 ![Distribution of node degrees before and after anomaly simulation.](figures/degree-distributions-post.png){#fig:node-degrees-anomaly-sim short-caption="Distribution of node degrees."}
 
-| Property        | Min      | Max  |
+| Property        | Min      | Max  |
 | --------------- | -------- | ---- |
-| hidden layers   | 1        | 8    |
-| hidden channels | 2        | 256  |
-| weight decay    | 0        | 0.01 |
-| dropout         | 0        | 0.5  |
+| hidden layers   | 1        | 8    |
+| hidden channels | 2        | 256  |
+| weight decay    | 0        | 0.01 |
+| dropout         | 0        | 0.5  |
 
 : Neural architecture search space for GNN models - continuous. {#tbl:gnn-search-space-cont}
 
-| Property                            | Choices                 |
-| ----------------------------------- | ----------------------- |
-| activation function                 | ReLU, GELU, leaky ReLU  |
-| linear layer post-message-passing   | true, false             |
-| message-passing aggregation         | min, max, sum, mean     |
-| heterogeneous embedding aggregation | min, max, sum, mean     |
+| Property                            | Choices                |
+| ----------------------------------- | ---------------------- |
+| activation function                 | ReLU, GELU, leaky ReLU |
+| linear layer post-message-passing   | true, false            |
+| message-passing aggregation         | min, max, sum, mean    |
+| heterogeneous embedding aggregation | min, max, sum, mean    |
 
 : Neural architecture search space for GNN models - categorical. {#tbl:gnn-search-space-cat}
 
-| Property                                    | Min   | Max |
+| Property                                    | Min  | Max |
 | ------------------------------------------- | ----- | --- |
-| learning rate                               | 0.001 | 0.1 |
-| colsample by level                          | 0.01  | 0.1 |
-| depth                                       | 1     | 12  |
-| bagging temperature (If Bayesian bootstrap) | 0     | 10  |
-| subsample (if Bernoulli bootstrap)          | 0.1   | 1   |
+| learning rate                               | 0.001 | 0.1 |
+| colsample by level                          | 0.01  | 0.1 |
+| depth                                       | 1     | 12  |
+| bagging temperature (If Bayesian bootstrap) | 0     | 10  |
+| subsample (if Bernoulli bootstrap)          | 0.1   | 1   |
 
 : CatBoost hyperparameter search space - continuous. {#tbl:catboost-search-space-cont}
 
-| Property       | Choices                  |
+| Property       | Choices                  |
 | -------------- | ------------------------ |
-| boosting type  | ordered, plain           |
+| boosting type  | ordered, plain           |
 | bootstrap type | Bayesian, Bernoulli, MVS |
 
 : CatBoost hyperparameter search space - categorical. {#tbl:catboost-search-space-cat}
