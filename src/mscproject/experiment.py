@@ -439,6 +439,9 @@ def optimise_architecture(
     learning_rate = 0.01
     trial.set_user_attr("learning_rate", learning_rate)
 
+    # ! REMEMBER TO REVERT THIS.
+    print(param_dict)
+
     # Get the model and optimiser.
     model, optimiser = get_model_and_optimiser(
         param_dict, dataset, learning_rate=learning_rate
