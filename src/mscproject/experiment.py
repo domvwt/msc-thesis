@@ -367,7 +367,7 @@ def optimise_architecture(
     heads_max = 4
     hidden_channels_min = 1
     hidden_channels_max = 8
-    num_layers_max = 8
+    num_layers_max = 6
 
     add_self_loops = trial.suggest_categorical("add_self_loops", [True, False])
 
