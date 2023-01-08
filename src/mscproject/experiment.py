@@ -361,7 +361,7 @@ def optimise_architecture(
 
     # ! REMEBER TO REVERT THIS.
     # aggr_choices = {"sum", "mean", "min", "max", "lstm"}
-    aggr_choices = {"lstm"}
+    aggr_choices = ["lstm", "lstm"]
     heads_min = 0
     heads_max = 4
     hidden_channels_min = 1
