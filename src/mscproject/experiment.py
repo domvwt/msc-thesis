@@ -601,7 +601,7 @@ def main():
             user_attrs = base_study.best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
             print("Using model params:\n", pformat(model_params))
-            print("Using user attrs:\n", pformat({**user_attrs, **{"user_attrs_aprc_history": "omitted"}))
+            print("Using user attrs:\n", pformat({**user_attrs, **{"user_attrs_aprc_history": "omitted"}}))
             if args.study_type == "REGULARISATION":
                 model_path = MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
                 trial_function = ft.partial(
