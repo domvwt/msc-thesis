@@ -302,7 +302,6 @@ def run_trial(
     # Training time in HH:MM:SS.
     training_time = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
     print(f"Training time: {training_time}", flush=True)
-    trial.set_user_attr("training_time", training_time)
 
     # Log the number of epochs.
     best_epoch = early_stopping.best_epoch or early_stopping.epoch
@@ -643,7 +642,7 @@ def main():
     # Print top models.
     print()
     print("Top Models:")
-    drop_cols = ["datetime_start", "datetime_complete", "duration", "state"]
+    drop_cols = ["datetime_start", "datetime_complete", "duration", "state", "user_attr_aprc_history"]
     trials_df: pd.DataFrame = study.trials_dataframe()
     trials_df = trials_df.sort_values("value", ascending=False).head(10)
     trials_df = trials_df.drop(drop_cols, axis=1)
