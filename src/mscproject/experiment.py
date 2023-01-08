@@ -359,7 +359,9 @@ def optimise_architecture(
         str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
     )
 
-    aggr_choices = {"sum", "mean", "min", "max", "lstm"}
+    # ! REMEBER TO REVERT THIS.
+    # aggr_choices = {"sum", "mean", "min", "max", "lstm"}
+    aggr_choices = {"lstm"}
     heads_min = 0
     heads_max = 4
     hidden_channels_min = 1
