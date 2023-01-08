@@ -359,9 +359,7 @@ def optimise_architecture(
         str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
     )
 
-    # ! REMEBER TO REVERT THIS.
-    # aggr_choices = {"sum", "mean", "min", "max", "lstm"}
-    aggr_choices = ["lstm", "lstm"]
+    aggr_choices = {"sum", "mean", "min", "max", "softmax", "powermean"}
     heads_min = 0
     heads_max = 4
     hidden_channels_min = 1
@@ -438,9 +436,6 @@ def optimise_architecture(
     # Set the learning rate.
     learning_rate = 0.01
     trial.set_user_attr("learning_rate", learning_rate)
-
-    # ! REMEMBER TO REVERT THIS.
-    print(param_dict)
 
     # Get the model and optimiser.
     model, optimiser = get_model_and_optimiser(

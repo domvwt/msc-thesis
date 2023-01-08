@@ -39,12 +39,6 @@ class KGNN(SigmoidMixin):
     def init_conv(
         self, in_channels: int, out_channels: int, **kwargs
     ) -> MessagePassing:
-
-        if kwargs.get("aggr") == 'lstm':
-            kwargs.setdefault('aggr_kwargs', {})
-            kwargs['aggr_kwargs'].setdefault('in_channels', in_channels)
-            kwargs['aggr_kwargs'].setdefault('out_channels', in_channels)
-            
         return GraphConv(in_channels, out_channels, **kwargs)
 
 
