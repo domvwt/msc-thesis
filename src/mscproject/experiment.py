@@ -361,7 +361,8 @@ def optimise_architecture(
     )
 
     basic_aggr_choices = {"sum", "mean", "min", "max"}
-    extended_aggr_choices = basic_aggr_choices | {"softmax", "powermean"}
+    learnable_aggr_choices = {"softmax", "powermean"}
+    extended_aggr_choices = basic_aggr_choices | learnable_aggr_choices
     heads_min = 0
     heads_max = 4
     hidden_channels_min = 1
@@ -401,6 +402,9 @@ def optimise_architecture(
         param_dict["group"] = trial.suggest_categorical("group", basic_aggr_choices)
         hidden_channels_min = int(param_dict["heads_log2"])
 
+    if param_dict["aggr"] in extended_aggr_choices:
+        param_dict["aggr_kwargs"] = {"learn": True}
+
     hidden_channels_log2 = trial.suggest_int(
         "hidden_channels_log2", hidden_channels_min, hidden_channels_max
     )
@@ -430,8 +434,6 @@ def optimise_architecture(
             act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
             # NOTE: act_first only has an effect when normalisation is used.
             act_first=True,
-            # NOTE: allow learning of softmax and powermean parameters.
-            aggr_kwargs={"learn": True},
             to_hetero_aggr=to_hetero_aggr,
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
