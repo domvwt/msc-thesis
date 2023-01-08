@@ -5,7 +5,7 @@ description = ""
 authors = ["Dominic Thorn <dominic.thorn@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.11"
+python = ">=3.8,<3.11"
 numpy = "^1.22.4"
 pandas = "^1.4.2"
 scikit-learn = "^1.1.1"
@@ -54,6 +54,9 @@ geometric = [
   "torch-geometric", 
   "torchmetrics",
 ]
+
+[tool.poetry.group.dev.dependencies]
+rope = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

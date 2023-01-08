@@ -241,6 +241,7 @@ def _train(
 
     best_aprc = -np.inf
     best_eval_metrics = None
+    aprc_history = []
 
     # Initialise the early stopping callback.
     early_stopping = EarlyStopping(patience=200, delta=0.01, verbose=False)
@@ -252,6 +253,7 @@ def _train(
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
         val_aprc = eval_metrics.val.average_precision
+        aprc_history.append(val_aprc)
 
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
@@ -294,6 +296,9 @@ def _train(
     best_epoch = early_stopping.best_epoch or early_stopping.epoch
     trial.set_user_attr("total_epochs", early_stopping.epoch)
     trial.set_user_attr("best_epoch", best_epoch)
+
+    # Log the aprc history.
+    trial.set_user_attr("aprc_history", aprc_history)
 
     if best_eval_metrics:
         trial.set_user_attr("loss", best_eval_metrics.val.loss)
