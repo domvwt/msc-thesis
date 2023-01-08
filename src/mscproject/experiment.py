@@ -206,7 +206,7 @@ def get_model_and_optimiser(
     param_dict = param_dict.copy()
 
     model_type = param_dict.pop("model_type")
-    edge_aggregator = param_dict.pop("edge_aggr")
+    to_hetero_aggr = param_dict.pop("to_hetero_aggr")
     weight_decay = param_dict.pop("weight_decay", 0)
 
     if "hidden_channels_log2" in param_dict:
@@ -217,7 +217,7 @@ def get_model_and_optimiser(
         model = model_type(**param_dict, metadata=dataset.metadata())
     else:
         model = model_type(**param_dict)
-        model = to_hetero(model, metadata=dataset.metadata(), aggr=edge_aggregator)
+        model = to_hetero(model, metadata=dataset.metadata(), aggr=to_hetero_aggr)
 
     # Initialise the model.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -415,7 +415,7 @@ def optimise_architecture(
 
     # Not to be confused with GNN edge aggregation - this is used by the
     # `to_hetero` function.
-    to_hetero_aggr = trial.suggest_categorical("edge_aggr", basic_aggr_choices)
+    to_hetero_aggr = trial.suggest_categorical("to_hetero_aggr", basic_aggr_choices)
     param_dict["weight_decay"] = 0
 
     param_dict.update(
@@ -429,7 +429,7 @@ def optimise_architecture(
             act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
             # NOTE: act_first only has an effect when normalisation is used.
             act_first=True,
-            edge_aggr=to_hetero_aggr,
+            to_hetero_aggr=to_hetero_aggr,
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
             jk=jk_choice,
