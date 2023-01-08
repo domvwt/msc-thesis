@@ -237,7 +237,7 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def train_optuna(
+def run_trial(
     trial: optuna.Trial,
     param_dict,
     dataset,
@@ -328,7 +328,7 @@ def train_optuna(
 
 
 def optimise_architecture(
-    trial: optuna.Trial, dataset: HeteroData, model_type_name: str
+    trial: optuna.Trial, dataset: HeteroData, model_type_name: str, model_path: Path
 ):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -453,8 +453,7 @@ def optimise_architecture(
     model, optimiser = get_model_and_optimiser(
         param_dict, dataset, learning_rate=learning_rate
     )
-    model_path = MODEL_DIR / "unregularised" / f"{model_type_name}.pt"
-    return train_optuna(
+    return run_trial(
         trial,
         param_dict,
         dataset,
@@ -482,7 +481,7 @@ def build_experiment_from_trial_params(
 
 
 def optimise_regularisation(
-    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict
+    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict, model_path: Path
 ):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -500,8 +499,7 @@ def optimise_regularisation(
     model, optimiser, param_dict = build_experiment_from_trial_params(
         model_params, user_attrs, dataset
     )
-    model_path = MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
-    return train_optuna(
+    return run_trial(
         trial,
         param_dict,
         dataset,
@@ -535,7 +533,7 @@ def optimise_weights(
     model, optimiser, param_dict = build_experiment_from_trial_params(
         model_params, user_attrs, dataset
     )
-    return train_optuna(
+    return run_trial(
         trial,
         param_dict,
         dataset,
@@ -586,51 +584,46 @@ def main():
         dataset = dataset.data.to(device)
 
         if args.study_type == "ARCHITECTURE":
+            model_path = MODEL_DIR / "architecture" / f"{args.model_type_name}.pt"
             trial_function = ft.partial(
                 optimise_architecture,
                 dataset=dataset,
                 model_type_name=args.model_type_name,
-            )
-        elif args.study_type == "REGULARISATION":
-            assert args.base_study_type, "Must specify base study type."
-            base_study = optuna.load_study(
-                study_name=base_study_name,
-                storage=args.db,
-            )
-            model_params = base_study.best_params
-            user_attrs = base_study.best_trial.user_attrs
-            user_attrs["model_type"] = args.model_type_name
-            print("Using model params:\n", pformat(model_params))
-            print("Using user attrs:\n", pformat(user_attrs))
-            trial_function = ft.partial(
-                optimise_regularisation,
-                dataset=dataset,
-                model_params=model_params,
-                user_attrs=user_attrs,
-            )
-        elif args.study_type == "WEIGHTS":
-            assert args.base_study_type, "Must specify base study type."
-            base_study = optuna.load_study(
-                study_name=base_study_name,
-                storage=args.db,
-            )
-            model_params = base_study.best_params
-            user_attrs = base_study.best_trial.user_attrs
-            user_attrs["model_type"] = args.model_type_name
-            if args.base_study_type == "REGULARISATION":
-                base_model_type = "regularised"
-            else:
-                base_model_type = "unregularised"
-            model_path = MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
-            print("Using model params:\n", pformat(model_params))
-            print("Using user attrs:\n", pformat(user_attrs))
-            trial_function = ft.partial(
-                optimise_weights,
-                dataset=dataset,
-                model_params=model_params,
-                user_attrs=user_attrs,
                 model_path=model_path,
             )
+        elif args.study_type in ("REGULARISATION", "WEIGHTS"):
+            assert args.base_study_type, "Must specify base study type."
+            base_study = optuna.load_study(
+                study_name=base_study_name,
+                storage=args.db,
+            )
+            model_params = base_study.best_params
+            user_attrs = base_study.best_trial.user_attrs
+            user_attrs["model_type"] = args.model_type_name
+            print("Using model params:\n", pformat(model_params))
+            print("Using user attrs:\n", pformat({**user_attrs, **{"user_attrs_aprc_history": "omitted"}))
+            if args.study_type == "REGULARISATION":
+                model_path = MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
+                trial_function = ft.partial(
+                    optimise_regularisation,
+                    dataset=dataset,
+                    model_params=model_params,
+                    user_attrs=user_attrs,
+                    model_path=model_path,
+                )
+            elif args.study_type == "WEIGHTS":
+                if args.base_study_type == "REGULARISATION":
+                    base_model_type = "regularised"
+                else:
+                    base_model_type = "unregularised"
+                model_path = MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
+                trial_function = ft.partial(
+                    optimise_weights,
+                    dataset=dataset,
+                    model_params=model_params,
+                    user_attrs=user_attrs,
+                    model_path=model_path,
+                )
         else:
             raise ValueError(f"Unknown experiment type: {args.study_type}")
 
