@@ -302,6 +302,7 @@ def train_optuna(
     # Training time in HH:MM:SS.
     training_time = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
     print(f"Training time: {training_time}", flush=True)
+    trial.set_user_attr("training_time", training_time)
 
     # Log the number of epochs.
     best_epoch = early_stopping.best_epoch or early_stopping.epoch
