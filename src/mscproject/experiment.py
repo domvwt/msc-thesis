@@ -38,9 +38,9 @@ def get_parser():
         "-e",
         "--experiment-type",
         type=str,
-        choices=["DESIGN", "HYPERPARAMETERS", "TRAIN_ONLY"],
+        choices=["ARCHITECTURE", "REGULARISATION", "WEIGHTS"],
         required=True,
-        help="Experiment type. One of ['DESIGN', 'HYPERPARAMETERS', 'TRAIN_ONLY']",
+        help="Experiment type. One of ['ARCHITECTURE', 'REGULARISATION', 'WEIGHTS']",
     )
     parser.add_argument(
         "-n",
@@ -226,7 +226,7 @@ def get_model_and_optimiser(
     return model, optimiser
 
 
-def _train(
+def train_optuna(
     trial: optuna.Trial,
     param_dict,
     dataset,
@@ -315,7 +315,7 @@ def _train(
     return best_eval_metrics.val.average_precision
 
 
-def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
+def optimise_architecture(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
@@ -429,7 +429,7 @@ def optimise_design(trial: optuna.Trial, dataset: HeteroData, model_type_name: s
         param_dict, dataset, learning_rate=learning_rate
     )
     model_path = MODEL_DIR / "unregularised" / f"{model_type_name}.pt"
-    return _train(
+    return train_optuna(
         trial,
         param_dict,
         dataset,
@@ -462,7 +462,7 @@ def build_experiment_from_trial_params(
     return model, optimiser, model_params
 
 
-def optimise_hyperparameters(
+def optimise_regularisation(
     trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict
 ):
     # Clear the CUDA cache if applicable.
@@ -482,7 +482,7 @@ def optimise_hyperparameters(
         model_params, user_attrs, dataset
     )
     model_path = MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
-    return _train(
+    return train_optuna(
         trial,
         param_dict,
         dataset,
@@ -493,7 +493,7 @@ def optimise_hyperparameters(
     )
 
 
-def train_only(
+def optimise_weights(
     trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict
 ):
     # Clear the CUDA cache if applicable.
@@ -512,8 +512,10 @@ def train_only(
     model, optimiser, param_dict = build_experiment_from_trial_params(
         model_params, user_attrs, dataset
     )
+    # Model is loaded from unregularised training as regularisation is detrimental
+    # to the performance of the model.
     model_path = MODEL_DIR / "unregularised" / f"{user_attrs['model_type']}.pt"
-    return _train(
+    return train_optuna(
         trial,
         param_dict,
         dataset,
@@ -560,38 +562,40 @@ def main():
         dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
         dataset = dataset.data.to(device)
 
-        if args.experiment_type == "DESIGN":
+        if args.experiment_type == "ARCHITECTURE":
             trial_function = ft.partial(
-                optimise_design, dataset=dataset, model_type_name=args.model_type_name
+                optimise_architecture, dataset=dataset, model_type_name=args.model_type_name
             )
-        elif args.experiment_type == "HYPERPARAMETERS":
-            design_study = optuna.load_study(
-                study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
+        elif args.experiment_type == "REGULARISATION":
+            base_study = optuna.load_study(
+                study_name=f"pyg_model_selection_{args.model_type_name}_ARCHITECTURE",
                 storage=args.db,
             )
-            model_params = design_study.best_params
-            user_attrs = design_study.best_trial.user_attrs
+            model_params = base_study.best_params
+            user_attrs = base_study.best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
             print("Using model params:\n", pformat(model_params))
             print("Using user attrs:\n", pformat(user_attrs))
             trial_function = ft.partial(
-                optimise_hyperparameters,
+                optimise_regularisation,
                 dataset=dataset,
                 model_params=model_params,
                 user_attrs=user_attrs,
             )
-        elif args.experiment_type == "TRAIN_ONLY":
-            design_study = optuna.load_study(
-                study_name=f"pyg_model_selection_{args.model_type_name}_DESIGN",
+        elif args.experiment_type == "WEIGHTS":
+            # Architecture studyused as base  because regularisation is detrimental to
+            # the performance of the model.
+            base_study = optuna.load_study(
+                study_name=f"pyg_model_selection_{args.model_type_name}_ARCHITECTURE",
                 storage=args.db,
             )
-            model_params = design_study.best_params
-            user_attrs = design_study.best_trial.user_attrs
+            model_params = base_study.best_params
+            user_attrs = base_study.best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
             print("Using model params:\n", pformat(model_params))
             print("Using user attrs:\n", pformat(user_attrs))
             trial_function = ft.partial(
-                train_only,
+                optimise_weights,
                 dataset=dataset,
                 model_params=model_params,
                 user_attrs=user_attrs,

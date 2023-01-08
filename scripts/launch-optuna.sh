@@ -9,7 +9,7 @@ run_until_success () {
 
 
 OPTUNA_DB="sqlite:///data/optuna-03.db"
-EXPERIMENT_TYPE="DESIGN"
+EXPERIMENT_TYPE="ARCHITECTURE"
 TARGET_TRIALS=30
 
 #python src/mscproject/experiment.py -m ALL
@@ -36,7 +36,7 @@ python src/mscproject/experiment.py \
   -e $EXPERIMENT_TYPE
 
 
-EXPERIMENT_TYPE="HYPERPARAMETERS"
+EXPERIMENT_TYPE="REGULARISATION"
 TARGET_TRIALS=20
 
 python src/mscproject/experiment.py \
@@ -52,7 +52,7 @@ python src/mscproject/experiment.py \
   -e $EXPERIMENT_TYPE \
 
 
-EXPERIMENT_TYPE="TRAIN_ONLY"
+EXPERIMENT_TYPE="WEIGHTS"
 TARGET_TRIALS=10
 
 python src/mscproject/experiment.py \
