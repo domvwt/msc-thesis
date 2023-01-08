@@ -538,7 +538,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    study_name = f"pyg_model_selection_{args.model_type_name}_{args.experiment_type}"
+    study_name = f"pyg_model_selection_{args.model_type_name}_{args.study_type}"
     base_study_name = (
         f"pyg_model_selection_{args.model_type_name}_{args.base_study_type}"
     )
@@ -573,13 +573,13 @@ def main():
         dataset = CompanyBeneficialOwners(dataset_path, to_undirected=True)
         dataset = dataset.data.to(device)
 
-        if args.experiment_type == "ARCHITECTURE":
+        if args.study_type == "ARCHITECTURE":
             trial_function = ft.partial(
                 optimise_architecture,
                 dataset=dataset,
                 model_type_name=args.model_type_name,
             )
-        elif args.experiment_type == "REGULARISATION":
+        elif args.study_type == "REGULARISATION":
             base_study = optuna.load_study(
                 study_name=base_study_name,
                 storage=args.db,
@@ -595,7 +595,7 @@ def main():
                 model_params=model_params,
                 user_attrs=user_attrs,
             )
-        elif args.experiment_type == "WEIGHTS":
+        elif args.study_type == "WEIGHTS":
             base_study = optuna.load_study(
                 study_name=base_study_name,
                 storage=args.db,
@@ -618,7 +618,7 @@ def main():
                 model_path=model_path,
             )
         else:
-            raise ValueError(f"Unknown experiment type: {args.experiment_type}")
+            raise ValueError(f"Unknown experiment type: {args.study_type}")
 
         study.optimize(trial_function, n_trials=remaining_trials)
 
