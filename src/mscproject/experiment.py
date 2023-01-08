@@ -430,6 +430,8 @@ def optimise_architecture(
             act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
             # NOTE: act_first only has an effect when normalisation is used.
             act_first=True,
+            # NOTE: allow learning of softmax and powermean parameters.
+            aggr_kwargs={"learn": True},
             to_hetero_aggr=to_hetero_aggr,
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
