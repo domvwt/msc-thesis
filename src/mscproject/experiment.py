@@ -361,7 +361,9 @@ def optimise_architecture(
     )
 
     basic_aggr_choices = {"sum", "mean", "min", "max"}
-    learnable_aggr_choices = {"softmax", "powermean"}
+    # NOTE: Learnable aggregation functions currently cause CUDA crashes.
+    # learnable_aggr_choices = {"softmax", "powermean"}
+    learnable_aggr_choices = {}
     extended_aggr_choices = basic_aggr_choices | learnable_aggr_choices
     heads_min = 0
     heads_max = 4
