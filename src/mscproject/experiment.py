@@ -359,10 +359,8 @@ def optimise_architecture(
         str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
     )
 
-    # ! REVERT THIS
     basic_aggr_choices = {"sum", "mean", "min", "max"}
-    # extended_aggr_choices = {"softmax", "powermean"} | basic_aggr_choices
-    extended_aggr_choices = {"softmax", "powermean"}
+    extended_aggr_choices = basic_aggr_choices | {"softmax", "powermean"}
     heads_min = 0
     heads_max = 4
     hidden_channels_min = 1
