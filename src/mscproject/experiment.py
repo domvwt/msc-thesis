@@ -360,8 +360,9 @@ def optimise_architecture(
     )
 
     # ! REVERT THIS
-    # aggr_choices = {"sum", "mean", "min", "max", "softmax", "powermean"}
-    aggr_choices = {"softmax", "powermean"}
+    basic_aggr_choices = {"sum", "mean", "min", "max"}
+    # extended_aggr_choices = {"softmax", "powermean"} | basic_aggr_choices
+    extended_aggr_choices = {"softmax", "powermean"}
     heads_min = 0
     heads_max = 4
     hidden_channels_min = 1
@@ -376,10 +377,14 @@ def optimise_architecture(
         dataset: HeteroData = RemoveSelfLoops()(dataset)
 
     if model_type.__name__ == "KGNN":
-        param_dict["aggr"] = trial.suggest_categorical("gnn_aggr", aggr_choices)
+        param_dict["aggr"] = trial.suggest_categorical(
+            "gnn_aggr", extended_aggr_choices
+        )
         param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
     elif model_type.__name__ == "GraphSAGE":
-        param_dict["aggr"] = trial.suggest_categorical("gnn_aggr", aggr_choices)
+        param_dict["aggr"] = trial.suggest_categorical(
+            "gnn_aggr", extended_aggr_choices
+        )
         param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
     elif model_type.__name__ == "GAT":
         param_dict["v2"] = trial.suggest_categorical("v2", [True])
@@ -394,7 +399,7 @@ def optimise_architecture(
         hidden_channels_min = int(param_dict["heads_log2"])
     elif model_type.__name__ == "HGT":
         param_dict["heads_log2"] = trial.suggest_int("heads_log2", heads_min, heads_max)
-        param_dict["group"] = trial.suggest_categorical("group", aggr_choices)
+        param_dict["group"] = trial.suggest_categorical("group", basic_aggr_choices)
         hidden_channels_min = int(param_dict["heads_log2"])
 
     hidden_channels_log2 = trial.suggest_int(
@@ -410,9 +415,9 @@ def optimise_architecture(
         param_dict["heads"] = heads
         trial.set_user_attr("n_heads", heads)
 
-    # Not to be confused with KGNN edge aggregation - this is used by the
+    # Not to be confused with GNN edge aggregation - this is used by the
     # `to_hetero` function.
-    edge_aggr = trial.suggest_categorical("edge_aggr", aggr_choices)
+    to_hetero_aggr = trial.suggest_categorical("edge_aggr", basic_aggr_choices)
     param_dict["weight_decay"] = 0
 
     param_dict.update(
@@ -426,7 +431,7 @@ def optimise_architecture(
             act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
             # NOTE: act_first only has an effect when normalisation is used.
             act_first=True,
-            edge_aggr=edge_aggr,
+            edge_aggr=to_hetero_aggr,
             # NOTE: normalisation is not used as data is not batched.
             norm=None,
             jk=jk_choice,
