@@ -360,10 +360,10 @@ def optimise_architecture(
         str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
     )
 
-    basic_aggr_choices = {"sum", "mean", "min", "max"}
-    learnable_aggr_choices = {"softmax", "powermean"}
-    # NOTE: Learnable aggregation functions currently cause CUDA crashes.
-    # extended_aggr_choices = basic_aggr_choices | learnable_aggr_choices
+    basic_aggr_choices = ["sum", "mean", "min", "max"]
+    learnable_aggr_choices = ["softmax", "powermean"]
+    # NOTE: Learnable aggregation functions currently causing CUDA crashes.
+    # extended_aggr_choices = basic_aggr_choices + learnable_aggr_choices
     extended_aggr_choices = basic_aggr_choices
     heads_min = 0
     heads_max = 4
@@ -481,7 +481,11 @@ def build_experiment_from_trial_params(
 
 
 def optimise_regularisation(
-    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict, model_path: Path
+    trial: optuna.Trial,
+    dataset: HeteroData,
+    model_params: dict,
+    user_attrs: dict,
+    model_path: Path,
 ):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -600,10 +604,15 @@ def main():
             model_params = base_study.best_params
             user_attrs = base_study.best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
-            print("Using model params:\n", pformat(model_params))
-            print("Using user attrs:\n", pformat({**user_attrs, **{"user_attrs_aprc_history": "omitted"}}))
+            print("Model params:\n", pformat(model_params))
+            print(
+                "User attrs:\n",
+                pformat({**user_attrs, **{"aprc_history": "omitted"}}),
+            )
             if args.study_type == "REGULARISATION":
-                model_path = MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
+                model_path = (
+                    MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
+                )
                 trial_function = ft.partial(
                     optimise_regularisation,
                     dataset=dataset,
@@ -616,7 +625,9 @@ def main():
                     base_model_type = "regularised"
                 else:
                     base_model_type = "unregularised"
-                model_path = MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
+                model_path = (
+                    MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
+                )
                 trial_function = ft.partial(
                     optimise_weights,
                     dataset=dataset,
