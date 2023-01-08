@@ -27,7 +27,7 @@ class SigmoidMixin(BasicGNN):
         return sigmoid(x)
 
 
-class GCN(SigmoidMixin):
+class KGNN(SigmoidMixin):
     """
     https://github.com/pyg-team/pytorch_geometric/discussions/3479
     """
@@ -168,12 +168,12 @@ class HGT(BasicHeteroGNN):
         return HGTConv(in_channels, out_channels, **kwargs)
 
 
-GNN = TypeVar("GNN", GCN, GraphSAGE, GAT, HAN, HGT)
+GNN = TypeVar("GNN", KGNN, GraphSAGE, GAT, HAN, HGT)
 
 
 def get_model(model_name) -> GNN:
     models = {
-        "GCN": GCN,
+        "KGNN": KGNN,
         "GraphSAGE": GraphSAGE,
         "GAT": GAT,
         "HAN": HAN,

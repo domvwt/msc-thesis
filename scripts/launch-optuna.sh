@@ -8,7 +8,7 @@ run_until_success () {
 }
 
 
-OPTUNA_DB="sqlite:///data/optuna-03.db"
+OPTUNA_DB="sqlite:///data/optuna-04.db"
 STUDY_TYPE="ARCHITECTURE"
 TARGET_TRIALS=30
 
@@ -21,7 +21,7 @@ TARGET_TRIALS=30
 #   -s $STUDY_TYPE
 
 python src/mscproject/experiment.py \
-  -m GCN \
+  -m KGNN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
   -s $STUDY_TYPE
@@ -40,7 +40,7 @@ STUDY_TYPE="REGULARISATION"
 TARGET_TRIALS=20
 
 python src/mscproject/experiment.py \
-  -m GCN \
+  -m KGNN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
   -s $STUDY_TYPE \
@@ -56,7 +56,7 @@ STUDY_TYPE="WEIGHTS"
 TARGET_TRIALS=10
 
 python src/mscproject/experiment.py \
-  -m GCN \
+  -m KGNN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
   -s $STUDY_TYPE

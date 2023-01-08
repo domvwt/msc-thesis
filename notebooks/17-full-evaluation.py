@@ -32,7 +32,7 @@ while not Path("data") in Path(".").iterdir():
 
 # %%
 PREDICTION_DIR = Path("data/predictions")
-SELECT_MODELS = ["kGNN", "GraphSAGE", "CatBoost"]
+SELECT_MODELS = ["KGNN", "GraphSAGE", "CatBoost"]
 
 # %%
 # Matplotlib Settings
@@ -65,7 +65,7 @@ prediction_dict = {
     for preds_csv in PREDICTION_DIR.glob("*.csv")
     if preds_csv.stem in SELECT_MODELS
 }
-# prediction_dict["kGNN"] = prediction_dict.pop("GCN")
+# prediction_dict["KGNN"] = prediction_dict.pop("KGNN")
 POSITIVE_PROPORTION = next(iter(prediction_dict.values()))["actual"].mean()
 
 # %%
@@ -371,8 +371,8 @@ def top_k_metrics(y_true, y_pred, k=10):
 
 
 # %%
-y_test = prediction_dict["kGNN"]["actual"]
-y_pred = prediction_dict["kGNN"]["pred_proba"]
+y_test = prediction_dict["KGNN"]["actual"]
+y_pred = prediction_dict["KGNN"]["pred_proba"]
 top_k_metrics(y_test, y_pred, k=1000)
 
 

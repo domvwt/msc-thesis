@@ -30,7 +30,7 @@ def get_parser():
         "-m",
         "--model-type-name",
         type=str,
-        choices=["GCN", "GraphSAGE", "GAT", "HAN", "HGT", "ALL"],
+        choices=["KGNN", "GraphSAGE", "GAT", "HAN", "HGT", "ALL"],
         required=True,
         help="Model type to optimise.",
     )
@@ -339,7 +339,7 @@ def optimise_architecture(trial: optuna.Trial, dataset: HeteroData, model_type_n
     if model_type_name == "ALL":
         model_type = mod.get_model(
             trial.suggest_categorical(
-                "model", ["GCN", "GraphSAGE", "GAT", "HAN", "HGT"]
+                "model", ["KGNN", "GraphSAGE", "GAT", "HAN", "HGT"]
             )
         )
     else:
@@ -371,7 +371,7 @@ def optimise_architecture(trial: optuna.Trial, dataset: HeteroData, model_type_n
     else:
         dataset: HeteroData = RemoveSelfLoops()(dataset)
 
-    if model_type.__name__ == "GCN":
+    if model_type.__name__ == "KGNN":
         param_dict["aggr"] = trial.suggest_categorical("gnn_aggr", aggr_choices)
         param_dict["bias"] = trial.suggest_categorical("bias", [True, False])
     elif model_type.__name__ == "GraphSAGE":
@@ -406,7 +406,7 @@ def optimise_architecture(trial: optuna.Trial, dataset: HeteroData, model_type_n
         param_dict["heads"] = heads
         trial.set_user_attr("n_heads", heads)
 
-    # Not to be confused with GCN edge aggregation - this is used by the
+    # Not to be confused with KGNN edge aggregation - this is used by the
     # `to_hetero` function.
     edge_aggr = trial.suggest_categorical("edge_aggr", aggr_choices)
     param_dict["weight_decay"] = 0

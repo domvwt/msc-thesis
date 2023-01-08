@@ -35,7 +35,7 @@ while not Path("data") in Path(".").iterdir():
 
 # %%
 MODEL_DIR = Path("data/models/pyg/unregularised/")
-OPTUNA_DB = Path("data/optuna-03.db")
+OPTUNA_DB = Path("data/optuna-04.db")
 DATASET_PATH = Path("data/pyg")
 PREDICTION_DIR = Path("data/predictions")
 
@@ -62,7 +62,7 @@ def get_best_trial(model_name):
 get_best_trial("GraphSAGE")
 
 # %%
-get_best_trial("GCN")
+get_best_trial("KGNN")
 
 # %%
 device = "cuda" if torch.cuda.is_available() else "cpu"
