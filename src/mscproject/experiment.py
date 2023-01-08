@@ -402,7 +402,7 @@ def optimise_architecture(
         param_dict["group"] = trial.suggest_categorical("group", basic_aggr_choices)
         hidden_channels_min = int(param_dict["heads_log2"])
 
-    if param_dict["aggr"] in extended_aggr_choices:
+    if param_dict["aggr"] in learnable_aggr_choices:
         param_dict["aggr_kwargs"] = {"learn": True}
 
     hidden_channels_log2 = trial.suggest_int(
