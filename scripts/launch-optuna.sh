@@ -9,7 +9,7 @@ run_until_success () {
 
 
 OPTUNA_DB="sqlite:///data/optuna-03.db"
-EXPERIMENT_TYPE="ARCHITECTURE"
+STUDY_TYPE="ARCHITECTURE"
 TARGET_TRIALS=30
 
 #python src/mscproject/experiment.py -m ALL
@@ -18,13 +18,13 @@ TARGET_TRIALS=30
 #   -m GraphSAGE \
 #   --db $OPTUNA_DB \
 #   -n $TARGET_TRIALS \
-#   -e $EXPERIMENT_TYPE
+#   -s $STUDY_TYPE
 
 python src/mscproject/experiment.py \
   -m GCN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE
+  -s $STUDY_TYPE
 
 
 TARGET_TRIALS=60
@@ -33,39 +33,39 @@ python src/mscproject/experiment.py \
   -m GraphSAGE \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE
+  -s $STUDY_TYPE
 
 
-EXPERIMENT_TYPE="REGULARISATION"
+STUDY_TYPE="REGULARISATION"
 TARGET_TRIALS=20
 
 python src/mscproject/experiment.py \
   -m GCN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE \
+  -s $STUDY_TYPE \
 
 python src/mscproject/experiment.py \
   -m GraphSAGE \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE \
+  -s $STUDY_TYPE \
 
 
-EXPERIMENT_TYPE="WEIGHTS"
+STUDY_TYPE="WEIGHTS"
 TARGET_TRIALS=10
 
 python src/mscproject/experiment.py \
   -m GCN \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE
+  -s $STUDY_TYPE
 
 python src/mscproject/experiment.py \
   -m GraphSAGE \
   --db $OPTUNA_DB \
   -n $TARGET_TRIALS \
-  -e $EXPERIMENT_TYPE
+  -s $STUDY_TYPE
 
 
 exit 0 

@@ -25,22 +25,33 @@ MODEL_DIR = Path("data/models/pyg")
 
 # Create parser for command line arguments.
 def get_parser():
-    parser = argparse.ArgumentParser(description="Optimise MSC model.")
+    parser = argparse.ArgumentParser(description="Optimise GNN model.")
     parser.add_argument(
         "-m",
         "--model-type-name",
         type=str,
         choices=["GCN", "GraphSAGE", "GAT", "HAN", "HGT", "ALL"],
         required=True,
-        help="Model type to optimise. One of ['GCN', 'GraphSAGE', 'GAT', 'HAN', 'HGT'] or 'ALL'",
+        help="Model type to optimise.",
     )
     parser.add_argument(
-        "-e",
-        "--experiment-type",
+        "-s",
+        "--study-type",
         type=str,
         choices=["ARCHITECTURE", "REGULARISATION", "WEIGHTS"],
         required=True,
-        help="Experiment type. One of ['ARCHITECTURE', 'REGULARISATION', 'WEIGHTS']",
+        help="Experiment type.",
+    )
+    parser.add_argument(
+        "-b",
+        "--base-study-type",
+        type=str,
+        required=False,
+        choices=["ARCHITECTURE", "REGULARISATION"],
+        default="",
+        help=(
+            "Best parameters from this study will be used as the starting point for the optimisation. "
+        ),
     )
     parser.add_argument(
         "-n",
@@ -440,12 +451,6 @@ def optimise_architecture(trial: optuna.Trial, dataset: HeteroData, model_type_n
     )
 
 
-def remove_prefix(text, prefix):
-    if text.startswith(prefix):
-        return text[len(prefix) :]
-    return text
-
-
 def build_experiment_from_trial_params(
     model_params, user_attrs, dataset, verbose=False
 ):
@@ -494,7 +499,7 @@ def optimise_regularisation(
 
 
 def optimise_weights(
-    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict
+    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict, model_path: Path
 ):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -512,9 +517,6 @@ def optimise_weights(
     model, optimiser, param_dict = build_experiment_from_trial_params(
         model_params, user_attrs, dataset
     )
-    # Model is loaded from unregularised training as regularisation is detrimental
-    # to the performance of the model.
-    model_path = MODEL_DIR / "unregularised" / f"{user_attrs['model_type']}.pt"
     return train_optuna(
         trial,
         param_dict,
@@ -531,6 +533,7 @@ def main():
     args = parser.parse_args()
 
     study_name = f"pyg_model_selection_{args.model_type_name}_{args.experiment_type}"
+    base_study_name = f"pyg_model_selection_{args.model_type_name}_{args.base_study_type}"
 
     if args.overwrite:
         # Delete study if it already exists.
@@ -568,7 +571,7 @@ def main():
             )
         elif args.experiment_type == "REGULARISATION":
             base_study = optuna.load_study(
-                study_name=f"pyg_model_selection_{args.model_type_name}_ARCHITECTURE",
+                study_name=base_study_name,
                 storage=args.db,
             )
             model_params = base_study.best_params
@@ -583,15 +586,18 @@ def main():
                 user_attrs=user_attrs,
             )
         elif args.experiment_type == "WEIGHTS":
-            # Architecture studyused as base  because regularisation is detrimental to
-            # the performance of the model.
             base_study = optuna.load_study(
-                study_name=f"pyg_model_selection_{args.model_type_name}_ARCHITECTURE",
+                study_name=base_study_name,
                 storage=args.db,
             )
             model_params = base_study.best_params
             user_attrs = base_study.best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
+            if args.base_study_type == "REGULARISATION":
+                base_model_type = "regularised"
+            else:
+                base_model_type = "unregularised"
+            model_path = MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
             print("Using model params:\n", pformat(model_params))
             print("Using user attrs:\n", pformat(user_attrs))
             trial_function = ft.partial(
@@ -599,6 +605,7 @@ def main():
                 dataset=dataset,
                 model_params=model_params,
                 user_attrs=user_attrs,
+                model_path=model_path,
             )
         else:
             raise ValueError(f"Unknown experiment type: {args.experiment_type}")
