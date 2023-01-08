@@ -586,6 +586,7 @@ def main():
                 model_type_name=args.model_type_name,
             )
         elif args.study_type == "REGULARISATION":
+            assert args.base_study_type, "Must specify base study type."
             base_study = optuna.load_study(
                 study_name=base_study_name,
                 storage=args.db,
@@ -602,6 +603,7 @@ def main():
                 user_attrs=user_attrs,
             )
         elif args.study_type == "WEIGHTS":
+            assert args.base_study_type, "Must specify base study type."
             base_study = optuna.load_study(
                 study_name=base_study_name,
                 storage=args.db,
