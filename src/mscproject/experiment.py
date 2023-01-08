@@ -326,7 +326,9 @@ def train_optuna(
     return best_eval_metrics.val.average_precision
 
 
-def optimise_architecture(trial: optuna.Trial, dataset: HeteroData, model_type_name: str):
+def optimise_architecture(
+    trial: optuna.Trial, dataset: HeteroData, model_type_name: str
+):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
@@ -357,7 +359,7 @@ def optimise_architecture(trial: optuna.Trial, dataset: HeteroData, model_type_n
         str(trial.suggest_categorical("jk", sorted(jk_choices.keys())))
     )
 
-    aggr_choices = ["sum", "mean", "min", "max"]
+    aggr_choices = {"sum", "mean", "min", "max", "lstm"}
     heads_min = 0
     heads_max = 4
     hidden_channels_min = 1
@@ -499,7 +501,11 @@ def optimise_regularisation(
 
 
 def optimise_weights(
-    trial: optuna.Trial, dataset: HeteroData, model_params: dict, user_attrs: dict, model_path: Path
+    trial: optuna.Trial,
+    dataset: HeteroData,
+    model_params: dict,
+    user_attrs: dict,
+    model_path: Path,
 ):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -533,7 +539,9 @@ def main():
     args = parser.parse_args()
 
     study_name = f"pyg_model_selection_{args.model_type_name}_{args.experiment_type}"
-    base_study_name = f"pyg_model_selection_{args.model_type_name}_{args.base_study_type}"
+    base_study_name = (
+        f"pyg_model_selection_{args.model_type_name}_{args.base_study_type}"
+    )
 
     if args.overwrite:
         # Delete study if it already exists.
@@ -567,7 +575,9 @@ def main():
 
         if args.experiment_type == "ARCHITECTURE":
             trial_function = ft.partial(
-                optimise_architecture, dataset=dataset, model_type_name=args.model_type_name
+                optimise_architecture,
+                dataset=dataset,
+                model_type_name=args.model_type_name,
             )
         elif args.experiment_type == "REGULARISATION":
             base_study = optuna.load_study(
