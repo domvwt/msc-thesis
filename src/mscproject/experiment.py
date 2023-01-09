@@ -643,7 +643,7 @@ def main():
     print()
     print("Top Models:")
     trials_df: pd.DataFrame = study.trials_dataframe()
-    trials_df = trials_df.sort_values("value", ascending=False).head(10)
+    trials_df = trials_df.sort_values("value", ascending=False).head(5)
     drop_cols = ["datetime_start", "datetime_complete", "duration", "state", "user_attrs_aprc_history"]
     trials_df = trials_df.drop(drop_cols, axis=1)
     prefs = ["params_", "user_attrs_"]
