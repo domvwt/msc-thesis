@@ -11,6 +11,8 @@ import optuna
 import pandas as pd
 import torch
 import torch.nn.functional as F
+from torch.nn import Module
+from torch.optim import Optimizer
 from torch_geometric.data import HeteroData
 from torch_geometric.nn import to_hetero
 from torch_geometric.transforms import AddSelfLoops
@@ -241,10 +243,10 @@ def run_trial(
     trial: optuna.Trial,
     param_dict: dict,
     dataset: HeteroData,
-    model: torch.nn.Module,
-    optimiser: torch.optim.Optimiser,
-    save_best=False,
-    model_path=None,
+    model: Module,
+    optimiser: Optimizer,
+    save_best: bool = False,
+    model_path: Optional[Path] = None,
     best_model_score: float = -np.inf,
 ):
     # Train and evaluate the model.
