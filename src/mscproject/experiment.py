@@ -642,10 +642,13 @@ def main():
     # Print top models.
     print()
     print("Top Models:")
-    drop_cols = ["datetime_start", "datetime_complete", "duration", "state", "user_attrs_aprc_history"]
     trials_df: pd.DataFrame = study.trials_dataframe()
     trials_df = trials_df.sort_values("value", ascending=False).head(10)
+    drop_cols = ["datetime_start", "datetime_complete", "duration", "state", "user_attrs_aprc_history"]
     trials_df = trials_df.drop(drop_cols, axis=1)
+    prefs = ["params_", "user_attrs_"]
+    for pref in prefs:
+        trials_df = trials_df.rename(columns={col: col.replace(pref, "") for col in trials_df.columns if pref in col})
     print(trials_df.T)
 
     # Plot the results.
