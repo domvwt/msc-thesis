@@ -284,7 +284,7 @@ def run_trial(
             Path(model_path).parent.mkdir(parents=True, exist_ok=True)
             torch.save(model.state_dict(), model_path)
 
-        if val_aprc > best_model_score:
+        if val_aprc > best_model_score or best_eval_metrics is None:
             best_model_score = val_aprc
             best_eval_metrics = eval_metrics
 
