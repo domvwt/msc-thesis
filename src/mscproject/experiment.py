@@ -267,8 +267,8 @@ def run_trial(
         try:
             return trial.study.best_trial.value
         except ValueError:
-            return - np.inf
-            
+            return -np.inf
+
     best_model_score = max(best_trial_value(), best_model_score)
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
@@ -327,8 +327,8 @@ def run_trial(
         trial.set_user_attr("auc", best_eval_metrics.val.auroc)
         trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
 
-    print(f"Best epoch: {best_epoch}")
-    print(best_eval_metrics.val, flush=True)
+        print(f"Best epoch: {best_epoch}")
+        print(best_eval_metrics.val, flush=True)
 
     return best_eval_metrics.val.average_precision
 
