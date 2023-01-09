@@ -649,7 +649,7 @@ def main():
     prefs = ["params_", "user_attrs_"]
     for pref in prefs:
         trials_df = trials_df.rename(columns={col: col.replace(pref, "") for col in trials_df.columns if pref in col})
-    print(trials_df.T)
+    print(trials_df.T.round(3).to_string())
 
     # Plot the results.
     optuna.visualization.plot_optimization_history(study).show()
