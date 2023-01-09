@@ -251,7 +251,8 @@ def run_trial(
 ):
     # Train and evaluate the model.
     max_epochs = 2000
-    val_aprc = -np.inf
+    epoch_val_aprc = -np.inf
+    best_epoch_val_aprc = -np.inf
 
     best_eval_metrics = None
     aprc_history = []
@@ -263,26 +264,28 @@ def run_trial(
     print(pformat(param_dict), flush=True)
     start_time = time.time()
 
-    def best_trial_value():
-        try:
-            return trial.study.best_trial.value
-        except ValueError:
-            return -np.inf
+    try:
+        best_study_val_aprc = trial.study.best_trial.value
+    except ValueError:
+        best_study_val_aprc = -np.inf
 
-    best_model_score = max(best_trial_value(), best_model_score)
+    best_model_score = max(best_study_val_aprc, best_model_score)
 
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
-        val_aprc = eval_metrics.val.average_precision
-        aprc_history.append(val_aprc)
+        epoch_val_aprc = eval_metrics.val.average_precision
+        aprc_history.append(epoch_val_aprc)
 
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
 
-        if val_aprc > best_model_score:
-            best_model_score = val_aprc
+        if epoch_val_aprc > best_epoch_val_aprc:
+            best_epoch_val_aprc = epoch_val_aprc
             best_eval_metrics = eval_metrics
+
+        if epoch_val_aprc > best_model_score:
+            best_model_score = epoch_val_aprc
             if save_best:
                 print()
                 print("Saving best model of study...", flush=True)
@@ -296,8 +299,8 @@ def run_trial(
                     f"Epoch: {early_stopping.epoch}",
                     f"Time per epoch: {time_per_epoch:.2f}s",
                     f"Val loss: {eval_metrics.val.loss:.4f}",
-                    f"Val APRC: {val_aprc:.4f}",
-                    f"Best Val APRC: {best_model_score:.4f}",
+                    f"Val APRC: {epoch_val_aprc:.4f}",
+                    f"Best Val APRC: {best_epoch_val_aprc:.4f}",
                 ]
             ),
             flush=True,
@@ -315,20 +318,17 @@ def run_trial(
     trial.set_user_attr("total_epochs", early_stopping.epoch)
     trial.set_user_attr("best_epoch", best_epoch)
 
-    # Log the aprc history.
+    trial.set_user_attr("loss", best_eval_metrics.val.loss)
+    trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
+    trial.set_user_attr("precision", best_eval_metrics.val.precision)
+    trial.set_user_attr("recall", best_eval_metrics.val.recall)
+    trial.set_user_attr("f1", best_eval_metrics.val.f1)
+    trial.set_user_attr("auc", best_eval_metrics.val.auroc)
+    trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
     trial.set_user_attr("aprc_history", aprc_history)
 
-    if best_eval_metrics:
-        trial.set_user_attr("loss", best_eval_metrics.val.loss)
-        trial.set_user_attr("acc", best_eval_metrics.val.accuracy)
-        trial.set_user_attr("precision", best_eval_metrics.val.precision)
-        trial.set_user_attr("recall", best_eval_metrics.val.recall)
-        trial.set_user_attr("f1", best_eval_metrics.val.f1)
-        trial.set_user_attr("auc", best_eval_metrics.val.auroc)
-        trial.set_user_attr("aprc", best_eval_metrics.val.average_precision)
-
-        print(f"Best epoch: {best_epoch}")
-        print(best_eval_metrics.val, flush=True)
+    print(f"Best epoch: {best_epoch}")
+    print(best_eval_metrics.val, flush=True)
 
     return best_eval_metrics.val.average_precision
 
