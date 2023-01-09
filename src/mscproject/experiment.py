@@ -239,18 +239,18 @@ def get_model_and_optimiser(
 
 def run_trial(
     trial: optuna.Trial,
-    param_dict,
-    dataset,
-    model,
-    optimiser,
+    param_dict: dict,
+    dataset: HeteroData,
+    model: torch.nn.Module,
+    optimiser: torch.optim.Optimiser,
     save_best=False,
     model_path=None,
+    best_model_score: float = -np.inf,
 ):
     # Train and evaluate the model.
     max_epochs = 2000
     val_aprc = -np.inf
 
-    best_aprc = -np.inf
     best_eval_metrics = None
     aprc_history = []
 
@@ -270,8 +270,11 @@ def run_trial(
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
 
         if save_best and (
-            (trial.number == 0 and val_aprc > best_aprc)
-            or (trial.number > 0 and val_aprc > best_aprc > trial.study.best_value)
+            (trial.number == 0 and val_aprc > best_model_score)
+            or (
+                trial.number > 0
+                and val_aprc > best_model_score > trial.study.best_value
+            )
         ):
             print()
             print("Saving best model of study...", flush=True)
@@ -279,8 +282,8 @@ def run_trial(
             Path(model_path).parent.mkdir(parents=True, exist_ok=True)
             torch.save(model.state_dict(), model_path)
 
-        if val_aprc > best_aprc:
-            best_aprc = val_aprc
+        if val_aprc > best_model_score:
+            best_model_score = val_aprc
             best_eval_metrics = eval_metrics
 
         print(
@@ -290,7 +293,7 @@ def run_trial(
                     f"Time per epoch: {time_per_epoch:.2f}s",
                     f"Val loss: {eval_metrics.val.loss:.4f}",
                     f"Val APRC: {val_aprc:.4f}",
-                    f"Best Val APRC: {best_aprc:.4f}",
+                    f"Best Val APRC: {best_model_score:.4f}",
                 ]
             ),
             flush=True,
@@ -519,6 +522,7 @@ def optimise_weights(
     model_params: dict,
     user_attrs: dict,
     model_path: Path,
+    best_model_score: float,
 ):
     # Clear the CUDA cache if applicable.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -544,6 +548,7 @@ def optimise_weights(
         optimiser,
         save_best=True,
         model_path=model_path,
+        best_model_score=best_model_score,
     )
 
 
@@ -633,6 +638,7 @@ def main():
                     model_params=model_params,
                     user_attrs=user_attrs,
                     model_path=model_path,
+                    best_model_score=base_study.best_value,
                 )
         else:
             raise ValueError(f"Unknown experiment type: {args.study_type}")
@@ -644,11 +650,21 @@ def main():
     print("Top Models:")
     trials_df: pd.DataFrame = study.trials_dataframe()
     trials_df = trials_df.sort_values("value", ascending=False).head(5)
-    drop_cols = ["datetime_start", "datetime_complete", "duration", "state", "user_attrs_aprc_history"]
+    drop_cols = [
+        "datetime_start",
+        "datetime_complete",
+        "duration",
+        "state",
+        "user_attrs_aprc_history",
+    ]
     trials_df = trials_df.drop(drop_cols, axis=1)
     prefs = ["params_", "user_attrs_"]
     for pref in prefs:
-        trials_df = trials_df.rename(columns={col: col.replace(pref, "") for col in trials_df.columns if pref in col})
+        trials_df = trials_df.rename(
+            columns={
+                col: col.replace(pref, "") for col in trials_df.columns if pref in col
+            }
+        )
     print(trials_df.round(3).T)
 
     # Plot the results.
@@ -659,6 +675,7 @@ def main():
         optuna.visualization.plot_param_importances(study).show()
     except Exception as e:
         print(f"Error plotting results: {e}")
+
 
 if __name__ == "__main__":
     main()
