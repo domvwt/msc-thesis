@@ -649,14 +649,16 @@ def main():
     prefs = ["params_", "user_attrs_"]
     for pref in prefs:
         trials_df = trials_df.rename(columns={col: col.replace(pref, "") for col in trials_df.columns if pref in col})
-    print(trials_df.T.round(3).to_string())
+    print(trials_df.round(3).T)
 
     # Plot the results.
-    optuna.visualization.plot_optimization_history(study).show()
-    optuna.visualization.plot_contour(study).show()
-    optuna.visualization.plot_slice(study).show()
-    optuna.visualization.plot_param_importances(study).show()
-
+    try:
+        optuna.visualization.plot_optimization_history(study).show()
+        optuna.visualization.plot_contour(study).show()
+        optuna.visualization.plot_slice(study).show()
+        optuna.visualization.plot_param_importances(study).show()
+    except Exception as e:
+        print(f"Error plotting results: {e}")
 
 if __name__ == "__main__":
     main()
