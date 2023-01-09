@@ -262,6 +262,15 @@ def run_trial(
     print("Training model:", flush=True)
     print(pformat(param_dict), flush=True)
     start_time = time.time()
+
+    def best_trial_value():
+        try:
+            return trial.study.best_trial.value
+        except ValueError:
+            return - np.inf
+            
+    best_model_score = max(best_trial_value(), best_model_score)
+
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
@@ -271,22 +280,15 @@ def run_trial(
         early_stopping(eval_metrics.val.average_precision)
         time_per_epoch = (time.time() - start_time) / (early_stopping.epoch + 1)
 
-        if save_best and (
-            (trial.number == 0 and val_aprc > best_model_score)
-            or (
-                trial.number > 0
-                and val_aprc > best_model_score > trial.study.best_value
-            )
-        ):
-            print()
-            print("Saving best model of study...", flush=True)
-            assert model_path is not None, "Model path must be specified."
-            Path(model_path).parent.mkdir(parents=True, exist_ok=True)
-            torch.save(model.state_dict(), model_path)
-
-        if val_aprc > best_model_score or best_eval_metrics is None:
+        if val_aprc > best_model_score:
             best_model_score = val_aprc
             best_eval_metrics = eval_metrics
+            if save_best:
+                print()
+                print("Saving best model of study...", flush=True)
+                assert model_path is not None, "Model path must be specified."
+                Path(model_path).parent.mkdir(parents=True, exist_ok=True)
+                torch.save(model.state_dict(), model_path)
 
         print(
             "; ".join(
