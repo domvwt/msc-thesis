@@ -596,7 +596,7 @@ def main():
         dataset = dataset.data.to(device)
 
         if args.study_type == "ARCHITECTURE":
-            model_path = MODEL_DIR / "architecture" / f"{args.model_type_name}.pt"
+            model_path = MODEL_DIR / "unregularised" / f"{args.model_type_name}.pt"
             trial_function = ft.partial(
                 optimise_architecture,
                 dataset=dataset,
@@ -629,10 +629,11 @@ def main():
                     model_path=model_path,
                 )
             elif args.study_type == "WEIGHTS":
-                if args.base_study_type == "REGULARISATION":
-                    base_model_type = "regularised"
-                else:
-                    base_model_type = "unregularised"
+                # if args.base_study_type == "REGULARISATION":
+                #     base_model_type = "regularised"
+                # else:
+                #     base_model_type = "unregularised"
+                base_model_type = "weights"
                 model_path = (
                     MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
                 )
@@ -642,7 +643,7 @@ def main():
                     model_params=model_params,
                     user_attrs=user_attrs,
                     model_path=model_path,
-                    best_model_score=base_study.best_value,
+                    # best_model_score=base_study.best_value,
                 )
         else:
             raise ValueError(f"Unknown experiment type: {args.study_type}")
