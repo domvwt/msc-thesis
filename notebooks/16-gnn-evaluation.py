@@ -84,6 +84,7 @@ for model_name in model_names:
 
     model_params, user_attrs = get_best_trial(model_name)
     user_attrs["model_type"] = model_name
+    del user_attrs["aprc_history"]
 
     print(f"Using model params: {model_params}")
     print(f"Using user attrs: {user_attrs}")
