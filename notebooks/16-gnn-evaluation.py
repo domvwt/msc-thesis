@@ -50,7 +50,7 @@ dataset = dataset.data.to("cpu")
 # %%
 def get_best_trial(model_name):
     study = optuna.load_study(
-        study_name=f"pyg_model_selection_{model_name}_ARCHITECTURE",
+        study_name=f"pyg_model_selection_{model_name}_WEIGHTS",
         storage=f"sqlite:///{OPTUNA_DB}",
     )
     model_params = study.best_params
@@ -72,63 +72,69 @@ model_metrics = {}
 # Load and evaluate models
 for model_name in model_names:
 
-    print("Evaluating model:", model_name)
+    try:
+        print("Evaluating model:", model_name)
 
-    model_path = MODEL_DIR / f"{model_name}.pt"
-    if not model_path.exists():
-        print(f"Model {model_name} does not exist, skipping")
-        continue
+        model_path = MODEL_DIR / f"{model_name}.pt"
 
-    model_params, user_attrs = get_best_trial(model_name)
-    user_attrs["model_type"] = model_name
+        if not model_path.exists():
+            print(f"Model {model_name} does not exist, skipping")
+            continue
+        else:
+            print(f"Loading model from: {model_path}")
 
-    dataset = CompanyBeneficialOwners(DATASET_PATH, to_undirected=True)
-    dataset = dataset.data.to(device)
+        model_params, user_attrs = get_best_trial(model_name)
+        user_attrs["model_type"] = model_name
 
-    model, optimiser, _ = exp.build_experiment_from_trial_params(
-        model_params, user_attrs, dataset
-    )
-    model.load_state_dict(torch.load(model_path, map_location=torch.device(device)))
+        dataset = CompanyBeneficialOwners(DATASET_PATH, to_undirected=True)
+        dataset = dataset.data.to(device)
 
-    model.to(device)
-
-    if model_params["add_self_loops"]:
-        dataset = AddSelfLoops(fill_value=1.0)(dataset)
-    else:
-        dataset = RemoveSelfLoops()(dataset)
-
-    eval_metrics = exp.evaluate(
-        model, dataset, on_train=False, on_val=False, on_test=True
-    )
-
-    model_metrics[model_name] = eval_metrics.test
-    print(model_name, eval_metrics.test)
-
-    print("Making predictions...")
-    prediction_dict = model(dataset.x_dict, dataset.edge_index_dict)
-    prediction_df_list = []
-
-    print("Saving predictions...")
-    for node_type in dataset.node_types:
-        prediction = (
-            prediction_dict[node_type][dataset[node_type].test_mask]
-            .cpu()
-            .detach()
-            .numpy()
-            .flatten()
+        model, optimiser, _ = exp.build_experiment_from_trial_params(
+            model_params, user_attrs, dataset
         )
-        actual = (
-            dataset.y_dict[node_type][dataset[node_type].test_mask]
-            .cpu()
-            .detach()
-            .numpy()
-            .flatten()
-        )
-        df = pd.DataFrame({"pred_proba": prediction, "actual": actual})
-        prediction_df_list.append(df)
+        model.load_state_dict(torch.load(model_path, map_location=torch.device(device)))
 
-    prediction_df = pd.concat(prediction_df_list)
-    prediction_df.to_csv(PREDICTION_DIR / f"{model_name}.csv", index=False)
+        model.to(device)
+
+        if model_params["add_self_loops"]:
+            dataset = AddSelfLoops(fill_value=1.0)(dataset)
+        else:
+            dataset = RemoveSelfLoops()(dataset)
+
+        eval_metrics = exp.evaluate(
+            model, dataset, on_train=False, on_val=False, on_test=True
+        )
+
+        model_metrics[model_name] = eval_metrics.test
+        print(model_name, eval_metrics.test)
+
+        print("Making predictions...")
+        prediction_dict = model(dataset.x_dict, dataset.edge_index_dict)
+        prediction_df_list = []
+
+        print("Saving predictions...")
+        for node_type in dataset.node_types:
+            prediction = (
+                prediction_dict[node_type][dataset[node_type].test_mask]
+                .cpu()
+                .detach()
+                .numpy()
+                .flatten()
+            )
+            actual = (
+                dataset.y_dict[node_type][dataset[node_type].test_mask]
+                .cpu()
+                .detach()
+                .numpy()
+                .flatten()
+            )
+            df = pd.DataFrame({"pred_proba": prediction, "actual": actual})
+            prediction_df_list.append(df)
+
+        prediction_df = pd.concat(prediction_df_list)
+        prediction_df.to_csv(PREDICTION_DIR / f"{model_name}.csv", index=False)
+    except Exception as e:
+        print("Error:", e)
 
 # %%
 performance_comparison = pd.DataFrame.from_dict(model_metrics, orient="index")
