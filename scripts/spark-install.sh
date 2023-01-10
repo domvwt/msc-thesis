@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 # Spark Setup Script
 # ----------------------------------------------------------------------------
-# Download, install, and configure Spark on Ubuntu.
+# Download, install, and configure Spark on Debian / Ubuntu systems.
 # ----------------------------------------------------------------------------
 
 SPARK_VERSION="3.1.1"
