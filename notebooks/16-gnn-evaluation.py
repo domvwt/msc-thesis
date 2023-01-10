@@ -85,6 +85,9 @@ for model_name in model_names:
     model_params, user_attrs = get_best_trial(model_name)
     user_attrs["model_type"] = model_name
 
+    print(f"Using model params: {model_params}")
+    print(f"Using user attrs: {user_attrs}")
+
     dataset = CompanyBeneficialOwners(DATASET_PATH, to_undirected=True)
     dataset = dataset.data.to(device)
 
