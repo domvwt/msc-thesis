@@ -50,7 +50,7 @@ dataset = dataset.data.to("cpu")
 # %%
 def get_best_trial(model_name):
     study = optuna.load_study(
-        study_name=f"pyg_model_selection_{model_name}_WEIGHTS",
+        study_name=f"pyg_model_selection_{model_name}_ARCHITECTURE",
         storage=f"sqlite:///{OPTUNA_DB}",
     )
     model_params = study.best_params
