@@ -271,6 +271,8 @@ def run_trial(
 
     best_model_score = max(best_study_val_aprc, best_model_score)
 
+    print(f"Best model score: {best_model_score}", flush=True)
+
     while not early_stopping.early_stop and early_stopping.epoch < max_epochs:
         _ = train(model, dataset, optimiser)
         eval_metrics = evaluate(model, dataset)
@@ -643,7 +645,7 @@ def main():
                     model_params=model_params,
                     user_attrs=user_attrs,
                     model_path=model_path,
-                    # best_model_score=base_study.best_value,
+                    best_model_score=-np.inf,
                 )
         else:
             raise ValueError(f"Unknown experiment type: {args.study_type}")
