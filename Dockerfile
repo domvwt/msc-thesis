@@ -3,6 +3,22 @@ FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel
 LABEL org.opencontainers.image.authors = "Dominic Thorn"
 LABEL org.opencontainers.image.base.name="pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel"
 
+# Define non-root user.
+ARG USERNAME=default-user
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Create the user with sudo access.
+RUN groupadd --gid $USER_GID $USERNAME \
+ && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+ && apt-get update \
+ && apt-get install -y sudo \
+ && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+ && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Switch to the user.
+USER $USERNAME
+
 # Set conda executable.
 ENV CONDA=/opt/conda/bin/conda
 
