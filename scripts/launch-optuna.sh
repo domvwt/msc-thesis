@@ -12,7 +12,7 @@ run_until_success () {
 
 OPTUNA_DB="sqlite:///data/optuna-05.db"
 STUDY_TYPE="ARCHITECTURE"
-TARGET_TRIALS=100
+TARGET_TRIALS=50
 
 #python src/mscproject/experiment.py -m ALL
 
@@ -54,7 +54,7 @@ python src/mscproject/experiment.py \
 
 STUDY_TYPE="WEIGHTS"
 BASE_STUDY_TYPE="ARCHITECTURE"
-TARGET_TRIALS=50
+TARGET_TRIALS=20
 
 python src/mscproject/experiment.py \
   -m KGNN \
