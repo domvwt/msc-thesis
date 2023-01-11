@@ -54,7 +54,7 @@ python src/mscproject/experiment.py \
 
 STUDY_TYPE="WEIGHTS"
 BASE_STUDY_TYPE="ARCHITECTURE"
-TARGET_TRIALS=30
+TARGET_TRIALS=50
 
 python src/mscproject/experiment.py \
   -m KGNN \
