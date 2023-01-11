@@ -34,7 +34,7 @@ while not Path("data") in Path(".").iterdir():
     os.chdir("..")
 
 # %%
-MODEL_DIR = Path("data/models/pyg/weights/")
+MODEL_DIR = Path("data/models/pyg/weights-unregularised/")
 OPTUNA_DB = Path("data/optuna-04.db")
 DATASET_PATH = Path("data/pyg")
 PREDICTION_DIR = Path("data/predictions")

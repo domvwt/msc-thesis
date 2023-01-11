@@ -631,11 +631,10 @@ def main():
                     model_path=model_path,
                 )
             elif args.study_type == "WEIGHTS":
-                # if args.base_study_type == "REGULARISATION":
-                #     base_model_type = "regularised"
-                # else:
-                #     base_model_type = "unregularised"
-                base_model_type = "weights"
+                if args.base_study_type == "REGULARISATION":
+                    base_model_type = "weights-regularised"
+                else:
+                    base_model_type = "weights-unregularised"
                 model_path = (
                     MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
                 )
