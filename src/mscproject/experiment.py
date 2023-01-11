@@ -621,7 +621,7 @@ def main():
             )
             if args.study_type == "REGULARISATION":
                 model_path = (
-                    MODEL_DIR / "regularised" / f"{user_attrs['model_type']}.pt"
+                    MODEL_DIR / "regularised" / f"{args.model_type_name}.pt"
                 )
                 trial_function = ft.partial(
                     optimise_regularisation,
@@ -636,7 +636,7 @@ def main():
                 else:
                     base_model_type = "weights-unregularised"
                 model_path = (
-                    MODEL_DIR / base_model_type / f"{user_attrs['model_type']}.pt"
+                    MODEL_DIR / base_model_type / f"{args.model_type_name}.pt"
                 )
                 trial_function = ft.partial(
                     optimise_weights,
