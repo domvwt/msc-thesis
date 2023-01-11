@@ -10,7 +10,7 @@ run_until_success () {
 # DEBUG
 #TARGET_TRIALS=2
 
-OPTUNA_DB="sqlite:///data/optuna-04.db"
+OPTUNA_DB="sqlite:///data/optuna-05.db"
 STUDY_TYPE="ARCHITECTURE"
 TARGET_TRIALS=100
 
@@ -31,25 +31,25 @@ python src/mscproject/experiment.py \
   #--overwrite
 
 
-STUDY_TYPE="REGULARISATION"
-BASE_STUDY_TYPE="ARCHITECTURE"
-TARGET_TRIALS=30
+# STUDY_TYPE="REGULARISATION"
+# BASE_STUDY_TYPE="ARCHITECTURE"
+# TARGET_TRIALS=30
 
-python src/mscproject/experiment.py \
-  -m KGNN \
-  --db $OPTUNA_DB \
-  -n $TARGET_TRIALS \
-  -s $STUDY_TYPE \
-  -b $BASE_STUDY_TYPE \
-  #--overwrite
+# python src/mscproject/experiment.py \
+#   -m KGNN \
+#   --db $OPTUNA_DB \
+#   -n $TARGET_TRIALS \
+#   -s $STUDY_TYPE \
+#   -b $BASE_STUDY_TYPE \
+#   #--overwrite
 
-python src/mscproject/experiment.py \
-  -m GraphSAGE \
-  --db $OPTUNA_DB \
-  -n $TARGET_TRIALS \
-  -s $STUDY_TYPE \
-  -b $BASE_STUDY_TYPE \
-  #--overwrite
+# python src/mscproject/experiment.py \
+#   -m GraphSAGE \
+#   --db $OPTUNA_DB \
+#   -n $TARGET_TRIALS \
+#   -s $STUDY_TYPE \
+#   -b $BASE_STUDY_TYPE \
+#   #--overwrite
 
 
 STUDY_TYPE="WEIGHTS"
@@ -72,5 +72,7 @@ python src/mscproject/experiment.py \
   -b $BASE_STUDY_TYPE \
   #--overwrite
 
+# Run eval code on the best models
+python notebooks/16-gnn-evaluation.py
 
 exit 0 

@@ -360,7 +360,7 @@ def optimise_architecture(
     #   for heterogeneous models. Other modes will *not* work.
     jk_choices = {
         "none": None,
-        "last": "last",
+        # "last": "last",
         # "cat": "cat",
         # "max": "max",
     }
@@ -433,6 +433,9 @@ def optimise_architecture(
     to_hetero_aggr = trial.suggest_categorical("to_hetero_aggr", basic_aggr_choices)
     param_dict["weight_decay"] = 0
 
+    # act = trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"])
+    act = trial.suggest_categorical("act", ["relu"])
+
     param_dict.update(
         dict(
             model_type=model_type,
@@ -441,7 +444,7 @@ def optimise_architecture(
             out_channels=1,
             num_layers=num_layers,
             dropout=0,
-            act=trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"]),
+            act=act,
             # NOTE: act_first only has an effect when normalisation is used.
             act_first=True,
             to_hetero_aggr=to_hetero_aggr,
@@ -672,6 +675,18 @@ def main():
             }
         )
     print(trials_df.round(3).T)
+    print()
+    
+    # Save the top models to disk.
+    results_path = Path(f"reports/{args.model_type_name}_{args.study_type}_top_trials.csv")
+    print(f"Saving top trial results to: {results_path}")
+    top_trials = study.trials_dataframe().sort_values("value", ascending=False).head(50)
+    top_trials = top_trials.reset_index(drop=True)
+    results_path.parent.mkdir(parents=True, exist_ok=True)
+    top_trials.to_csv(
+        f"results/pyg/{args.model_type_name}_{args.study_type}_top_trials.csv",
+        index=False,
+    )
 
     # Plot the results.
     try:
