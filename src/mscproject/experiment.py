@@ -290,7 +290,7 @@ def run_trial(
             best_model_score = epoch_val_aprc
             if save_best:
                 print()
-                print("Saving best model of study...", flush=True)
+                print(f"Saving best model of study to: {model_path}", flush=True)
                 assert model_path is not None, "Model path must be specified."
                 Path(model_path).parent.mkdir(parents=True, exist_ok=True)
                 torch.save(model.state_dict(), model_path)
