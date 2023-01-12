@@ -4,7 +4,7 @@ import functools as ft
 import time
 from pathlib import Path
 from pprint import pformat
-from typing import Optional, List, Set
+from typing import Optional
 
 import numpy as np
 import optuna
@@ -679,11 +679,12 @@ def main():
 
     # Save the top models to disk.
     results_path = Path(
-        f"reports/{args.model_type_name}_{args.study_type}_top_trials.csv"
+        f"reports/top_trials_{args.model_type_name}_{args.study_type}.csv"
     )
     print(f"Saving top trial results to: {results_path}")
     top_trials = study.trials_dataframe().sort_values("value", ascending=False).head(50)
     top_trials = top_trials.reset_index(drop=True)
+    top_trials = top_trials.drop("user_attrs_aprc_history", axis=1)
     results_path.parent.mkdir(parents=True, exist_ok=True)
     top_trials.to_csv(
         results_path,
