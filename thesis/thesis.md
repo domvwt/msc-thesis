@@ -272,7 +272,7 @@ Edge attributes are not used in the GraphSAGE model and are therefore ignored du
 
 The Higher-Order GNN (or kGNN) proposed by @morrisWeisfeilerLemanGo2021 extends the prototypical GNN described by @kipfSemiSupervisedClassificationGraph2017 to higher-order graph representations. These higher-order representations are learned by associating all unordered $k$-tuples of nodes and learning a representation for each tuple, where $k$ is a hyperparameter of the model. These tuple representations are hierarchically combined in a final dense layer to produce a representation for each node that considers its local neighbourhood and higher-order topological features. This is illustrated in figure {@fig:higher-order-gnn}.
 
-As with the GraphSAGE model, an aggregation architecture is used to learn the node tuple representations. The weights for each layer are also trained via backpropagation for supervised learning tasks. Unlike the GraphSAGE model, the kGNN model incorporates edge weights in its learning process.
+As with the GraphSAGE model, an aggregation architecture is used to learn the node tuple representations. The weights for each layer are also trained via backpropagation for supervised learning tasks. As with the GraphSAGE model, our kGNN model does not use consider weights in its learning process.
 
 ![Hierarchical 1-2-3 GNN network architecture [@morrisWeisfeilerLemanGo2021]](figures/learning-higher-order-graph-properties.png){#fig:higher-order-gnn short-caption="Hierarchical 1-2-3 GNN network architecture"}
 
@@ -306,6 +306,8 @@ The Adam optimiser [@kingmaAdamMethodStochastic2017] is used to train the GNNs w
 
 #### Neural Architecture Search
 
+> Update number of trials
+
 For each of the GNN models (GraphSAGE and kGNN), we learn an optimal neural architecture for the anomalous node classification task. We use the Optuna library [@akibaOptunaNextgenerationHyperparameter2019]
 
 to explore the search space, training candidate models on the training dataset and selecting the architecture that achieves the highest AUC-PR on the validation data.
@@ -314,6 +316,8 @@ Each model is trained for a maximum of 2000 epochs, with an early stopping callb
 
 #### Hyperparameter Tuning
 
+> Update number of trials
+
 Parameters for dropout and weight decay are also tuned using Optuna. These trials occur after the architecture search, to limit the dimensionality of the search space in each experiment. 20 trials are performed for each pair of candidate values, with the best hyperparameters selected based on the AUC-PR score on the validation set.
 
 ### CatBoost Training
@@ -321,6 +325,8 @@ Parameters for dropout and weight decay are also tuned using Optuna. These trial
 The CatBoost classifier is trained similarly to the GNNs. Each candidate model is trained and evaluated on the same training and validation sets as the GNN models and evaluated using the AUC-PR metric. The hyperparameter search space is provided in the appendix tables {@tbl:catboost-search-space-cont} and {@tbl:catboost-search-space-cat}.
 
 # Results and Discussion
+
+> Update this, and add the results for the other models.
 
 ## Model Performance
 
@@ -345,6 +351,8 @@ The outstanding performance of the kGNN model may be explained by its capacity t
 It should also be noted that the kGNN model has two additional message-passing layers compared to the GraphSAGE model. This may be a contributing factor to the model’s superior performance, however, the kGNN comprises half as many hidden channels. This model depth may be another contributing factor to the kGNN model’s superior performance.
 
 ## Neural Architecture Search and Hyperparameter Tuning
+
+> Add optimal architecture tables to the appendix
 
 ### GraphSAGE
 
@@ -387,6 +395,11 @@ During the initial planning of this study, we intended to include a Graph Attent
 The GNN architecture search spaces for this study are simple compared to the realm of possible model architectures. Investigating developments such as Jumping Knowledge layers [@xuRepresentationLearningGraphs2018] and the prospect of using different aggregation functions for each edge type may reveal further improvements in model performance, or the possibility of training equally performant models with fewer parameters.
 
 It is also possible to restate the task in this study as one of edge classification. The motivation for framing the problem as one of node classification is primarily to facilitate comparison with traditional ML benchmark models, which require a relational tabular data structure rather than an adjacency matrix. @duanAANEAnomalyAware2020 proposes Anomaly Aware Network Embedding (AANE) and demonstrates performance on real-world datasets. If successful on the anomalous business ownership detection task, the results would be useful for fraud detection, as the model should be able to identify anomalous edges, rather than identifying entire nodes as anomalous.
+
+> Add note on learnable and exotic aggregation functions, lstm, powermean, softmax, etc.
+> @liDeeperGCNAllYou2020
+
+> Batching the dataset would allow for use of learanble aggregation functions and attention mechanisms
 
 ### Datasets and Simulation Strategies
 

@@ -360,7 +360,7 @@ def optimise_architecture(
     #   for heterogeneous models. Other modes will *not* work.
     jk_choices = {
         "none": None,
-        # "last": "last",
+        "last": "last",
         # "cat": "cat",
         # "max": "max",
     }
@@ -434,7 +434,7 @@ def optimise_architecture(
     param_dict["weight_decay"] = 0
 
     # act = trial.suggest_categorical("act", ["leaky_relu", "relu", "gelu"])
-    act = trial.suggest_categorical("act", ["relu"])
+    act = trial.suggest_categorical("act", ["leaky_relu", "relu"])
 
     param_dict.update(
         dict(
