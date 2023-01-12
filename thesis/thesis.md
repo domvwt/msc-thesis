@@ -272,7 +272,7 @@ Edge attributes are not used in the GraphSAGE model and are therefore ignored du
 
 The Higher-Order GNN (or kGNN) proposed by @morrisWeisfeilerLemanGo2021 extends the prototypical GNN described by @kipfSemiSupervisedClassificationGraph2017 to higher-order graph representations. These higher-order representations are learned by associating all unordered $k$-tuples of nodes and learning a representation for each tuple, where $k$ is a hyperparameter of the model. These tuple representations are hierarchically combined in a final dense layer to produce a representation for each node that considers its local neighbourhood and higher-order topological features. This is illustrated in figure {@fig:higher-order-gnn}.
 
-As with the GraphSAGE model, an aggregation architecture is used to learn the node tuple representations. The weights for each layer are also trained via backpropagation for supervised learning tasks. As with the GraphSAGE model, our kGNN model does not use consider weights in its learning process.
+As with the GraphSAGE model, an aggregation architecture is used to learn the node tuple representations. The weights for each layer are also trained via backpropagation for supervised learning tasks. In contrast to GraphSAGE, the kGNN model incorporates edge weights and types into the learning process.
 
 ![Hierarchical 1-2-3 GNN network architecture [@morrisWeisfeilerLemanGo2021]](figures/learning-higher-order-graph-properties.png){#fig:higher-order-gnn short-caption="Hierarchical 1-2-3 GNN network architecture"}
 
@@ -355,6 +355,14 @@ It should also be noted that the kGNN model has two additional message-passing l
 > Add optimal architecture tables to the appendix
 
 ### GraphSAGE
+
+```text
+jk (str, optional): The Jumping Knowledge mode. If specified, the model
+will additionally apply a final linear transformation to transform
+node embeddings to the expected output feature dimensionality.
+(:obj:`None`, :obj:`"last"`, :obj:`"cat"`, :obj:`"max"`,
+:obj:`"lstm"`). (default: :obj:`None`)
+```
 
 The best performing architecture for the GraphSAGE models was found to be a 2-layer model with 256 hidden channels, a bias term, and an additional linear layer after the final message-passing layer. A sum aggregation function was selected for both the message-passing layers and the aggregation of heterogeneous node representations. A leaky ReLU activation function was selected for all layers. Neither dropout nor weight decay were beneficial to model performance.
 
