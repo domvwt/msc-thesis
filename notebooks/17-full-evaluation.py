@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.14.1
 #   kernelspec:
-#     display_name: 'Python 3.9.12 (''.venv'': poetry)'
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -570,6 +570,7 @@ def get_model_performance_metrics_np(y_true, y_pred_proba, threshold=0.5):
 
 # %%
 def bootstrap_model_performance_metrics(preds_dict, threshold=0.5, n=1000):
+    # This should be parallelised.
 
     metrics = {}
 
@@ -722,6 +723,9 @@ def get_bootstrap_intervals_df(bootstrap_trials_df):
 
 
 # %%
+bootstrap_intervals
+
+# %%
 bootstrap_intervals = get_bootstrap_intervals_df(bootstrap_trials_df)
 bootstrap_intervals.sort_values(by=("AUC-ROC", "mean"), ascending=False)
 
@@ -787,3 +791,7 @@ bootstrap_ci.style.apply(highlight_max, subset=["AUC-ROC", "AUC-PR"], axis=0)
 
 # %%
 print(bootstrap_ci.to_markdown())
+
+# %%
+
+# %%

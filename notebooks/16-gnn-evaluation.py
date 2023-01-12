@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.14.1
 #   kernelspec:
-#     display_name: 'Python 3.9.12 (''.venv'': poetry)'
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -35,7 +35,7 @@ while not Path("data") in Path(".").iterdir():
 
 # %%
 MODEL_DIR = Path("data/models/pyg/weights-unregularised/")
-OPTUNA_DB = Path("data/optuna-04.db")
+OPTUNA_DB = Path("data/optuna-05.db")
 DATASET_PATH = Path("data/pyg")
 PREDICTION_DIR = Path("data/predictions")
 
@@ -57,6 +57,16 @@ def get_best_trial(model_name):
     user_attrs = study.best_trial.user_attrs
     return model_params, user_attrs
 
+
+# %%
+model_name = "GraphSAGE"
+study = optuna.load_study(
+    study_name=f"pyg_model_selection_{model_name}_ARCHITECTURE",
+    storage=f"sqlite:///{OPTUNA_DB}",
+)
+
+# %%
+study.trials_dataframe().sort_values("value", ascending=False)[:10].T
 
 # %%
 get_best_trial("GraphSAGE")
