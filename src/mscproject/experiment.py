@@ -4,7 +4,7 @@ import functools as ft
 import time
 from pathlib import Path
 from pprint import pformat
-from typing import Optional
+from typing import Optional, List, Set
 
 import numpy as np
 import optuna
@@ -265,7 +265,7 @@ def run_trial(
     start_time = time.time()
 
     try:
-        best_study_val_aprc = trial.study.best_trial.value
+        best_study_val_aprc = trial.study.best_trial.value or -np.inf
     except ValueError:
         best_study_val_aprc = -np.inf
 
@@ -561,6 +561,59 @@ def optimise_weights(
     )
 
 
+def select_best_trial(study: optuna.Study, top_k: int) -> optuna.trial.FrozenTrial:
+    """Select the best trial from a study.
+
+    The best trial is chosen by selecting the most typical trial. This is done by
+    selecting the single trial with the values in common with the most other trials.
+
+    Args:
+        study: The study to select the best trial from.
+        top_k: The number of trials to consider.
+
+    Returns:
+        The best trial.
+    """
+    top_10_trials = study.best_trials[:top_k]
+    top_10_trial_params = [trial.params for trial in top_10_trials]
+
+    # Get param sets.
+    param_sets = [
+        set(param_dict.items()) for param_dict in top_10_trial_params
+    ]
+
+    # Select the most typical set.
+    most_typical_trial = most_typical_set(param_sets)
+
+    # Get the trial with the most typical set.
+    for trial in top_10_trials:
+        if set(trial.params.items()) == most_typical_trial:
+            return trial
+
+    raise ValueError("No trial found with the most typical set.")
+
+
+def most_typical_set(sets: List[Set]) -> Set:
+    """Select the most typical set from a list of sets.
+
+    The most typical set is chosen by selecting the single set with the values in
+    common with the most other sets.
+
+    Args:
+        sets: The list of sets to select the most typical set from.
+
+    Returns:
+        The most typical set.
+    """
+    similarities = [
+        len(set.intersection(*sets[i], *sets[j]))
+        for i in range(len(sets))
+        for j in range(i + 1, len(sets))
+    ]
+
+    return sets[similarities.index(max(similarities))]
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -614,8 +667,9 @@ def main():
                 study_name=base_study_name,
                 storage=args.db,
             )
-            model_params = base_study.best_params
-            user_attrs = base_study.best_trial.user_attrs
+            best_trial = select_best_trial(base_study, top_k=10)
+            model_params = best_trial.params
+            user_attrs = best_trial.user_attrs
             user_attrs["model_type"] = args.model_type_name
             print("Model params:\n", pformat(model_params))
             print(
@@ -649,8 +703,10 @@ def main():
                     model_path=model_path,
                     best_model_score=-np.inf,
                 )
+            else:
+                raise ValueError(f"Unknown study type: {args.study_type}")
         else:
-            raise ValueError(f"Unknown experiment type: {args.study_type}")
+            raise ValueError(f"Unknown study type: {args.study_type}")
 
         study.optimize(trial_function, n_trials=remaining_trials)
 
@@ -671,12 +727,12 @@ def main():
     for pref in prefs:
         trials_df = trials_df.rename(
             columns={
-                col: col.replace(pref, "") for col in trials_df.columns if pref in col
+                col: str(col).replace(pref, "") for col in trials_df.columns if pref in str(col)
             }
         )
     print(trials_df.round(3).T)
     print()
-    
+
     # Save the top models to disk.
     results_path = Path(f"reports/{args.model_type_name}_{args.study_type}_top_trials.csv")
     print(f"Saving top trial results to: {results_path}")
@@ -684,7 +740,7 @@ def main():
     top_trials = top_trials.reset_index(drop=True)
     results_path.parent.mkdir(parents=True, exist_ok=True)
     top_trials.to_csv(
-        f"results/pyg/{args.model_type_name}_{args.study_type}_top_trials.csv",
+        results_path,
         index=False,
     )
 
