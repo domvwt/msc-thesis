@@ -10,7 +10,7 @@ run_until_success () {
 # DEBUG
 #TARGET_TRIALS=2
 
-OPTUNA_DB="sqlite:///data/optuna-05.db"
+OPTUNA_DB="sqlite:///data/optuna-06.db"
 STUDY_TYPE="ARCHITECTURE"
 TARGET_TRIALS=50
 
