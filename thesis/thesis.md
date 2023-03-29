@@ -274,7 +274,7 @@ The Higher-Order GNN (or kGNN) proposed by @morrisWeisfeilerLemanGo2021 extends 
 
 As with the GraphSAGE model, an aggregation architecture is used to learn the node tuple representations. The weights for each layer are also trained via backpropagation for supervised learning tasks. In contrast to GraphSAGE, the kGNN model incorporates edge weights and types into the learning process.
 
-![Hierarchical 1-2-3 GNN network architecture [@morrisWeisfeilerLemanGo2021]](figures/learning-higher-order-graph-properties.png){#fig:higher-order-gnn short-caption="Hierarchical 1-2-3 GNN network architecture"}
+![kGNN network architecture [@morrisWeisfeilerLemanGo2021]](figures/learning-higher-order-graph-properties.png){#fig:higher-order-gnn short-caption="Hierarchical 1-2-3 GNN network architecture"}
 
 ## Experimental Setup
 
@@ -288,7 +288,7 @@ Class imbalance in the dataset is addressed by assigning a weight to each class 
 
 ### Evaluation Metrics
 
-We use two threshold-free metrics to evaluate model performance: the area under the precision-recall curve (AUC-PR) and the area under the receiver operating characteristic curve (AUC-ROC). These metrics are chosen as they are insensitive to the choice of threshold, and are more robust to class imbalance than threshold-dependent metrics, such as accuracy. [@maImbalancedLearningFoundations2013, p.72]
+We use two metrics to evaluate model performance: the area under the precision-recall curve (AUC-PR) and the area under the receiver operating characteristic curve (AUC-ROC). These metrics are chosen as they are insensitive to the choice of threshold, and are more robust to class imbalance than threshold-dependent metrics, such as accuracy. [@maImbalancedLearningFoundations2013, p.72]
 
 #### Area under the Receiver Operating Characteristic Curve (AUC-ROC)
 
@@ -306,27 +306,23 @@ The Adam optimiser [@kingmaAdamMethodStochastic2017] is used to train the GNNs w
 
 #### Neural Architecture Search
 
-> Update number of trials
+For each of the GNN models (GraphSAGE and kGNN), we learn an optimal neural architecture for the anomalous node classification task. We use the Optuna library [@akibaOptunaNextgenerationHyperparameter2019] to explore the search space, train candidate models on the training dataset and select the architecture that achieves the highest AUC-PR on the validation data.
 
-For each of the GNN models (GraphSAGE and kGNN), we learn an optimal neural architecture for the anomalous node classification task. We use the Optuna library [@akibaOptunaNextgenerationHyperparameter2019]
-
-to explore the search space, training candidate models on the training dataset and selecting the architecture that achieves the highest AUC-PR on the validation data.
-
-Each model is trained for a maximum of 2000 epochs, with an early stopping callback used to terminate trials that do not improve for 200 consecutive epochs. Thirty trials are performed for each model. Both GNN models share the same search spaces, the parameters of the space are provided in the appendix tables {@tbl:gnn-search-space-cont} and {@tbl:gnn-search-space-cat}.
+Each model is trained for a maximum of 2000 epochs, with an early stopping callback used to terminate trials that do not improve for 200 consecutive epochs. Fifty trials are performed for each model. Both GNN models share the same search space, the parameters of the space are provided in the appendix tables {@tbl:gnn-search-space-cont} and {@tbl:gnn-search-space-cat}.
 
 #### Hyperparameter Tuning
 
-> Update number of trials
-
 Parameters for dropout and weight decay are also tuned using Optuna. These trials occur after the architecture search, to limit the dimensionality of the search space in each experiment. 20 trials are performed for each pair of candidate values, with the best hyperparameters selected based on the AUC-PR score on the validation set.
+
+#### Weight Initialisation
+
+The GNN models are initialised with random weights. To ensure that the final model is not trained with a sub-optimal set of initial weights, multiple candidate models are trained with the chosen architecture and hyperparameters. The model with the highest AUC-PR on the validation set is selected as the final model.
 
 ### CatBoost Training
 
 The CatBoost classifier is trained similarly to the GNNs. Each candidate model is trained and evaluated on the same training and validation sets as the GNN models and evaluated using the AUC-PR metric. The hyperparameter search space is provided in the appendix tables {@tbl:catboost-search-space-cont} and {@tbl:catboost-search-space-cat}.
 
 # Results and Discussion
-
-> Update this, and add the results for the other models.
 
 ## Model Performance
 
@@ -336,43 +332,31 @@ Both of the GNN models achieved higher AUC-ROC and AUC-PR scores than the CatBoo
 
 ![ROC and PR curves on the test set.](figures/roc-pr-curve.png){#fig:roc-pr-curve short-caption="ROC and PR curves on the test set."}
 
-| Model     | AUC-ROC      | 95% CI         |      AUC-PR  | 95% CI         |
-|:----------|-------------:|:---------------|-------------:|:---------------|
-| CatBoost  |        0.639 | [0.619, 0.659] |        0.104 | [0.092, 0.116] |
-| GraphSAGE |        0.943 | [0.929, 0.957] |        0.735 | [0.695, 0.775] |
-| kGNN      |    **0.982** | [0.974, 0.990] |    **0.904** | [0.876, 0.932] |
+| Model         |   AUC-ROC | 95% CI         |     AUC-PR | 95% CI         |
+|:--------------|----------:|:---------------|-----------:|:---------------|
+| CatBoost      |     0.639 | [0.619, 0.659] |      0.104 | [0.092, 0.116] |
+| GraphSAGE     |     0.945 | [0.931, 0.959] |      0.776 | [0.736, 0.816] |
+| **kGNN**      | **0.995** | [0.993, 0.997] |  **0.945** | [0.931, 0.959] |
 
 : Model performance on the test set. {#tbl:results}
 
-We note the CatBoost model’s performance is little better than an unskilled classifier in terms of its AUC-PR score, suggesting that it is of little value for fraud detection in this scenario. In answer to our first research question (Q1), we conclude the GNN models are superior to the CatBoost model for the anomalous node classification task. Further, the increase in performance on this task more than justifies the additional cost in terms of complexity and computational resource required to train the GNN models. To answer our second research question (Q2), our best performing kGNN model achieves an uplift of 53.7% in the AUC-ROC score over the CatBoost model, and an uplift of 769.2% in AUC-PR score over the CatBoost model.
+We note the CatBoost model’s performance is little better than an unskilled classifier in terms of its AUC-PR score, suggesting that it is of little value for fraud detection in this scenario. In answer to our first research question (Q1), we conclude the GNN models are superior to the CatBoost model for the anomalous node classification task. Further, the increase in performance on this task more than justifies the additional cost in terms of complexity and computational resource required to train the GNN models. To answer our second research question (Q2), our best performing kGNN model achieves an uplift of 55.7% in the AUC-ROC score over the CatBoost model, and an uplift of 808.7% in AUC-PR score over the CatBoost model.
 
 The outstanding performance of the kGNN model may be explained by its capacity to learn and combine higher-order features of the graph. A potential avenue for further study would be to investigate what features the model is learning and how they influence the model’s performance. Work by @yingGNNExplainerGeneratingExplanations2019 on the GNNExplainer tool is likely worth exploring.
 
-It should also be noted that the kGNN model has two additional message-passing layers compared to the GraphSAGE model. This may be a contributing factor to the model’s superior performance, however, the kGNN comprises half as many hidden channels. This model depth may be another contributing factor to the kGNN model’s superior performance.
-
 ## Neural Architecture Search and Hyperparameter Tuning
-
-> Add optimal architecture tables to the appendix
 
 ### GraphSAGE
 
-```text
-jk (str, optional): The Jumping Knowledge mode. If specified, the model
-will additionally apply a final linear transformation to transform
-node embeddings to the expected output feature dimensionality.
-(:obj:`None`, :obj:`"last"`, :obj:`"cat"`, :obj:`"max"`,
-:obj:`"lstm"`). (default: :obj:`None`)
-```
-
-The best performing architecture for the GraphSAGE models was found to be a 2-layer model with 256 hidden channels, a bias term, and an additional linear layer after the final message-passing layer. A sum aggregation function was selected for both the message-passing layers and the aggregation of heterogeneous node representations. A leaky ReLU activation function was selected for all layers. Neither dropout nor weight decay were beneficial to model performance.
+The best performing architecture for the GraphSAGE model was a 7-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message-passing layer. A min aggregation function was selected for both the message-passing layers and the aggregation of heterogeneous node representations. A leaky ReLU activation function was selected for all layers. Neither dropout nor weight decay were beneficial to model performance.
 
 ### kGNN
 
-The best performing architecture for the kGNN model was a deeper 4-layer model with 128 hidden channels, no bias term, and an additional linear layer after the final message-passing layer. A minimum pooling aggregation function was selected for both the message-passing layers and the aggregation of heterogeneous node representations. A GELU activation function was selected for all layers. Again, neither dropout nor weight decay were beneficial to model performance.
+The best performing architecture for the kGNN model was a 5-layer model with 128 hidden channels, a bias term, and no additional linear layer after the final message-passing layer. A max pooling aggregation function was selected for the message-passing layers, while min was used for the aggregation of heterogeneous node representations. A ReLU activation function was selected for all layers. Neither dropout nor weight decay were beneficial to model performance.
 
 ### CatBoost
 
-The most successful CatBoost was trained with the following hyperparameters:
+The best performing CatBoost was trained with hyperparameters:
 
 - learning rate: 0.09
 - depth: 9
@@ -382,17 +366,15 @@ The most successful CatBoost was trained with the following hyperparameters:
 
 ### Notes and Recommendations
 
-It was observed during the model tuning process that both GNN models displayed a great deal of variance in performance, even between trials when all hyperparameters were held constant. This suggests a high deal of sensitivity to the initialisation of the model weights, and that the model architecture is far from the only factor in determining model performance.
+It was observed during the model tuning process that both GNN models displayed a great deal of variance in performance, even between trials when all hyperparameters were held constant. This suggests a high deal of sensitivity to the initialisation of the model weights.
 
 To ensure that the final model is among the best possible candidates, we perform several rounds of training with the best performing architecture, checking validation performance at each epoch and saving the weights whenever the validation AUC-PR improves beyond the previous best value. This process is repeated for each of the GNN models, and the final models are selected based on the best validation AUC-PR score. This is in contrast to the common strategy of training the final model for a predetermined number of epochs on both the training and validation datasets.
 
-Further, both models exhibited a non-linear progression in performance during training and demonstrated no signs of over-fitting. While this could suggest that the models have not converged, allowing the models to train over thousands of epochs showed that the validation AUC-PR continues to increase and decrease in a non-linear fashion. It may be worth studying this behaviour in future work to determine whether the training instability results from the model architecture, the dataset, or some other factor in the experimental design.
+Further, both models exhibited a non-linear progression in performance during training and demonstrated no signs of over-fitting. While this could suggest that the models have not converged, allowing the models to train over thousands of epochs showed that the validation AUC-PR continues to increase and decrease in a non-linear fashion. It may be worth studying this behaviour in future work to determine whether the training instability results from the model architecture, the dataset, or some other factor in the experimental design. Validation APRC histories for the 3 best and 3 worst GraphSAGE and kGNN random weight initialisations are shown in figures {@fig:training-history-GraphSAGE} and {@fig:training-history-KGNN}.
 
 These observations should be noted as potential pitfalls in the model tuning process, and in answer to our third research question (Q3), we would advise caution when training GNN models for industrial applications, especially in critical areas such as fraud detection. Our recommendation is to follow a similar process to that detailed in this study, of staged model training and hyperparameter tuning, with regular check-pointing to ensure that the final model is optimal for the task.
 
 ## Further Work
-
-There are several other opportunities for work that we would like to highlight.
 
 ### Graph Attention Networks
 
@@ -402,20 +384,13 @@ During the initial planning of this study, we intended to include a Graph Attent
 
 The GNN architecture search spaces for this study are simple compared to the realm of possible model architectures. Investigating developments such as Jumping Knowledge layers [@xuRepresentationLearningGraphs2018] and the prospect of using different aggregation functions for each edge type may reveal further improvements in model performance, or the possibility of training equally performant models with fewer parameters.
 
-It is also possible to restate the task in this study as one of edge classification. The motivation for framing the problem as one of node classification is primarily to facilitate comparison with traditional ML benchmark models, which require a relational tabular data structure rather than an adjacency matrix. @duanAANEAnomalyAware2020 proposes Anomaly Aware Network Embedding (AANE) and demonstrates performance on real-world datasets. If successful on the anomalous business ownership detection task, the results would be useful for fraud detection, as the model should be able to identify anomalous edges, rather than identifying entire nodes as anomalous.
-
-> Add note on learnable and exotic aggregation functions, lstm, powermean, softmax, etc.
-> @liDeeperGCNAllYou2020
-
-> Batching the dataset would allow for use of learanble aggregation functions and attention mechanisms
+It is possible to restate the task in this study as one of edge classification. The motivation for framing the problem as one of node classification is primarily to facilitate comparison with traditional ML benchmark models, which require a tabular data structure. @duanAANEAnomalyAware2020 proposes Anomaly Aware Network Embedding (AANE) and demonstrates performance on real-world datasets. If successful on the anomalous business ownership detection task, the results would be useful for fraud detection, as the model should be able to identify anomalous edges, rather than identifying entire nodes as anomalous.
 
 ### Datasets and Simulation Strategies
 
-It is surprising to see that the GNN performance on the anomaly detection task is so strong, given that the anomaly generation process did not follow any pattern or established logic. Indeed, it was expected that more of the anomalies would have appeared very similar to the genuine relationships of the majority class and that the model would have struggled to distinguish between the two.
+The random assignment of anomalous edges makes it difficult to reason about the models’ performance, and it would be interesting to investigate the performance of the models on a dataset where the anomalies are generated in a more controlled manner. Investigating alternative simulation strategies could help to understand under what conditions the GNN models can detect anomalies and where they struggle. It could also be worth performing the same anomaly simulation and identification exercise on established benchmark datasets, such as the Cora citation network [@mccallumAutomatingConstructionInternet2000], to see if the results are consistent.
 
-The random assignment of anomalous edges makes it difficult to reason about the models’ performance, and it would be interesting to investigate the performance of the models on a dataset where the anomalies are generated in a more controlled manner. Trying alternative simulation strategies could help to understand under what conditions the GNN models can detect anomalies and where they struggle. It could also be worth performing the same anomaly simulation and identification exercise on established benchmark datasets, such as the Cora citation network [@mccallumAutomatingConstructionInternet2000], to see if the results are consistent.
-
-The ICIJ dataset is another potential source of data for training a business ownership anomaly classifier. Several difficulties would need to be overcome, not least of which is linking this data to another source of legitimate company relationships to serve as negative fraud examples. This is a significant challenge because the companies listed by ICIJ are registered in various legal jurisdictions. However, having a known set of positive fraud examples would help build the external validity of any subsequent study and offer valuable insight into business ownership fraud.
+The ICIJ dataset is another potential source of data for training a business ownership anomaly classifier. Several difficulties would need to be overcome, not least of which is linking this data to another source of legitimate company relationships to serve as negative fraud examples. This is a significant challenge because the companies listed by ICIJ are registered in various legal jurisdictions. However, having a known set of positive fraud examples would help build the external validity of any subsequent study and offer valuable insight into these models' potential for detecting fraud.
 
 \newpage
 
@@ -451,7 +426,7 @@ The ICIJ dataset is another potential source of data for training a business own
 
 : Neural architecture search space for GNN models - categorical. {#tbl:gnn-search-space-cat}
 
-| Property                                    | Min  | Max |
+| Property                                    | Min   | Max |
 | ------------------------------------------- | ----- | --- |
 | learning rate                               | 0.001 | 0.1 |
 | colsample by level                          | 0.01  | 0.1 |
@@ -467,3 +442,27 @@ The ICIJ dataset is another potential source of data for training a business own
 | bootstrap type | Bayesian, Bernoulli, MVS |
 
 : CatBoost hyperparameter search space - categorical. {#tbl:catboost-search-space-cat}
+
+\newpage
+
+| Hyperparameter            | GraphSAGE  | kGNN |
+|:--------------------------|-----------:|-----:|
+| Learning Rate             |       0.01 | 0.01 |
+| Optimiser                 |       Adam | Adam |
+| Activation                | Leaky ReLU | ReLU |
+| Depth                     |          7 |    5 |
+| Hidden Channels           |        128 |  128 |
+| Bias                      |         No |  Yes |
+| Linear Layer              |        Yes |   No |
+| Message Aggregation       |        Min |  Max |
+| Heterogeneous Aggregation |        Min |  Min |
+| Dropout                   |         No |   No |
+| Weight Decay              |         No |   No |
+
+: Hyperparameters for the best performing GNN models. {#tbl:hyperparameters}
+
+\newpage
+
+![GraphSAGE: validation APRC history for the 3 best and 3 worst random weight initialisations. All models are built with the same best performing architecture and hyperparameters.](figures/training-history-GraphSAGE.png){#fig:training-history-GraphSAGE short-caption="Validation APRC history for GraphSAGE models."}
+
+![kGNN: validation APRC history for the 3 best and 3 worst random weight initialisations. All models are built with the same best performing architecture and hyperparameters.](figures/training-history-KGNN.png){#fig:training-history-KGNN short-caption="Validation APRC history for kGNN models."}
